@@ -184,7 +184,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          <a href="/2020/06/02/hexo+win+mac/" class="post-title-link" itemprop="url">hexo win+mac协作发布博客</a>
+          <a href="/2020/06/02/hexo+win+mac/" class="post-title-link" itemprop="url">Hexo+GithubPages部署过程问题记录</a>
         </h2>
 
         <div class="post-meta-container">
@@ -202,7 +202,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2021-09-24 22:43:48" itemprop="dateModified" datetime="2021-09-24T22:43:48+08:00">2021-09-24</time>
+        <time title="修改时间：2021-09-24 23:22:20" itemprop="dateModified" datetime="2021-09-24T23:22:20+08:00">2021-09-24</time>
       </span>
 
   
@@ -215,15 +215,19 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <h1 id="多平台协作发布注意事项"><a href="#多平台协作发布注意事项" class="headerlink" title="多平台协作发布注意事项"></a>多平台协作发布注意事项</h1><p>使用到的插件列表：</p>
-<p><img src="/2020/06/02/hexo+win+mac/Sni_2409222314.png" alt="Sni_2409222314"></p>
-<p><code>.gitignore</code>文件中过滤了<code>node_modules\</code>，所以 clone 来的目录里没有<code>node_modules\</code>，这是hexo所需要的组件，所以要在该目录中重新安装hexo，<strong>但不需要hexo init</strong>。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">npm install hexo</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
+          <h2 id="本地初始化一个Hexo项目"><a href="#本地初始化一个Hexo项目" class="headerlink" title="本地初始化一个Hexo项目"></a>本地初始化一个Hexo项目</h2><p><strong>注意：本地的目录不要动</strong>，<strong>可以重命名</strong>。</p>
+<p>重新新建一个空目录，作为你的博客目录。进入该目录，初始化一个Hexo项目：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">hexo init</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git *--save</span><br></pre></td></tr></table></figure>
 
-<p>尝试不过滤 .gitignore 的内容</p>
-<p>参考链接：</p>
-<p><a target="_blank" rel="noopener" href="https://wandouduoduo.github.io/articles/902dbefe.html">mac和windows协同写hexo博客)</a></p>
-
+<p>然后用自己原来博客里的文件替换掉这里的<code>source\</code>, <code>scaffolds\</code>, <code>themes\</code>,<code>_config.yml</code>替换成自己原来博客里的。<strong>注意，一定要把themes/next中的.git/目录删除</strong></p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/06/02/hexo+win+mac/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 

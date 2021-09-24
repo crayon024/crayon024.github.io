@@ -1,5 +1,5 @@
 ---
-title: hexo+win+mac+github 操作过程记录
+title: Hexo+GithubPages部署过程问题记录
 date: 2020-06-02 21:54:14
 tags: 
   -- blog
@@ -13,8 +13,6 @@ tags:
 
 重新新建一个空目录，作为你的博客目录。进入该目录，初始化一个Hexo项目：
 
-复制
-
 ```
 hexo init
 npm install
@@ -22,6 +20,8 @@ npm install hexo-deployer-git *--save
 ```
 
 然后用自己原来博客里的文件替换掉这里的`source\`, `scaffolds\`, `themes\`,`_config.yml`替换成自己原来博客里的。**注意，一定要把themes/next中的.git/目录删除**
+
+<!--more-->
 
 然后上传到代码仓库，同时初始化了 main 分支。
 
