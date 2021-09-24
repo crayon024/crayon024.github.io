@@ -1,0 +1,9 @@
+.DS_Store
+.deploy_git
+
+                            ########################
+                            ### .DS_Store banish ###
+                            ########################
+# https://stackoverflow.com/questions/107701/how-can-i-remove-ds-store-files-from-a-git-repository
+# 1. find . -name .DS_Store -print0 | xargs -0 git rm -f --ignore-unmatch
+# 2. add .DS_Store to .gitignore
