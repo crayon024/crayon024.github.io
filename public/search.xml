@@ -1,0 +1,1040 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>ConcurrentHashMap 源码分析</title>
+    <url>/2020/04/25/ConcurrentHashMap-Analyse/</url>
+    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>ConcurrentHashMap 是高性能的线程安全的哈希容器。</p>
+<p>值得一提的是 ConcurrentHashMap 的 key 和 value 不允许 null 值。</p>
+<p>Doug Lea 和 Josh Bloch 对 HashMap，ConcurrentHashMap key 允不允许 null 值的讨论。</p>
+<ul>
+<li><p><a href="http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002485.html?fileGuid=Hxch6t3HxHCRkVqG">http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002485.html</a></p>
+</li>
+<li><p><a href="http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002486.html?fileGuid=Hxch6t3HxHCRkVqG">http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002486.html</a></p>
+<span id="more"></span></li>
+</ul>
+<p>邮件里大致的内容说明是因为 null 值有二义性。在并发环境下，如果你通过 get(key) 得到了一个 null 值，无法判断是因为 map 中不存在这个 key 还是因为 key 对应的 value 是 null。在并发环境下，你无法通过调用 containsKey() 来确定。</p>
+<p>因为不允许 null 值，所以在 ConcurrentHashMap 中，可以通过 get() 是否为 null 来直接判断是否 contains 一个 key。</p>
+<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><h2 id="存储结构"><a href="#存储结构" class="headerlink" title="存储结构"></a>存储结构</h2><p>JDK 1.8 之后，采用的存储结构与 HashMap 一样，Node&lt;K,V&gt;[] table。不同的是 Node 中的 val 和 next 用<strong>volatile</strong>来修饰，用于保证可见性。</p>
+<p><img src="/2020/04/25/ConcurrentHashMap-Analyse/image-20210925124000740.png" alt="image-20210925124000740"></p>
+<h2 id="put-方法"><a href="#put-方法" class="headerlink" title="put() 方法"></a>put() 方法</h2><ol>
+<li><p><img src="/2020/04/25/ConcurrentHashMap-Analyse/image-20210925124058747.png" alt="image-20210925124058747">rehash，保证均匀分布</p>
+</li>
+<li><p>索引定位后，如果该槽上没有值，通过 CAS 更新。这里的 tabAt，casTabAt 需要利用到 volatile 的可见性来保证正确。</p>
+</li>
+<li><p>表正在扩容</p>
+</li>
+<li><p>都不满足，对索引定位到的槽加锁操作。</p>
+</li>
+<li><p>槽节点的 hash 值大等 0，说明该槽上不是红黑树。按照拉链法的方式来插入值。</p>
+</li>
+<li><p>槽根节点的 hash 值小于 0，说明是树节点，走红黑树的插入逻辑。</p>
+</li>
+<li><p>插入后，判断阈值来进行树化。</p>
+<p><img src="/2020/04/25/ConcurrentHashMap-Analyse/image-20210925124118357.png" alt="image-20210925124118357"></p>
+</li>
+</ol>
+<p>JDK 1.8 之后，利用了 CAS+synchronized，相比于 1.7 的锁定 Segment 的方式，取消了ReentrantLock 使用synchronized（看来 1.8 对于 synchronized 的优化很可观。网上的资源提到 synchronized 的锁升级，其实在 1.6 就已经引入），优化了锁的粒度和使用。</p>
+<h2 id="get-方法"><a href="#get-方法" class="headerlink" title="get() 方法"></a>get() 方法</h2><p>get 方法相对比较简单，因为使用了<strong>volatile</strong>修饰 val 和 next 变量，get 的时候可以无锁操作。</p>
+<p><img src="/2020/04/25/ConcurrentHashMap-Analyse/image-20210925124156045.png" alt="image-20210925124156045"></p>
+<ol>
+<li><p>索引定位哈希槽的位置上是否有值，没有的话直接返回 null。有的话，比较哈希槽上根节点的 key ，一致的话直接返回 val 值。</p>
+</li>
+<li><p>哈希槽根节点的 hash 值小于 0 ，说明是红黑树，走红黑树的查找方法。</p>
+</li>
+<li><p>都不满足的话，在链表中往下遍历查找。</p>
+</li>
+</ol>
+<p><img src="/2020/04/25/ConcurrentHashMap-Analyse/image-20210925124249047.png" alt="image-20210925124249047"></p>
+<h1 id="硬件同步原语-CAS"><a href="#硬件同步原语-CAS" class="headerlink" title="硬件同步原语 CAS"></a>硬件同步原语 CAS</h1><p>硬件同步原语是由计算机硬件提供的一组原子操作，具体来说就是 CPU 提供的实现，可以保证指令操作的原子性。</p>
+<p>CAS（Compare and Swap）的意思是，先获取某个想要修改的旧值，然后在修改的时候，比较当前的值和旧值，如果一致，就更新为新的，返回 true。否则就不改变，返回 false。</p>
+<p>还有一个常用的 FAA（Fetch and Add），的作用是获取某个变量的值，然后将变量的值增加，然后返回旧值。</p>
+<p>在各种高级编程语言中，这些原语一般都有相应的实现。</p>
+<p>比如 JDK 中提供的 CAS 。</p>
+<p><img src="/2020/04/25/ConcurrentHashMap-Analyse/image-20210925124311450.png"></p>
+<p>Java 中的 FAA 好像是通过 CAS 实现的。</p>
+<h3 id><a href="#" class="headerlink" title></a><img src="/2020/04/25/ConcurrentHashMap-Analyse/image-20210925124327406.png" alt="image-20210925124327406"></h3><h3 id="CAS-的-ABA-问题"><a href="#CAS-的-ABA-问题" class="headerlink" title="CAS 的 ABA 问题"></a>CAS 的 ABA 问题</h3><p>CAS 在写入时仅仅判断当前值和旧值，期间值可能改变过，但是无法判断。Java 提供了<a href="http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html?fileGuid=Hxch6t3HxHCRkVqG">AtomicStampedReference</a>工具类，通过版本号的方式来完善这个问题。</p>
+<h3 id="CAS-的开销和优点"><a href="#CAS-的开销和优点" class="headerlink" title="CAS 的开销和优点"></a>CAS 的开销和优点</h3><p>使用 CAS 可以避免使用锁，减小开销。但是 CAS 面对频繁的资源竞争的话，一直反复采用 CAS 尝试更新失败概率高，CPU 的开销也随之变大。</p>
+<p>CAS 像是乐观锁的思路，总认为修改成功的概率很高。悲观锁的思路就是共享资源的竞争可能很频繁，就采用独占的方式操作，比如  synchronized 关键字。</p>
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><p>ConcurrentHashMap 是高性能的线程安全的容器，但并不意味着使用它就没有安全问题。比如其 size() ，putALL() 等方法在并发情况下只能反映中间情况。</p>
+<p>使用 ConcurrentHashMap 的时候，对其的多个操作之间仍然不是原子性的，如果需要的话可以对 map 加锁操作。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>ConcurrentHashMap 在 1.7 之前采用分段锁的形式，默认并发 16，取决于 Segment。1.8 之后的存储结构和 HashMap 类似，且采用 CAS + synchronized 来保证原子性的读写操作。</p>
+<p>使用 ConcurrentHashMap 、CopyOnWriteArrayList 等线程安全的工具类，并不意味着就没有线程安全问题，有关并发安全的知识则需要自己学习运用。</p>
+<h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ol>
+<li><a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentHashMap.html?fileGuid=Hxch6t3HxHCRkVqG">https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentHashMap.html</a>，ConcurrentHashMap 官方文档</li>
+<li><a href="http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html?fileGuid=Hxch6t3HxHCRkVqG">http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html</a>，AtomicStampedReference 使用教程</li>
+<li><a href="https://en.wikipedia.org/wiki/Compare-and-swap?fileGuid=Hxch6t3HxHCRkVqG">https://en.wikipedia.org/wiki/Compare-and-swap</a>，CAS 原语</li>
+</ol>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
+        <tag>java 集合</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>GC 策略总结</title>
+    <url>/2021/03/06/GC-Algo/</url>
+    <content><![CDATA[<h1 id="GC-算法"><a href="#GC-算法" class="headerlink" title="GC 算法"></a>GC 算法</h1><ul>
+<li>标记-复制。<ul>
+<li>优点：存活的对象越少，复制需要的空间就越小；而且复制后的对象们内存空间排布紧凑，避免空间碎片的问题。</li>
+<li>缺点：有一部分空间被浪费。如果存活对象大且多的话复制成本比较高。<span id="more"></span></li>
+<li><strong>适用每次 GC 存活对象小而美的情况。年轻代</strong></li>
+</ul>
+</li>
+<li>标记-清除。直接清除可回收对象，不进行内存整理。，<ul>
+<li>优点：单次 STW 的时间可能要短一些。</li>
+<li>缺点：但是产生的内存碎片，可能导致内存总空间足够，但是没一块连续的空间存放对象的问题，内存利用率降低；对象放不下，可能触发额外的 GC。</li>
+<li><strong>适用对象存活率高的情况。老年代</strong></li>
+</ul>
+</li>
+<li>标记-清除-整理。STW 时间可能会稍长一些，内存碎片问题得到解决。适用对象存活率高的情况。</li>
+</ul>
+<h1 id="Serial-GC"><a href="#Serial-GC" class="headerlink" title="Serial GC"></a>Serial GC</h1><p>-XX:+UseSerialGC</p>
+<p>串行 GC 单线程执行，在 GC 期间其他业务线程均暂停，暂停的时间长。</p>
+<p>串行 GC 对年轻代采用标记复制算法。对老年代使用标记-清除-整理算法。</p>
+<p>串行 GC 简单直接，在单核 CPU 环境下比较适用。</p>
+<h2 id="XX-UseParNewGC"><a href="#XX-UseParNewGC" class="headerlink" title="-XX:+UseParNewGC"></a>-XX:+UseParNewGC</h2><p>ParNew 收集器，多线程版本的 Serial。配合 CMS 使用。</p>
+<h1 id="Parallel-GC"><a href="#Parallel-GC" class="headerlink" title="Parallel GC"></a>Parallel GC</h1><p>-XX:UseParallelGC -XX:UseParallelOldGC</p>
+<p>使用的 GC 算法和串行的一样。</p>
+<p>默认的 GC 线程数是 CPU core 数，该收集器的目标更倾向于<strong>提高系统吞吐量</strong>，有时候单次的 GC 暂停时间较长。</p>
+<h1 id="CMS-GC"><a href="#CMS-GC" class="headerlink" title="CMS GC"></a>CMS GC</h1><p>-XX:UseConcMarkSweepGC</p>
+<p>对老年代没有整理操作，使用 free-list 进行内存空间的管理。默认的核心线程数 CPU 核数 / 4。</p>
+<p>可以和业务线程并发执行，GC 暂停时间少。</p>
+<h1 id="G1-GC"><a href="#G1-GC" class="headerlink" title="G1 GC"></a>G1 GC</h1><p>打破整个分区的理论，把内存划分成多个小块进行管理。对每个小块的垃圾数量进行预估，优先回收垃圾多的 Region。可预期的垃圾停顿时间。</p>
+<h1 id="验证总结"><a href="#验证总结" class="headerlink" title="验证总结"></a>验证总结</h1><p>首先需要提到的一点是 GC 的时间和存活的对象数量有关，和堆内存的大小关系没有那么大。</p>
+<p>配置堆内存 512M，YGC 后年轻代存活对象大概 20M。</p>
+<ul>
+<li>串行 GC 利用单线程执行，GC 暂停的时间明显会比较长。在实际的测试下，在小堆内存空间的情况下，YGC 和并行 GC 的 YGC 差不多。FGC 使用的时间明显较长，<strong>大概是并行 GC 的一倍（存活对象 300M 左右）</strong>。老年代存活对象占用的空间大，整理移动的时间就长。</li>
+<li>CMS GC 的老年代清理明显的暂停时间降低。在 GC 日志中有发现 concurrent mode failure 的情况。查询资料后明白，CMS 在 cleanup 是并发执行的，这时的对象引用关系发生改变，也可能有新的对象需要分配空间。如果没有预留足够的空间内存分配就会导致并发失败。可能重新 CMS ，或者 GC 退化成 Serial。</li>
+<li>G1 GC 出现了 Humongous Allocation 因为大对象分配失败，触发了 initial-mark。也是重新标记，或者 GC 退化的问题。</li>
+</ul>
+<p>堆内存越大，内存中可容纳的对象越多，GC 的次数随之减少，单次 GC 的暂停时间可能更长（取决于存活对象的数量）。</p>
+<p>总的来说，注意不同 GC 策略采用的算法，以及设计的目的。比如 CMS 在于并发执行，提高系统响应。Parallel 更倾向于提高吞吐量；G1 GC 倾向于可配置可预估的暂停时间。</p>
+<p>CMS - 老年代 没有整理，使用 free-list 管理回收内存；真正的 STW 时间小，但是步骤多，还有浮动垃圾，GC 退化问题。G1 GC 也存在 GC 退化问题。</p>
+<p>配置堆内存的时候，注意 JVM 自身需要的内存和系统需要的内存，预留一定的空间。</p>
+<p>-Xms -Xmx 直接一步到位，扩容的时候有性能的抖动。</p>
+<p>年轻代和老年代的比例默认 1:2，新生代:from:to = 8：1：1，根据情况来调整。</p>
+<p>根据对象晋升回收速率的计算，进行空间，晋升年龄的配置。</p>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>jvm</tag>
+        <tag>gc</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>HashMap 源码分析</title>
+    <url>/2020/05/06/HashMap-SourceCode-Anaylise/</url>
+    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><h2 id="哈希算法"><a href="#哈希算法" class="headerlink" title="哈希算法"></a>哈希算法</h2><p>哈希算法的作用是：对于输入的数据，输出<strong>固定长度</strong>的数据摘要。</p>
+<p>哈希算法的特点：<span id="more"></span></p>
+<ol>
+<li>同一个输入，输出的哈希值一定是一致的。</li>
+<li>不同输入，哪怕是一个 Bit 的差别，得到的哈希值有明显的差别。</li>
+<li>对于不同的输入，是有可能得到相同的哈希值的。这种情况一般也称作哈希碰撞。原因很简单，因为计算得到的哈希值是固定长度的，总量有限制。而输入的值可能是无限的。</li>
+</ol>
+<p>一个优秀的哈希算法至少得满足两点：</p>
+<ol>
+<li>计算哈希值的速度很快。</li>
+<li>出现哈希碰撞的概率很低。</li>
+</ol>
+<p>哈希算法的实际应用场景很多，常见的有这几种：</p>
+<ol>
+<li>数据加密。符合的点有两个：很难根据哈希值反推出原始数据；哈希冲突的概率低；</li>
+<li>数据校验。校验文件的完整性。</li>
+<li>哈希表。</li>
+</ol>
+<p>对于业务上保存用户的密码，有一些思路顺便记录一下。</p>
+<ul>
+<li>hash + 随机 salt。</li>
+<li>采用计算时间慢的算法来降低硬件计算的速度。</li>
+<li>不规律的计算时间，避免得到与密码有关的联系的信息，比如字符串的长度信息。</li>
+<li>时序攻击：<a href="https://www.zhihu.com/question/20156213?fileGuid=9CXxDy6PxXx6yDVH">https://www.zhihu.com/question/20156213</a>。</li>
+</ul>
+<h2 id="HashMap"><a href="#HashMap" class="headerlink" title="HashMap"></a>HashMap</h2><p>HashMap 根据 key 的 hashCode 值，寻找对应的位置保存数据。在没有哈希冲突的前提下，可以通过 O(1) 的时间复杂度定位到的 key。</p>
+<p>Java 的 HashMap 通过额外链表法来解决哈希冲突的问题。在 Java 1.8 之后，如果某个哈希槽上的链表元素个数超过了 TREEIFY_THRESHOLD ，会将链表树化为红黑树，进一步提高性能。</p>
+<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><h2 id="存储结构"><a href="#存储结构" class="headerlink" title="存储结构"></a>存储结构</h2><p>HashMap 类中的字段 Node&lt;K,V&gt;[] table，即使用 Node&lt;K,V&gt; 数组来存储数据。</p>
+<p><img src="/2020/05/06/HashMap-SourceCode-Anaylise/image-20210925122839366.png" alt="image-20210925122839366">Node&lt;K,V&gt; 中有一个 Node&lt;K,V&gt; next 字段，当某个哈希槽上已经存储了数据，next 就用来在该哈希槽上拉出链表来解决哈希冲突。</p>
+<p>HashMap 的默认字段定义</p>
+<h2 id><a href="#" class="headerlink" title></a><img src="/2020/05/06/HashMap-SourceCode-Anaylise/image-20210925122854595.png" alt="image-20210925122854595"></h2><h2 id="hash-Object-key-方法"><a href="#hash-Object-key-方法" class="headerlink" title="hash(Object key) 方法"></a>hash(Object key) 方法</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public V put(K key, V value) &#123;</span><br><span class="line">return putVal(hash(key), key, value, false, true);</span><br><span class="line">&#125;</span><br><span class="line">static final int hash(Object key) &#123;</span><br><span class="line">    int h;</span><br><span class="line">    return (key == null) ? 0 : (h = key.hashCode()) ^ (h &gt;&gt;&gt; 16);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不管是在 put 或者 get，都会先通过 hash(key) ，根据 key 的 hashCode 重新计算一个 hash 值用于索引定位。<br>事先通过 hash(key) 将 key 的 hashCode 重新散列，将 hashCode 的高位向右移 16 位，异或计算后得到的 hash 值进行索引定位（否则这些高位可能由于 (table.length -1) &amp; hash 的取模方式永远参与不到取模的运算中，取模运算的结果其实就是 hash 中对应的后几位的值）。</p>
+<h2 id="索引定位方式"><a href="#索引定位方式" class="headerlink" title="索引定位方式"></a>索引定位方式</h2><p>HashMap 的源码定位哈希槽的位置的方式是通过位运算计算哈希槽的位置，具体的计算方式是：**(table.length - 1) &amp; hash**。</p>
+<p>由于 table.length 在初始化或者扩容后总是<strong>取 2 的某个幂次方数</strong>，在将其减去 1 之后，二进制的低位上数据都是 1，再于 hash 进行 &amp; 运算，将计算后的值限制在 table.length 内。相当于高效率的 % 运算。</p>
+<h2 id="插入方法"><a href="#插入方法" class="headerlink" title="插入方法"></a>插入方法</h2><p><img src="/2020/05/06/HashMap-SourceCode-Anaylise/image-20210925122935800.png" alt="image-20210925122935800"></p>
+<p>(图来自美团技术团队博客)</p>
+<h2 id="扩容机制"><a href="#扩容机制" class="headerlink" title="扩容机制"></a>扩容机制</h2><p>HashMap 扩容默认是原始容量的两倍。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">final</span> Node&lt;K,V&gt;[] resize() &#123;</span><br><span class="line">    Node&lt;K,V&gt;[] oldTab = table;</span><br><span class="line">    <span class="keyword">int</span> oldCap = (oldTab == <span class="keyword">null</span>) ? <span class="number">0</span> : oldTab.length;</span><br><span class="line">    <span class="keyword">int</span> oldThr = threshold;</span><br><span class="line">    <span class="keyword">int</span> newCap, newThr = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (oldCap &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 超过最大容量，随你碰撞好了</span></span><br><span class="line">        <span class="keyword">if</span> (oldCap &gt;= MAXIMUM_CAPACITY) &#123;</span><br><span class="line">            threshold = Integer.MAX_VALUE;</span><br><span class="line">            <span class="keyword">return</span> oldTab;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// oldCap 向左移动一位，newCap = 2 *oldCap </span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> ((newCap = oldCap &lt;&lt; <span class="number">1</span>) &lt; MAXIMUM_CAPACITY &amp;&amp;</span><br><span class="line">                 oldCap &gt;= DEFAULT_INITIAL_CAPACITY)</span><br><span class="line">            newThr = oldThr &lt;&lt; <span class="number">1</span>; <span class="comment">// double threshold</span></span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@SuppressWarnings(&#123;&quot;rawtypes&quot;,&quot;unchecked&quot;&#125;)</span></span><br><span class="line">    Node&lt;K,V&gt;[] newTab = (Node&lt;K,V&gt;[])<span class="keyword">new</span> Node[newCap];</span><br><span class="line">    table = newTab;</span><br><span class="line">    <span class="comment">//数据重新进行索引定位</span></span><br><span class="line">    <span class="keyword">if</span> (oldTab != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; oldCap; ++j) &#123;</span><br><span class="line">            Node&lt;K,V&gt; e;</span><br><span class="line">            <span class="keyword">if</span> ((e = oldTab[j]) != <span class="keyword">null</span>) &#123;</span><br><span class="line">                oldTab[j] = <span class="keyword">null</span>;</span><br><span class="line">                <span class="comment">// 该哈希槽上没有哈希冲突，重新索引定位位置存储</span></span><br><span class="line">                <span class="keyword">if</span> (e.next == <span class="keyword">null</span>) </span><br><span class="line">                    newTab[e.hash &amp; (newCap - <span class="number">1</span>)] = e;</span><br><span class="line">                <span class="comment">// 该哈希槽上的节点是 TreeNode，</span></span><br><span class="line">                <span class="keyword">else</span> <span class="keyword">if</span> (e <span class="keyword">instanceof</span> TreeNode)</span><br><span class="line">                    ((TreeNode&lt;K,V&gt;)e).split(<span class="keyword">this</span>, newTab, j, oldCap);</span><br><span class="line">                <span class="comment">// 该哈希槽上的节点存在哈希冲突保存的其他元素</span></span><br><span class="line">                <span class="keyword">else</span> &#123; <span class="comment">// 链表数据重新定位</span></span><br><span class="line">                    <span class="comment">// loHead,loTail 的含义是重新进行索引定位后仍在原哈希槽位置上的节点和链表节点元素。比如 e = oldTab[j]，重新索引定位后，newTab[j] = e;</span></span><br><span class="line">                    Node&lt;K,V&gt; loHead = <span class="keyword">null</span>, loTail = <span class="keyword">null</span>;</span><br><span class="line">                    <span class="comment">// hiHead,hiTail 的含义是重新进行索引定位后的节点和链表节点元素在 j + oldCap 上。比如 e = oldTab[j]，重新索引定位后，newTab[j + oldCap] = e;</span></span><br><span class="line">                    Node&lt;K,V&gt; hiHead = <span class="keyword">null</span>, hiTail = <span class="keyword">null</span>;</span><br><span class="line">                    Node&lt;K,V&gt; next;</span><br><span class="line">                    <span class="keyword">do</span> &#123;</span><br><span class="line">                        next = e.next;</span><br><span class="line">                        <span class="comment">//计算哈希值的高一位是 0 还是 1</span></span><br><span class="line">                        <span class="keyword">if</span> ((e.hash &amp; oldCap) == <span class="number">0</span>) &#123; <span class="comment">// 为 0</span></span><br><span class="line">                            <span class="keyword">if</span> (loTail == <span class="keyword">null</span>)</span><br><span class="line">                                loHead = e;</span><br><span class="line">                            <span class="keyword">else</span></span><br><span class="line">                                loTail.next = e;</span><br><span class="line">                            loTail = e;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">else</span> &#123; <span class="comment">// 高一位为 1</span></span><br><span class="line">                            <span class="keyword">if</span> (hiTail == <span class="keyword">null</span>)</span><br><span class="line">                                hiHead = e;</span><br><span class="line">                            <span class="keyword">else</span></span><br><span class="line">                                hiTail.next = e;</span><br><span class="line">                            hiTail = e;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; <span class="keyword">while</span> ((e = next) != <span class="keyword">null</span>);</span><br><span class="line">                    <span class="keyword">if</span> (loTail != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        loTail.next = <span class="keyword">null</span>;</span><br><span class="line">                        <span class="comment">// 高一位为 0 时，元素的存储位置数组下标没有变化</span></span><br><span class="line">                        newTab[j] = loHead;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (hiTail != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        hiTail.next = <span class="keyword">null</span>;</span><br><span class="line">                        <span class="comment">// 为 1，元素存储位置为 旧数组下标 + 原容量 。</span></span><br><span class="line">                        newTab[j + oldCap] = hiHead;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> newTab;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>重点看一下 43 行对链表的 rehash 操作。代码为什么通过 (e.hash &amp; oldCap) == 0 || != 0 就可以判断元素经过 rehash 后在新哈希桶中的位置。<br>因为 HashMap 的索引定位方式是 (table.length - 1) &amp; hash ，且扩容之后的容量是原容量的 2 倍。索引定位方式舍弃了 table.length 的那个高位 1，经过扩容后，rehash 的索引定位方式相比于原来的只需要计算之前舍弃的那个高位 1 就可以确实位置。<strong>这样在扩容时重新定位元素时巧妙的避免了重新计算 hash(key) 值。</strong></p>
+<p>举个例子，HashMap 的大小是 8 , 插入元素的时候触发了扩容，扩容后的大小是 16。</p>
+<p>有一个 key A 经过 hash(key) 后的 hash 值是 0100 0110。</p>
+<p><img src="/2020/05/06/HashMap-SourceCode-Anaylise/image-20210925123011727.png" alt="image-20210925123011727">11-14 行计算的是 k.hash &amp; oldCap，即如果结果是 0，说明 key A 的存储位置还是在 [6] 中。如果不为 0，说明第四位是 1，那么第 9 行的结果应该是 0000 1110 = 14 , 就是 j + oldCap 的位置。</p>
+<h2 id="hashCode-与-equals-方法"><a href="#hashCode-与-equals-方法" class="headerlink" title="hashCode() 与 equals() 方法"></a>hashCode() 与 equals() 方法</h2><p>重写了 equals() 方法，没有重写 hashCode() 方法。当我们用该对象作为 key 时，且业务上有 “逻辑相等” 的概念时，可能会导致预期外的行为。没有重写 hashCode() 方法的话，会使用 Object#hashCode() 方法，该方法生成的哈希值无法提供 “逻辑相同” 的概念。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
+<li>使用 HashMap 存储时，如果有 “逻辑相等” 的概念，需要同时重写 hashCode() 方法。</li>
+<li>在初始化的时候根据需求给定一个合适的大小，避免频繁扩容。</li>
+<li>HashMap 不是线程安全的容器，JDK 1.7 之前的实现并发使用在扩容搬移时可能出现 “无限循环” bug。</li>
+<li>线程安全的类似 HashMap 有 Hashtable 和 ConcurrentHashMap 可以使用。</li>
+</ol>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a href="https://tech.meituan.com/2016/06/24/java-hashmap.html?fileGuid=9CXxDy6PxXx6yDVH">https://tech.meituan.com/2016/06/24/java-hashmap.html</a>，美团技术团队博客</li>
+<li><a href="https://en.wikipedia.org/wiki/Timing_attack?fileGuid=9CXxDy6PxXx6yDVH">https://en.wikipedia.org/wiki/Timing_attack</a>，时序攻击</li>
+<li><a href="https://en.wikipedia.org/wiki/Hash_function?fileGuid=9CXxDy6PxXx6yDVH">https://en.wikipedia.org/wiki/Hash_function</a>，哈希函数</li>
+</ol>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
+        <tag>java 集合</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Java 异常处理</title>
+    <url>/2020/01/13/Java-Exception/</url>
+    <content><![CDATA[<h2 id="Throwable、Error、Exception"><a href="#Throwable、Error、Exception" class="headerlink" title="Throwable、Error、Exception"></a>Throwable、Error、Exception</h2><p>Throwable 接口可以理解成是 Java 异常世界中的 Object。因为 Java 中的所有异常一定都是 Throwable 的子类。</p>
+<span id="more"></span>
+
+<p><img src="/2020/01/13/Java-Exception/image-20210925115913274.png" alt="image-20210925115913274"></p>
+<p>Error 描述的是那些系统本身出现的错误，比如 Java 虚拟机内部问题等等。这些错误一般和 Java 应用程序没什么关系，Java 程序则不应该在任何 Java 方法中使用 throws 关键字说明可能抛出 Error 及其子类相关的异常。</p>
+<p>Exception 描述的是那些 Java 应用应该合理进行捕获的的异常。所有 Exception 的子类但不是 RuntimeException 的子类都被定义为<strong>受检异常</strong>。</p>
+<p>对于<strong>运行时异常</strong>，比如数组范围越界，访问空指针，类型转换异常，这些异常都是由于 Java 代码的问题导致，最好在程序编写的时候就避免。</p>
+<blockquote>
+<p>总之，一个方法必须声明所有可能抛出的受查异常， 而非受查异常要么不可控制（ Error),<br>要么就应该避免发生（ RuntimeException)。如果方法没有声明所有可能发生的受查异常， 编译器就会发出一个错误消息。</p>
+</blockquote>
+<h2 id="try-catch-finally"><a href="#try-catch-finally" class="headerlink" title="try/catch/finally"></a>try/catch/finally</h2><p>如果方法中发生了某些异常但是没有进行捕获，程序则会在异常发生的地方终止然后输出异常信息。异常信息一般包含调用栈等信息。</p>
+<p>程序可以通过 try/catch 代码块捕获包含在 try{} 中<strong>可能发生的异常</strong>，并在 catch 到<strong>对应的异常类型</strong>时执行 catch 中的代码。</p>
+<p>try 中发生异常<strong>且</strong> catch 声明的异常类型<strong>可以匹配</strong>，try 中剩余的语句不执行，转而执行 catch 中的语句。没异常或不匹配就忽略 catch 中的内容。注意和 switch 语句不同，switch 需要在每个 case 后跟一个 break 避免执行后续的 case。</p>
+<p>catch 块中可以继续抛出异常交给上层来处理。如果直接抛出其他类型的异常，这样会丢失原始的异常信息。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">  <span class="comment">// 刚捕获到的异常对象 e 被丢弃</span></span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;待会再试&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>更推荐的方法是**在抛出其他异常前保存原始异常或者将原始异常作为新异常的 cause(内因)**。且在抛出异常时，要提供合适的消息（对应下面代码的 “待会再试”）。</p>
+<p><img src="/2020/01/13/Java-Exception/image-20210925115943257.png" alt="image-20210925115943257"></p>
+<p>如果在 catch 块中<strong>直接重新抛出刚捕获的异常</strong>，那么 printStackTrace() 方法显示的是原本的调用栈信息，而不是新的抛出点信息。想更新抛出点信息的话，可以调用 fillInStackTrace() 方法。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">  <span class="keyword">throw</span> e.fillInStackTrace();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有时候我们需要 <strong>finally 子句</strong>来回收特定的资源，不管异常有没有发生，finally 子句的内容在最终都会执行。</p>
+<h2 id="try-with-resource"><a href="#try-with-resource" class="headerlink" title="try-with-resource"></a>try-with-resource</h2><p>但是要小心 finally 中的语句也可能发生异常，<strong>且在 finally 中抛出的异常会覆盖原始可能抛出的异常。</strong>这样就丢失了原始的异常。</p>
+<p>我们可以在 finally 中添加 try/catch 来捕获并处理异常。或者将 try 中发生的异常贴附给 finally 中的异常。</p>
+<p><img src="/2020/01/13/Java-Exception/image-20210925120011394.png" alt="image-20210925120011394"></p>
+<p><img src="/2020/01/13/Java-Exception/image-20210925120030689.png" alt="image-20210925120030689"></p>
+<p>结果：</p>
+<p><img src="/2020/01/13/Java-Exception/image-20210925120052598.png" alt="image-20210925120052598"></p>
+<p>其实对于在 finally 语句块中发生异常情况的上述处理（通过 addSuppressed() 依附异常），正是 try-with-resource 语法做的事情。对于实现了 AutoCloseable 接口的<strong>资源，</strong>可以使用 try-with-resource 语法来自动回收资源。</p>
+<p><img src="/2020/01/13/Java-Exception/image-20210925120113611.png" alt="image-20210925120113611"></p>
+<p>输出结果和上面的代码类似，说明 try-with-resource 内部的实现方式也是类似的：对 close() 方法可能抛出的异常，将其 Suppressed 到原始异常中抛出。</p>
+<p><img src="/2020/01/13/Java-Exception/image-20210925120128233.png" alt="image-20210925120128233"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>最后，结合《Effective Java》等相关资料，总结处理 Java 异常时的一些要点。</p>
+<ul>
+<li>异常只用在异常发生的情况，不该用来进行程序流程控制。</li>
+<li>注意区分 RuntimeException 和 受检异常，以及使用条件。</li>
+<li>抛出异常时结合带 String 参数的构造方法提供更多信息。</li>
+<li>捕获异常后并重新抛出异常时，注意保留原始的异常对象。</li>
+<li>优先用 try-with-resource，而不是 try / finally。</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Lambda 和 StreamAPI</title>
+    <url>/2020/04/16/Lambda-StreamAPI/</url>
+    <content><![CDATA[<h1 id="Lambda-表达式"><a href="#Lambda-表达式" class="headerlink" title="Lambda 表达式"></a>Lambda 表达式</h1><p><strong>Java 8 开始，可以用 Lambda 表示只有一个抽象方法的接口</strong>（<strong>函数式接口，该类型的接口一般标有 @FuntionalInterface 注解</strong>）。此前我们只能通过繁琐的匿名实现类表示。</p>
+<p>比如，Runnable 接口就是一个<strong>函数式接口</strong>。<span id="more"></span></p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121336491.png" alt="image-20210925121336491"></p>
+<p>所以我们可以用 Lambda 表达式创建一个该接口的匿名实现。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121400282.png" alt="image-20210925121400282"></p>
+<p><strong>() 表示</strong>函数式<strong>接口中定义的抽象方法的参数</strong>，因为 Runnable 接口中的 run() 方法没有参数，所以用空的 () 表示。</p>
+<p><strong>箭头后的内容表示</strong>该方法的实现，这里就是指 void run() 的具体实现，且因为其返回类型是 void，所以无需返回特定类型，这里只进行了一个输出语句。</p>
+<p>再比如下图的这个函数式接口 Predicate<T>，抽象方法的返回类型是 boolean，方法参数为泛型 T。</T></p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121415893.png" alt="image-20210925121415893"></p>
+<p>使用 Lambda 表示式实现的几种方式：</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121427947.png" alt="image-20210925121427947"></p>
+<p>第 6 行中，第一个 s 表示入参，其中 s 为 String 类型。</p>
+<p>箭头后的代码调用了 String 的 equals 方法，该方法返回 boolean，要和<strong>函数接口中定义的方法一致。</strong></p>
+<p>第 8 行到 第 16 行，说明 Lambda 的方法实现可以像普通方法的方法那样<strong>有方法体和显式的 return 语句（需要用 { } 包括</strong>）。</p>
+<p>还有一个点就是 Lambda 很多参数类型都不需要声明，编译器会为我们自动进行类型推导。如果 Lambda 表达式的类型有歧义，编译器会告诉你需要指定对应的类型。</p>
+<p>以下部分的代码几乎都由 List<Dish> 类型的 menu 变量作为构建流的基本元素。代码大致如下：</Dish></p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121440379.png" alt="image-20210925121440379"></p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121450024.png" alt="image-20210925121450024"></p>
+<h1 id="Stream"><a href="#Stream" class="headerlink" title="Stream"></a>Stream</h1><p>了解 Lambda 表示式之后，来看看新的 Stream API。</p>
+<h2 id="什么是流"><a href="#什么是流" class="headerlink" title="什么是流"></a>什么是流</h2><p>Stream<T> 接口的注释是这样的:</T></p>
+<p><em>“A sequence of elements supporting sequential and parallel aggregate operations.”</em></p>
+<p>支持有顺序，可以并行地聚合操作的一串<strong>元素序列</strong>。</p>
+<p>流的数据源头可以从集合，数组获得。有了基础流之后，可以对流进行数据处理，Stream API 定义了一系列简易的方法供我们使用。</p>
+<p>虽然流和集合都是包含特定的元素序列，但是他们之间是有一些明显区别的。这两者可以类比成我们生活中的 DVD 和在线看电影。DVD 相当于集合，已经有了电影所有的帧。流则需要我们从网络中进行数据加载再处理。</p>
+<h2 id="操作流"><a href="#操作流" class="headerlink" title="操作流"></a>操作流</h2><p>图中是两种筛选 Dish 的实现。</p>
+<p>第一种（第 16 行开始）使用常规的集合进行筛选。第二种（第 30 行开始）使用流进行筛选。</p>
+<p>明显第二种方式简洁且可读性也好。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121553922.png" alt="image-20210925121553922"></p>
+<p>来看看使用流操作（第二种方式，第 30 行开始）中每个操作的含义：</p>
+<p>第 31 行，<strong>stream()</strong> 方法从 menu 这一集合中（源头）产生流（Stream<Dish> 类型）供接下来操作。</Dish></p>
+<p>第 32 行，<strong>filter()</strong> 方法筛选出卡路里高于 500 的菜肴，将筛选后的元素变成一个新的流（Stream<Dish> 类型）供接下来操作。</Dish></p>
+<p>第 33 行，<strong>sorted()</strong> 方法按照卡路里高低排序，继续返回一个 Stream<Dish> 类型的流。</Dish></p>
+<p>第 34 行，<strong>limit()</strong> 方法只从流中截断出只包含 2 个元素的流。</p>
+<p>第 35 行，<strong>map()</strong> 方法将 Stream&lt;**Dish**&gt; 映射成 Stream&lt;**String**&gt;，返回一个菜肴名称的流。</p>
+<p>第 36 行，<strong>collect()</strong> 方法将 Stream<String> 中的元素保存到 List 中。到此结束，所以 highCaloriesDish 变量的类型是 List<String> 类型的。</String></String></p>
+<h2 id="Stream-API"><a href="#Stream-API" class="headerlink" title="Stream API"></a>Stream API</h2><h3 id="筛选"><a href="#筛选" class="headerlink" title="筛选"></a>筛选</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Stream&lt;T&gt; filter(Predicate&lt;? super T&gt; predicate);</span><br><span class="line">Stream&lt;T&gt; distinct();</span><br><span class="line">Stream&lt;T&gt; skip(long n);</span><br><span class="line">Stream&lt;T&gt; limit(long maxSize);</span><br></pre></td></tr></table></figure>
+
+<h3 id="映射"><a href="#映射" class="headerlink" title="映射"></a>映射</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;R&gt; Stream&lt;R&gt; map(Function&lt;? super T, ? extends R&gt; mapper);</span><br><span class="line">&lt;R&gt; Stream&lt;R&gt; flatMap(Function&lt;? super T, ? extends Stream&lt;? extends R&gt;&gt; mapper);</span><br></pre></td></tr></table></figure>
+
+<p>map() 方法的功能是根据传入的实现将类型映射为其他类型。</p>
+<p>map() 方法的参数 Function&lt;…&gt; 的定义是这样的：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@FunctionalInterface</span><br><span class="line">public interface Function&lt;T, R&gt; &#123;</span><br><span class="line">    R apply(T t);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>apply() 方法传入一个类型 T，然后根据方法实现返回类型 R。拿下图中的 map() 方法举例，传入参数类型为 Integer 的 i（对应 T），返回 i * i（也是 Integer 类型，对应 R）。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121717843.png" alt="image-20210925121717843"></p>
+<p><strong>扁平流 flatmap</strong> 看下图的箭头部分，String 的 split() 方法返回的是 String[]，经过 map 映射后流中包含了这两个元素  {[H，e，l，l，o]，[W，o，r，l，d]｝。之后如果我们直接调用 distinct()，意味着作用的对象是 [H，e，l，l，o] 和 [W，o，r，l，d] 这两个流中的 String[] 数组，它们肯定是不一样的，故达不到目的。</p>
+<p>Arrays.stream() 方法可以将传入的数组元素产生一个流。其方法签名是这样的：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public static &lt;T&gt; Stream&lt;T&gt; stream(T[] array) &#123;</span><br><span class="line">        return stream(array, 0, array.length);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Arrays::stream 返回 Stream<String> 列表后，map() 方法又将整个内容分别映射到不同的流中。故还是有问题。</String></p>
+<p>再看 flatMap ，flatMap() 方法将流中的每个值都映射到同一个流中。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121734068.png" alt="image-20210925121734068"></p>
+<h3 id="查找和匹配"><a href="#查找和匹配" class="headerlink" title="查找和匹配"></a>查找和匹配</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">boolean anyMatch(Predicate&lt;? super T&gt; predicate);</span><br><span class="line">boolean allMatch(Predicate&lt;? super T&gt; predicate);</span><br><span class="line">boolean noneMatch(Predicate&lt;? super T&gt; predicate);</span><br><span class="line">Optional&lt;T&gt; findFirst();</span><br><span class="line">Optional&lt;T&gt; findAny();</span><br></pre></td></tr></table></figure>
+
+<h3 id="归约"><a href="#归约" class="headerlink" title="归约"></a>归约</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">T reduce(T identity, BinaryOperator&lt;T&gt; accumulator);</span><br><span class="line">Optional&lt;T&gt; reduce(BinaryOperator&lt;T&gt; accumulator);</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122004919.png" alt="image-20210925122004919"></p>
+<p>第 4 行：reduce 接受一个初始值 0，然后逐个比较选择大的那个数。</p>
+<p>第 5 行：一样的功能使用方法引用表示。</p>
+<p>第 6 行：reduce() 方法只接受一个参数，不接受初始值。为了应对 stream() 调用后<strong>流中没有任何元素的可能性，</strong>所以这个方法的返回值是 Optional 类型。</p>
+<h2 id="数值流"><a href="#数值流" class="headerlink" title="数值流"></a>数值流</h2><p>前面我们使用到的流都是针对<strong>对象类型</strong>的，在进行计算的时候其实包括了<strong>隐含的拆装箱</strong>操作。为此 Java 8 引入了三个针对特定<strong>原始类型</strong>的流来进一步简化操作，分别是 IntStream，LongStream 和 DoubleStream。可以通过 Stream<T> 中的 mapToInt/Long/Dubbo 方法将流转换为特性的数值流。</T></p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122154169.png" alt="image-20210925122154169"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">将特化流装箱为对应的对象类型流  </span><br><span class="line">Stream&lt;Integer//Long//.&gt; boxed(); </span><br><span class="line">// 生成范围数值流</span><br><span class="line">public static IntStream range(int startInclusive, int endExclusive);</span><br><span class="line">// 包含起始值的范围数值流</span><br><span class="line">public static IntStream rangeClosed(int startInclusive, int endInclusive);</span><br></pre></td></tr></table></figure>
+
+<h2 id="如何构建一个流"><a href="#如何构建一个流" class="headerlink" title="如何构建一个流"></a>如何构建一个流</h2><p>此前我们获得流的方式都是通过集合调用 stream() 方法生成流，或者使用数值流的 range/rangeClosed 生成特定范围的数值流。这部分就来介绍生成流的其他方式。</p>
+<ul>
+<li>由显式值构建流：<strong>Stream.of()</strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public static&lt;T&gt; Stream&lt;T&gt; of(T... values) &#123; ... &#125;</span><br><span class="line">Stream&lt;String&gt; hello = Stream.of(&quot;hello&quot;, &quot;test&quot;, &quot;hi&quot;);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>由数组构建流，接收各种参数并由之生成对应的流：<strong>Arrays.stream()</strong></li>
+</ul>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122218320.png" alt="image-20210925122218320"></p>
+<ul>
+<li>由文件获得流。Java 中用来处理文件的 API 更新后可以用来支持 Stream API。</li>
+</ul>
+<p>借此顺便再看一下 flatMap ，Array.stream 的用法。注意看返回不同类型的 Stream。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122232527.png" alt="image-20210925122232527"></p>
+<p>注意到第 11 行，我们使用流之前需要重新从文件中生成新的流。因为流只能被消费一次，你会发现如果重复消费会发生类似的异常。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122245419.png" alt="image-20210925122245419"></p>
+<ul>
+<li>由函数生成流：<strong>iterate()，generate()</strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public static&lt;T&gt; Stream&lt;T&gt; iterate(final T seed, final UnaryOperator&lt;T&gt; f) &#123;&#125;</span><br><span class="line">public static&lt;T&gt; Stream&lt;T&gt; generate(Supplier&lt;T&gt; s) &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>iterate 接受一个 T 类型的初始值，以及一个<strong>每次都会作用在新值上的函数</strong>（合时宜的话可以说是 Lambda）。有点像 reduce 那样。不同的是<strong>iterate 会不断产生产生新元素</strong>到流中。</p>
+<p>generate 接受<strong>一个不断产生新的值的 Lambda</strong>。看一下其参数 Supplier<T> 接口中定义的方法就知道 generate 做的事情是什么了。</T></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@FunctionalInterface</span><br><span class="line">public interface Supplier&lt;T&gt; &#123;</span><br><span class="line">    T get(); // 唯一要做的就是提供一个生成新元素的实现</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是对那些可以生成无限流一般需要通过 limit() 方法来截断。</p>
+<h2 id="从流中收集数据"><a href="#从流中收集数据" class="headerlink" title="从流中收集数据"></a>从流中收集数据</h2><p>前面的代码中我们经常使用<strong>Stream</strong>的 <strong>collect()</strong> 方法配合入参 toList(）将流中的数据放到一个 List 中。其实这个 toList() 方法是定义在 Collectors 工厂类里面，其中还预定义了很多可以直接使用的方法。</p>
+<p>当我们对流使用 collect() 方法的时候，就是为了使用传入该方法的**”参数”**进行对应的收集操作。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122300501.png" alt="image-20210925122300501"></p>
+<p>我们先来看看 API 为我们预先提供了哪些可以直接用的 “参数”（Collectors 类中提供的现有实现）</p>
+<ul>
+<li>groupingBy</li>
+<li>maxBy</li>
+<li>summarizingInt</li>
+<li>joining 等等。。。</li>
+</ul>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122311199.png" alt="image-20210925122311199"></p>
+<h3 id="归约-1"><a href="#归约-1" class="headerlink" title="归约"></a>归约</h3><p><strong>reducing</strong></p>
+<p>前面提到的都是特定的收集方法，我们也可以通过 reducing() 方法来自己适应更广泛的收集情况。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122319901.png" alt="image-20210925122319901"></p>
+<p>先来看有三个入参的版本，</p>
+<ul>
+<li>第一个参数相当于给一个初始值。应对流中没有元素的情况。</li>
+<li>第二个参数有点像 map() 方法，提供一个映射操作。</li>
+<li>第三个参数就是针对映射后的参数类型进行操作。</li>
+</ul>
+<p>或者也可以直接只提供一个针对流元素进行操作的 Lambda 操作（只有一个参数的版本），这样的话如果流中没有元素应该返回什么呢？所以可以看到返回类型出现了 Optional 类型来应对这种情况。</p>
+<h3 id="分组"><a href="#分组" class="headerlink" title="分组"></a>分组</h3><h4 id="Collectors-groupingBy"><a href="#Collectors-groupingBy" class="headerlink" title="Collectors.groupingBy()"></a>Collectors.groupingBy()</h4><p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122336096.png" alt="image-20210925122336096"></p>
+<p>groupingBy() 先根据传入的 Function 类型参数，将流中的元素映射为特定的类型作为分类的依据（Map 中的 key 类型）。</p>
+<p>groupingBy() 方法也提供了两个参数的版本。</p>
+<p>Map 的 value 类型是 List 则是因为单个参数的 groupingBy() 方法默认传入的第二个参数是 toList() 方法。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122349828.png" alt="image-20210925122349828"></p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122357176.png" alt="image-20210925122357176"></p>
+<p>可以看到第二个参数的类型是 Collector 接口，说明还可以在第一层分组的基础上进行其他的操作。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122405341.png" alt="image-20210925122405341"></p>
+<p>主要看第 1 行和 第 5 行的输出结果，可以说明第二个参数作用在了第一个分组的 value 中，因为传入了 Dish::getType ,所有又在第一次分组中根据类型进行了分组。</p>
+<p>第 10 行的方法的 counting() 方法，计算了每个类别中包含的元素个数。</p>
+<h4 id="分区：Collectors-partitioningBy"><a href="#分区：Collectors-partitioningBy" class="headerlink" title="分区：Collectors.partitioningBy()"></a>分区：Collectors.partitioningBy()</h4><p>分区是分组的一种特殊情况。只是分区返回的分类都是通过 true 和 false 来区分。true 和 false 的定义就取决于你传入的那段 Predicate&lt;&gt; 实现。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122416154.png" alt="image-20210925122416154"></p>
+<p>partitioningBy() 和 groupingBy() 一样也有重载包含两个参数的版本，用法也差不多。</p>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>java 8</tag>
+        <tag>stream api</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Linux 零拷贝</title>
+    <url>/2021/07/20/Linux-Zero-Copy/</url>
+    <content><![CDATA[<blockquote>
+<p><strong>原文地址</strong>：<a href="https://www.linuxjournal.com/article/6345?page=0,0">https://www.linuxjournal.com/article/6345?page=0,0</a></p>
+<p>wiki词条：<a href="https://en.wikipedia.org/wiki/Zero-copy">https://en.wikipedia.org/wiki/Zero-copy</a></p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="零拷贝"><a href="#零拷贝" class="headerlink" title="零拷贝"></a>零拷贝</h2><p><strong>前置知识</strong></p>
+<ul>
+<li><strong>系统调用：操作系统为了统一接口提供的函数以供操作资源，比如 read，write方法</strong></li>
+<li><strong>用户态：用户程序运行的用户空间，无法直接访问底层硬件资源</strong></li>
+<li><strong>内核态：用户程序进行系统调用，委托内核态间接操作硬件资源</strong></li>
+<li><strong>DMA：直接存储技术，不通过 CPU 进行</strong></li>
+</ul>
+<p>假设你打算使用某软件将本机磁盘上的文件传输给某个客户端。</p>
+<p>因为计算机系统的保护机制，用户应用程序是在用户空间上运行，在涉及到硬件资源操作时，通过系统调用（比如调用 read() 方法读取文件内容），借助内核间接访问资源。</p>
+<p><img src="/2021/07/20/Linux-Zero-Copy/image-20210925123537658.png" alt="image-20210925123537658"></p>
+<p>可以看到，整个过程有四次文件复制操作。过程中，因为涉及到内核态与用户态之间的上下文转换和频繁且缓慢的 I/O 操作，其读写性能是比较糟糕的。</p>
+<p><img src="/2021/07/20/Linux-Zero-Copy/image-20210925123558017.png" alt="image-20210925123558017"></p>
+<p>零拷贝技术可以简单的理解成将参与到整个过程中的 <strong>用户空间态</strong> 省去，省去上下文切换的开销，减少 I/O 操作，很好的提高了效率。</p>
+<p><img src="/2021/07/20/Linux-Zero-Copy/image-20210925123623123.png" alt="image-20210925123623123"></p>
+<p>图片中，从内核缓存到 socket buffer 的 copy 操作被优化了。这需要硬件技术的帮忙。</p>
+<p> 通过支持聚集操作的网络接口，待传输的数据不必占用主存的连续空间，网卡的 DMA 引擎也可以将分布在不同位置的数据集中到一个数据传输中。</p>
+<blockquote>
+<p>有疑惑的话可以戳<a href="https://stackoverflow.com/questions/9770125/zero-copy-with-and-without-scatter-gather-operations">这里</a></p>
+<p>大概的解释就是，如果网卡不支持聚集操作，那么就需要将内核缓冲区中物理分布分散的数据通过 CPU 拷贝，连续的存放在 socket buffer 中以供 DMA 引擎拷贝。</p>
+</blockquote>
+<p>在 Linux 的 2.4 内核版本，socket buffer 的描述符就被修改升级以支持适应刚才说的特性 - 这也是 Linux 零拷贝的基础。</p>
+<p>不同之前的整个复制操作，内核将待传输数据的分布位置，待传输数据的长度等通过描述符复制给 socket buffer。 DMA 引擎（支持聚集操作）直接将数据从 kernel buffer 复制到协议引擎。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>实际上整个复制过程仍然包括了使用 DMA 引擎进行数据拷贝，所有不能说这是真正意义上的零拷贝。</p>
+<p>但我们站在 CPU 角度，在没有引入零拷贝技术前，都会涉及到 CPU 拷贝的步骤。引入之后，CPU 参与的步骤变少，且没有了用户态和内核态的上下文切换，节省了 CPU 开销。</p>
+<p>所以，可以在 CPU 角度看这个 “零”，而不是零次拷贝操作。</p>
+]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>翻译</tag>
+        <tag>linux</tag>
+        <tag>io</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Redis IO多路复用</title>
+    <url>/2020/03/06/Redis-Multi-IO-Model/</url>
+    <content><![CDATA[<p>常说 Redis 利用 I/O 多路复用，单线程处理来自许多客户端的网络请求。本文简单的从网络通信、I/O 模型、Redis 大致如何利用 I/O 多路复用模型了解下相关知识。</p>
+<span id="more"></span>
+
+<h2 id="什么是-socket-？"><a href="#什么是-socket-？" class="headerlink" title="什么是 socket ？"></a>什么是 socket ？</h2><ul>
+<li><a href="https://en.wikipedia.org/wiki/Network_socket">https://en.wikipedia.org/wiki/Network_socket</a></li>
+<li><a href="https://docs.oracle.com/javase/tutorial/networking/sockets/definition.html">https://docs.oracle.com/javase/tutorial/networking/sockets/definition.html</a></li>
+<li><a href="https://man7.org/linux/man-pages/man2/socket.2.html">https://man7.org/linux/man-pages/man2/socket.2.html</a></li>
+<li><a href="https://www.geeksforgeeks.org/socket-programming-cc/#:~:text=Socket%20programming%20is%20a%20way,other%20to%20form%20a%20connection.">https://www.geeksforgeeks.org/socket-programming-cc/#:~:text=Socket%20programming%20is%20a%20way,other%20to%20form%20a%20connection.</a></li>
+</ul>
+<h2 id="socket-网络模型的基本函数"><a href="#socket-网络模型的基本函数" class="headerlink" title="socket 网络模型的基本函数"></a>socket 网络模型的基本函数</h2><ul>
+<li><a href="https://man7.org/linux/man-pages/man2/socket.2.html">socket()</a>，为了进行网络 I/O 通信，<strong>进程必须做的第一件事情就是调用 socket() 函数</strong>，指定期望的通信协议类型等。socket() 调用成功会返回一个非负整数值，称为 sockfd，一般称作特指 socket 的<a href="https://en.wikipedia.org/wiki/File_descriptor">文件描述符</a>。</li>
+<li><a href="https://man7.org/linux/man-pages/man2/connect.2.html">connect()</a>，客户端通过调用 connect() 函数来请求连接。</li>
+<li>bind()，绑定 socket 和给定的地址和端口。如果服务端或者客户端没有调用 bind() 进行绑定，当调用 connect() 或 listen() 时，内核会为相应的 socket 选择一个临时端口。对于服务端来说，<strong>因为需要对外提供服务，所以服务端一般会主动调用 bind() 指定特定的端口和 socket 绑定来对外提供服务。</strong></li>
+<li><a href="https://stackoverflow.com/questions/4696812/passive-and-active-sockets">listen()</a>，当通过 socket() 创建一个新的 socket 时，一般这个 socket 被称为<strong>主动套接字，也就是说该套接字被看作可能调用 connect() 函数发起连接请求的。</strong>在向一个未连接的套接字调用 listen() 函数后，<strong>套接字转换为被动套接字，</strong>内核就知道应该接受指向该套接字的连接请求。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">int listen(int sockfd, int backlog);</span><br></pre></td></tr></table></figure>
+
+<p>其中的第二个参数 backlog 定义了可以为当前套接字进行连接的最大队列数。也就是说，如果客户端连接请求到达时，该套接字的处理队列长度达到 backlog 时，返回 error。</p>
+<ul>
+<li><a href="https://man7.org/linux/man-pages/man2/accept.2.html">accept()</a>，accept() 会从待处理连接队列头中取出连接请求，并在传入的第一个参数 sockfd 指向的监听套接字（或者说被动套接字）上创建一个<strong>新的已连接套接字，返回的 int 就是指向生成新套接字的 sockfd。</strong>原本的监听套接字不受影响。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);</span><br></pre></td></tr></table></figure>
+
+<p><strong>内核会为服务器对每个客户端的连接创建一个已连接套接字，</strong>且当服务结束后，相应的已连接套接字会被关闭（服务端的监听套接字一般持续存在）。</p>
+<h2 id="5-种-I-O-模型"><a href="#5-种-I-O-模型" class="headerlink" title="5 种 I/O 模型"></a>5 种 I/O 模型</h2><blockquote>
+<p><a href="https://notes.shichao.io/unp/ch6/#io-models">https://notes.shichao.io/unp/ch6/#io-models</a></p>
+</blockquote>
+<ul>
+<li>阻塞 I/O</li>
+<li>非阻塞 I/O</li>
+<li>I/O 复用</li>
+<li>信号驱动 I/O</li>
+<li>异步 I/O</li>
+</ul>
+<h3 id="阻塞-I-O-模型"><a href="#阻塞-I-O-模型" class="headerlink" title="阻塞 I/O 模型"></a>阻塞 I/O 模型</h3><p><img src="/2020/03/06/Redis-Multi-IO-Model/image-20210925114649571.png" alt="image-20210925114649571"></p>
+<h3 id="I-O-多路复用模型"><a href="#I-O-多路复用模型" class="headerlink" title="I/O 多路复用模型"></a>I/O 多路复用模型</h3><p><img src="/2020/03/06/Redis-Multi-IO-Model/image-20210925114705214.png" alt="image-20210925114705214"></p>
+<p>在这个模型里，程序会阻塞在 select 调用上。select 函数允许程序<strong>同时监听多个 fd</strong>的就绪状态。</p>
+<h2 id="select-poll-epoll-kqueue-等调用"><a href="#select-poll-epoll-kqueue-等调用" class="headerlink" title="select/poll/epoll, kqueue 等调用"></a>select/poll/epoll, kqueue 等调用</h2><ul>
+<li><a href="https://man7.org/linux/man-pages/man2/select.2.html">https://man7.org/linux/man-pages/man2/select.2.html</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Select_(Unix)">https://en.wikipedia.org/wiki/Select_(Unix)</a></li>
+<li>……</li>
+</ul>
+<h2 id="Redis-与-I-O-多路复用模型"><a href="#Redis-与-I-O-多路复用模型" class="headerlink" title="Redis 与 I/O 多路复用模型"></a>Redis 与 I/O 多路复用模型</h2><p>通常我们说 Redis 采用单线程架构且提供高并发访问。<strong>这里说的单线程其实是指 Redis 对于命令执行和网络 I/O 处理采用单个主线程</strong>。但是像 bgsave 等功能其实会使用到其他进程。</p>
+<p>（<em>在 Redis 6.0 中，Redis 对</em><em><strong>网络请求</strong></em><em>模块采用了多线程处理</em>）</p>
+<p>Redis 采用 Client/Server 访问架构，需要同时处理许多来自外部客户端的请求，也就意味着 Redis Server 会为每个客户端在本地维护一个对应的 socket。Redis 通过统一封装不同支持 I/O 多路复用的系统函数供上层使用，比如 select/epoll，kqueue 等系统调用，在不同平台上提供服务。即 Redis 不阻塞在单一的 sockfd 读写等待上，而是同时监听多个 sockfd 的就绪状态，不断处理就绪可处理的 sockfd。</p>
+<p>具体来说，Redis 通过提供自己的文件事件处理器来实现相关的功能。</p>
+<ul>
+<li>I/O 多路复用程序同时监听多个 sockfd，当其中有 sockfd 准备就绪(产生对应的事件)，I/O 多路复用程序将就绪的 sockfd 放入准备好的队列，同步有序地一个一个将套接字给 file event dispatcher。</li>
+<li>file event dispatcher 根据传来的对应事件分配给对应的事件处理器进行处理。</li>
+</ul>
+<p><img src="/2020/03/06/Redis-Multi-IO-Model/image-20210925114735701.png" alt="image-20210925114735701"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Redis 通过利用 I/O 多路复用模型，结合简洁的模块设置，让 Redis 在单线程架构的基础上同时为多个客户端提供服务。</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul>
+<li><a href="https://draveness.me/redis-io-multiplexing/">Redis 和 I/O 多路复用 - 面向信仰编程</a></li>
+<li><a href="https://notes.shichao.io/unp/ch6/#io-models">https://notes.shichao.io/unp/ch6/#io-models</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/63179839">epoll的本质 知乎</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Redis</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+        <tag>io</tag>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Hexo+GithubPages+Mac+Win 部署问题记录</title>
+    <url>/2020/01/08/hexo+win+mac/</url>
+    <content><![CDATA[<h2 id="本地初始化一个Hexo项目"><a href="#本地初始化一个Hexo项目" class="headerlink" title="本地初始化一个Hexo项目"></a>本地初始化一个Hexo项目</h2><p><strong>注意：本地的目录不要动</strong>，<strong>可以重命名</strong>。</p>
+<p>重新新建一个空目录，作为你的博客目录。进入该目录，初始化一个Hexo项目：<span id="more"></span></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo init</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git *--save</span><br></pre></td></tr></table></figure>
+
+<p>然后用自己原来博客里的文件替换掉这里的<code>source\</code>, <code>scaffolds\</code>, <code>themes\</code>,<code>_config.yml</code>替换成自己原来博客里的。<strong>注意，一定要把themes/next中的.git/目录删除</strong></p>
+<p>然后上传到代码仓库，同时初始化了 main 分支。</p>
+<p>最后切换 git checkout -b hexo, 之后基于这个分支做修改，hexo d 部署在配置的分支上，这边就是设置的 main 分支（和 github page 里设置的分支一致可直接在 page 中访问到）。</p>
+<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><p>使用到的插件列表：</p>
+<p><img src="/2020/01/08/hexo+win+mac/Sni_2409222314.png" alt="Sni_2409222314"></p>
+<p><code>.gitignore</code>文件中过滤了<code>node_modules\</code>，所以 clone 来的目录里没有<code>node_modules\</code>，这是hexo所需要的组件，所以要在该目录中重新安装hexo，<strong>但不需要hexo init</strong>。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install hexo</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
+
+<h3 id="不过滤-gitignore-的内容协作尝试"><a href="#不过滤-gitignore-的内容协作尝试" class="headerlink" title="不过滤 .gitignore 的内容协作尝试"></a>不过滤 .gitignore 的内容协作尝试</h3><p>hexo clean，hexo generate 正常，hexo d 部署的时候报错</p>
+<p><img src="/2020/01/08/hexo+win+mac/Sni_2409230640.png" alt="Sni_2409230640"></p>
+<p>.deploy_git 文件夹冲突，猜想应该是 hexo d 的时候操作 .deploy_git 的时候文件无法覆盖类似的冲突。</p>
+<p>解决方法：删除 .deploy_git，重新 hexo d 生成即可。（我们可以在 .gitignore 里过滤这个文件夹）</p>
+<h2 id="常见语法"><a href="#常见语法" class="headerlink" title="常见语法"></a>常见语法</h2><ul>
+<li>tag: <ul>
+<li>-&nbsp;tag1</li>
+<li>-&nbsp;tag2</li>
+</ul>
+</li>
+<li>空格：’&amp;nbsp + ;’</li>
+<li>文章缩略显示：&lt;!–more– &gt;</li>
+</ul>
+<h2 id="样式设置"><a href="#样式设置" class="headerlink" title="样式设置"></a>样式设置</h2><p><a href="https://github.com/iissnan/hexo-theme-next/issues/928">关于footer修改问题 · Issue #928 · iissnan/hexo-theme-next (github.com)</a></p>
+<p><a href="https://blog.csdn.net/Wonz5130/article/details/84666519">Hexo 显示分类、标签问题</a></p>
+<p><a href="https://blog.csdn.net/as480133937/article/details/100138838">Hexo-Next 主题博客个性化配置</a></p>
+<ul>
+<li>目录自动展开和换行：主题配置文件搜索 toc。</li>
+</ul>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://wandouduoduo.github.io/articles/902dbefe.html">mac和windows协同写hexo博客</a></p>
+<p><a href="https://www.caoayu.xyz/post/hexo/">hexo 图片显示+typora</a></p>
+]]></content>
+      <categories>
+        <category>hexo</category>
+      </categories>
+      <tags>
+        <tag>blog</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>MySQL 索引概要</title>
+    <url>/2020/10/25/mysql-index-3star-principle/</url>
+    <content><![CDATA[<h1 id="磁盘-I-O"><a href="#磁盘-I-O" class="headerlink" title="磁盘 I/O"></a>磁盘 I/O</h1><blockquote>
+<p>《数据库索引设计与优化》第二章</p>
+</blockquote>
+<h2 id="随机-I-O"><a href="#随机-I-O" class="headerlink" title="随机 I/O"></a>随机 I/O</h2><p>每次数据库从磁盘随机读取一个页大约会花费<strong>10 ms</strong>左右，10 ms 是根据磁盘活动等情况大致估算出来的。我们只要意识到每次随机 I/O 的成本是很高的即可。</p>
+<span id="more"></span>
+
+<h2 id><a href="#" class="headerlink" title></a><img src="/2020/10/25/mysql-index-3star-principle/image-20210925124904465.png" alt="image-20210925124904465"></h2><h2 id="顺序-I-O"><a href="#顺序-I-O" class="headerlink" title="顺序 I/O"></a>顺序 I/O</h2><p>顺序读取的速度大约在<strong>40 MB/s</strong>，对于一个 4 KB 大小的页来说，平均的页读取时间为 0.1 ms，相比随机 I/O 的 10 ms提升了两个数量级。</p>
+<p>顺序读取的优势在于，DBMS 意识到将要读取多个页，将发出多页 I/O 请求。且由于 DBMS 事先知道哪些页需要被读取，可能预先将其读取。</p>
+<h1 id="索引模型"><a href="#索引模型" class="headerlink" title="索引模型"></a>索引模型</h1><p>实现索引的方式有很多种，采用不同方式设计的索引在不同的场景的效率也不同。对应的效率可以类比到数据结构的特性。例如依赖哈希表设计的索引天然不适合范围查询。</p>
+<ul>
+<li>B-Tree</li>
+<li>哈希索引</li>
+<li>空间数据索引</li>
+<li>全文索引</li>
+</ul>
+<h1 id="InnoDB-采用的索引模型"><a href="#InnoDB-采用的索引模型" class="headerlink" title="InnoDB 采用的索引模型"></a>InnoDB 采用的索引模型</h1><p>不同的存储引擎的索引的工作方式不尽相同。本文主要分析 MySQL 中最常用的存储引擎 InnoDB 的索引。</p>
+<p>InnoDB 采用 B+Tree 实现索引，每张表通过主键以索引的形式存放（建表时没有指定主键，MySQL 会自动给一个 ROW_ID 作为主键），这种存储方式一般也称为索引组织表（index organized table，iot）。</p>
+<p>InnoDB 实现的 B+Tree 只在叶子节点存储数据，非叶子节点只用作索引定位使用。</p>
+<p>B+Tree 的特点</p>
+<p><a href="https://www.javatpoint.com/b-plus-tree?fileGuid=PD9KHHH3T6GPvkdY">https://www.javatpoint.com/b-plus-tree</a></p>
+<p>B+Tree 的树高低，在索引定位的过程中，访问不同数据快的次数和树高相当，可以很好的减少磁盘随机 I/O 的次数。而且一般根节点，一级索引很可能已经在内存中，磁盘随机 I/O 的次数更低了。</p>
+<h1 id="主键索引与普通索引"><a href="#主键索引与普通索引" class="headerlink" title="主键索引与普通索引"></a>主键索引与普通索引</h1><p>主键索引叶子节点需要存储整行的数据。主键索引一般也成为聚簇索引（clustered index）。</p>
+<p>普通索引的叶子节点存储的是主键的数据。普通索引一般称为二级索引。</p>
+<p>一个查询使用到普通索引时，有可能需要回到主键索引获取对应的数据，一般称作<strong>回表</strong>。</p>
+<h1 id="使用-MySQL-索引"><a href="#使用-MySQL-索引" class="headerlink" title="使用 MySQL 索引"></a>使用 MySQL 索引</h1><p><a href="https://www.mysqltutorial.org/mysql-index/?fileGuid=PD9KHHH3T6GPvkdY">https://www.mysqltutorial.org/mysql-index/</a></p>
+<h1 id="索引设计、优化"><a href="#索引设计、优化" class="headerlink" title="索引设计、优化"></a>索引设计、优化</h1><p>在具体索引设计前，先了解下使用到索引的查询语句的一些特性。</p>
+<ul>
+<li>索引覆盖，查询的列如果在索引中存在直接通过索引中的值返回。</li>
+<li>索引下推，判断谓词如若在索引内部存在，优先通过索引内部字段进行谓词判断，减少回表的过程。</li>
+<li>索引最左前缀原则，比如一个索引（age，name，sex）,相当于覆盖了 （age），（age，name）这两种索引。</li>
+<li>前缀索引。通过截断前缀作为索引字段。可以节省空间。但是可能会损失一些查询性能，因为数据库需要根据主键回表判断这个值。前缀索引还可以影响到索引覆盖，同理无法直接从索引树返回结果。</li>
+</ul>
+<p>假设有表 user（id，age，name）,主键 id，表上有索引（age，name）。</p>
+<p>对于查询语句 SELECT name FROM user WHERE age = 3;</p>
+<p><strong>索引覆盖</strong>：使用普通索引定位到 age = 3 的位置后，在索引中扫描返回对应的 name 字段。而<strong>不需要根据对应的主键 id 回到主索引</strong>获取 name 的值。</p>
+<p>对于查询语句SELECT id FROM user WHERE age = 3 and name = “fang”;</p>
+<p><strong>索引下推</strong>：使用普通索引定位到 age = 3 的位置后，在<strong>索引内部</strong>获取 name 继续判断是否符号谓词条件，最后直接访问 id。</p>
+<p>但是在 MySQL 5.6 之前，只能<strong>回到主索引</strong>一个个判断 name 的值。</p>
+<h1 id="理想的索引"><a href="#理想的索引" class="headerlink" title="理想的索引"></a>理想的索引</h1><blockquote>
+<p>《数据库索引设计与优化》第四章提出的三星索引的概念，即对于一个查询语句可能的最好索引。如果查询语句使用了三星索引，一次查询通常只需要一次磁盘随机读以及一次窄索引片的扫描。</p>
+</blockquote>
+<p>对特定的查询语句，三颗星的定义如下：</p>
+<ul>
+<li>第一颗：查询使用到的谓词的列作为索引的开头。（通过等值谓词最小化操作集）</li>
+<li>第二颗：ORDER BY 使用到的列添加到索引中。（避免结果排序）</li>
+<li>第三颗：查询语句需要返回的结果集的列全部被包含在索引中。（避免回表查询，对应多次的随机磁盘 I/O）</li>
+</ul>
+<p>比如有表 user（id，name，age，city，gender）</p>
+<p>查询语句 SELECT * FROM user WHERE age = 3 and name = “fang” order by city；</p>
+<ul>
+<li>第一颗：索引设计为（age，name）</li>
+<li>第二颗：在后面添加 city，（age，name，city）</li>
+<li>第三颗：SELECT *，索引中未包含 gender，（age，name，city，gender）</li>
+</ul>
+<p>书中提出说<strong>第三颗星通常是最重要的</strong>，原因是如果索引中未包含查询需要返回值时，需要回表进行多次速度较慢的<strong>磁盘随机读</strong>。</p>
+<p>但是在实际场景中，想要同时满足三颗星咩有那么简单。虽然我们总是可以向索引添加所有查询需要的字段来满足第三颗星。但是这样第一颗星和第二颗星就可能会冲突。</p>
+<p>比如查询语句 SELECT name, city FROM user WHERE age BETWEEN 4 AND 24 and city = “fujian” ORDER BY name;</p>
+<p>首先，添加索引 （city）满足第一颗星，然后可以添加 age，（city，age）满足第三颗星，同时刚好为 between 语句避免了回表判断。现在如果为了满足第二颗星以避免排序，name 这个索引的位置应该在 age 的前面才是预期的行为。</p>
+<p>联合索引会按照索引字段的顺序组织数据。对于 age BETWEEN 4 AND 24，ORDER BY name 来说，任一字段排在其他字段的前面就始终无法满足条件。（age，name) 先按照 age 的顺序排序后，name 的有序性只能在 age 相同的行之间保证。（name，age）同理。</p>
+<h1 id="索引维护"><a href="#索引维护" class="headerlink" title="索引维护"></a>索引维护</h1><p>为了保证索引有序性，插入新数据时可能触发页分裂，影响到性能。</p>
+<p>页分裂后会影响到页的利用率，影响到空间。</p>
+<p>可以重建索引来重新组织索引。</p>
+<p>alter table user drop index age; // 重建索引 age</p>
+<p>alter table user drop primary key; // 重建主键索引</p>
+<h1 id="索引分析"><a href="#索引分析" class="headerlink" title="索引分析"></a>索引分析</h1><p>通过 explain 分析语句的执行情况。</p>
+<p><a href="https://dev.mysql.com/doc/refman/5.6/en/explain-output.html#explain_rows?fileGuid=PD9KHHH3T6GPvkdY">https://dev.mysql.com/doc/refman/5.6/en/explain-output.html#explain_rows</a></p>
+<p>使用索引的一些坑</p>
+<ol>
+<li><strong>谓词条件字段</strong>通过函数操作，可能导致优化器放弃选择索引。因为通过函数计算后的索引得到的值，无法通过原本有序的索引树定位数据。</li>
+<li>隐式类型转换。可能会触发对索引字段做函数操作进行转换。放弃走索引树定位的原因同上。</li>
+<li>隐式字符编码转换。</li>
+</ol>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ul>
+<li><a href="https://draveness.me/sql-index-intro/">MySQL 索引设计概要 - 面向信仰编程</a></li>
+<li><a href="https://www.javatpoint.com/b-plus-tree?fileGuid=PD9KHHH3T6GPvkdY">https://www.javatpoint.com/b-plus-tree</a></li>
+<li><a href="https://www.mysqltutorial.org/mysql-index/?fileGuid=PD9KHHH3T6GPvkdY">https://www.mysqltutorial.org/mysql-index/</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>MySQL</category>
+      </categories>
+      <tags>
+        <tag>mysql</tag>
+        <tag>索引设计</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>redis.conf-zh_cn 中文翻译</title>
+    <url>/2020/09/25/redis-conf-zh-cn/</url>
+    <content><![CDATA[<h1 id="Redis-redis-conf-中文翻译"><a href="#Redis-redis-conf-中文翻译" class="headerlink" title="Redis - redis.conf 中文翻译"></a>Redis - redis.conf 中文翻译</h1><blockquote>
+<p>Redis 5.0.8 默认配置文件的翻译。个人英语水平有限，应以原文档为标准。</p>
+</blockquote>
+<span id="more"></span>
+
+<p><strong>完结撒花~…</strong></p>
+<p>Redis 配置文件范例。</p>
+<p>需要注意的是为了能顺利读取配置文件，Redis 启动时要将配置文件路径作为第一个参数：</p>
+<p>./redis-server /path/to/redis.conf</p>
+<h2 id="INCLUDES-（包含）"><a href="#INCLUDES-（包含）" class="headerlink" title="INCLUDES （包含）"></a>INCLUDES （包含）</h2><p>在这配置包含一个或多个配置文件。这个配置项适用于那些对大部分 Redis 实例有标准的配置模板，但对小部分 Redis 实例有定制化需求的场景。 包括文件可以包含其他文件，所以请明智使用。</p>
+<p>请注意 “include” 配置不会被 admin 或者 Redis 哨兵 “CONFIG REWRITE” 命令重写。由于 Redis 总是使用最后处理的行作为配置值，所以最好将 includes 配置放在该文件的最开始以此避免配置在运行的时候被重写。</p>
+<p>相反的你想要用 includes 配置来重写配置项，那 include 应该放在最后一行会更好。</p>
+<h3 id="include-path-to-local-conf"><a href="#include-path-to-local-conf" class="headerlink" title="#include /path/to/local.conf"></a><strong>#include /path/to/local.conf</strong></h3><h3 id="include-path-to-other-conf"><a href="#include-path-to-other-conf" class="headerlink" title="#include /path/to/other.conf"></a><strong>#include /path/to/other.conf</strong></h3><h2 id="MODULES（模块）"><a href="#MODULES（模块）" class="headerlink" title="MODULES（模块）"></a>MODULES（模块）</h2><p>启动时（at startup）加载模块。如果 server 加载模块失败服务器会终止（abort）。</p>
+<h3 id="loadmodule-path-to-my-module-so"><a href="#loadmodule-path-to-my-module-so" class="headerlink" title="#loadmodule /path/to/my_module.so"></a><strong>#loadmodule /path/to/my_module.so</strong></h3><h3 id="loadmodule-path-to-other-moudle-so"><a href="#loadmodule-path-to-other-moudle-so" class="headerlink" title="#loadmodule /path/to/other_moudle.so"></a><strong>#loadmodule /path/to/other_moudle.so</strong></h3><h2 id="NETWORK（网络）"><a href="#NETWORK（网络）" class="headerlink" title="NETWORK（网络）"></a>NETWORK（网络）</h2><p>如果没有使用 bind 进行配置，Redis 则默认监听所有 Server 上可以访问的网络接口的连接。如果配置了 bind 指向具体的值，Redis 则只监听配置的那些连接的网络接口。可以是一个 IP 或者紧接着多个 IP 地址。</p>
+<p>示例：</p>
+<p><strong>#bind 192.167.2.34 10.0.0.1</strong></p>
+<p><strong>#bind 127.0.0.1 ::1</strong></p>
+<p>警告：如果跑 Redis 的机器直接暴露在网络中，binding（指定，绑定）所有的网络接口有潜在的危险，且会让实例暴露给网络上的所有人。因此，我们取消注释了下面的 bind 指令，这会让 Redis 只监听 IPv4 的环回地址（意味着 Redis 只接受跑在和 Redis 实例一台机器上的客户端连接）。</p>
+<p><strong>如果你确认你的 Redis 实例可以接受来自所有地址的请求，把下面的指令注释掉即可。</strong></p>
+<h3 id="bind-127-0-0-1"><a href="#bind-127-0-0-1" class="headerlink" title="bind 127.0.0.1"></a><strong>bind 127.0.0.1</strong></h3><p>保护模式是安全防护的其中一层，保护模式的存在是为了避免暴露在网络中的 Redis 实例被不当的连接滥用（Redis instances left open on the internet are accessed and exploited）。</p>
+<p>当保护模式打开且：</p>
+<p>1）Redis 服务没有使用 “bind” 去绑定明确的 ip 地址集合。</p>
+<p>2）没有配置密码。</p>
+<p>那么，Redis 服务只接受来自 IPv4 和 IPv6 的环回地址 127.0.0.1 和 ::1并且是来自 Unix 域的套接字。</p>
+<p>保护模式默认开启。除非你确定你的 Redis 实例在没有配置连接认证或者使用 bind 命令限制特定的 ip 连接的情况下还可以被连接。不然最好保持该模式开启。</p>
+<h3 id="protected-mode-yes"><a href="#protected-mode-yes" class="headerlink" title="protected-mode yes"></a><strong>protected-mode yes</strong></h3><p>通过特定端口进行连接，默认端口是 6379（IANA #815344）。如果端口配置成 0，Redis 就不会监听 TCP 套接字。</p>
+<h3 id="port-6379"><a href="#port-6379" class="headerlink" title="port 6379"></a><strong>port 6379</strong></h3><p>TCP listen() 积压（backlog）。</p>
+<p>在高频请求场景下的 Redis，为了避免慢的客户端连接，你需要配置较高的 backlog。提醒事项：Linux 内核会默默的将其截断成 /proc/sys/net/core/somaxconn 的值，所以保证同时提高 somaxconn 和 tcp_max_syn_backlog 的值以求预期的效果。</p>
+<h3 id="tcp-backlog-511"><a href="#tcp-backlog-511" class="headerlink" title="tcp-backlog 511"></a><strong>tcp-backlog 511</strong></h3><p><strong>Unix 套接字</strong></p>
+<p>自己指定特定的 Unix 套接字路径来监听可能来的连接。Redis 没有为此配置默认值，如果你也没有手动去配置指定的话，那 Redis 不会监听一个 unix 套接字。</p>
+<p><strong>#unixsocket /tmp/redis.sock</strong></p>
+<p><strong>#unixsocketperm 700</strong></p>
+<p><strong>N 秒后</strong>（0 表示此配置无效），客户端和服务端之间是空闲的，则断开连接。</p>
+<h3 id="timeout-0"><a href="#timeout-0" class="headerlink" title="timeout 0"></a><strong>timeout 0</strong></h3><p><strong>TCP keepalive</strong></p>
+<p>如果配置了非零的值，使用 SO_KEEPALIVE 发送 TCP 的 ACKs 给那些可能断连的客户端。这很管用，原因有：</p>
+<p>1）检测死掉的同伴链接（Detect dead peers）。</p>
+<p>2）从中间网络设备的视角来看，连接持续保存。</p>
+<p>在 Linux，配置特定的值（单位为 秒）为周期来发送 ACKs。注意事项：需要两倍的该时间来关闭连接。不同的内核中该周期取决于内核的配置。</p>
+<p>300 秒是一个比较合理的选择，这也是 Redis 从 3.2.1 版本开始配置的默认值。</p>
+<h3 id="tcp-keepalive-300"><a href="#tcp-keepalive-300" class="headerlink" title="tcp-keepalive 300"></a>tcp-keepalive 300</h3><h2 id="GENERAL"><a href="#GENERAL" class="headerlink" title="GENERAL"></a>GENERAL</h2><p>Redis 运行默认不是守护进程。需要的话将该项配置成 yes。</p>
+<p>注意事项：该配置开启后，Redis 会默认在 /var/run/redis.pid 文件中写相关信息。</p>
+<h3 id="daemonize-no"><a href="#daemonize-no" class="headerlink" title="daemonize no"></a>daemonize no</h3><p>如果你是以 upstart 或者 systemd 方式跑 Redis，Redis 可以与你的监督数（supervision tree）交互。具体的选项：</p>
+<ul>
+<li>supervised no    - 不进行监督树的交互。</li>
+<li>supervised upstart    - 通过将 Redis 置为 SIGSTOP 模式进行 upstart 信号通知。</li>
+<li>supervised systemd    - 通过将 READY=1 写入 $NOTIFY_SOCKET 进行 systemd 的信号通知。</li>
+<li>supervised auto    - 基于 UPSTART_JOB 或者 NOTIFY_SOCKET 环境变量来检测是 upstart 还是 systemd 方式。</li>
+</ul>
+<p>注意：以上的 supervision 方法只通知 “处理准备就绪” 的信号。他们不会持续的响应你配置的 supervisor。</p>
+<h3 id="supervised-no"><a href="#supervised-no" class="headerlink" title="supervised no"></a>supervised no</h3><p>如果配置指定了 pid 文件，Redis 就用该配置的 pid 文件写入，退出的时候移除对应的 pid 文件。</p>
+<p>如果 Redis 是以非守护进程模式的运行，又没有配置指定的 pid 文件，那么不会创建 pid 文件。如果 Redis 是守护进程的模式，即使没有配置指定的 pid 文件，会默认使用 “/var/run/redis.pid”文件。</p>
+<p>最好创建一个 pid 文件（Creating a pid file is best effort）：没有创建 pid 文件不会有任何影响，Server 还是会正常运行。</p>
+<h3 id="pidfile-var-run-redis-6379-pid"><a href="#pidfile-var-run-redis-6379-pid" class="headerlink" title="pidfile /var/run/redis_6379.pid"></a>pidfile /var/run/redis_6379.pid</h3><p>指定 Server 的日志级别（Specify the server<strong>verbosity</strong>level）。</p>
+<p>有以下四种级别：</p>
+<ul>
+<li>debug（包含许多具体信息，开发/测试 环境下很方便）</li>
+<li>verbose（包含许多不常用的信息，但没有 debug 级别那么混乱）</li>
+<li>notice（moderately verbose，不多不少，很适合生产环境）</li>
+<li>warning（只记录重要或者非常的信息）</li>
+</ul>
+<h3 id="loglevel-notice"><a href="#loglevel-notice" class="headerlink" title="loglevel notice"></a>loglevel notice</h3><p>指定 log 文件名。配置成空串的话可以强制 Redis 在标准输出记录日志。注意事项：如果你使用标准输出进行日志记录且是以 守护进程 的模式运行，日志会在 /dev/null 中。</p>
+<h3 id="logfile-“”"><a href="#logfile-“”" class="headerlink" title="logfile “”"></a>logfile “”</h3><p>想让日志记录到系统日志，设置 ‘syslog-enabled’ 成 yes，使用 syslog 带有的其他配置选项来满足你的需求。</p>
+<h3 id="syslog-enabled-no"><a href="#syslog-enabled-no" class="headerlink" title="#syslog-enabled no"></a>#syslog-enabled no</h3><p>指定 syslog 的身份。</p>
+<h3 id="syslog-ident-redis"><a href="#syslog-ident-redis" class="headerlink" title="#syslog-ident redis"></a>#syslog-ident redis</h3><p>指定 syslog 工具（facility）。一定要是 USER 或者在 LOCAL0-LOCAL7 之间。</p>
+<h3 id="syslog-facility-local0"><a href="#syslog-facility-local0" class="headerlink" title="#syslog-facility local0"></a>#syslog-facility local0</h3><p>设置数据库的号码。默认的数据库号是 DB 0，你在每个连接中，通过 SELECT <dbid>，选择一个 0~databases-1 的数来配置特定的数据库号。</dbid></p>
+<h3 id="databases-16"><a href="#databases-16" class="headerlink" title="databases 16"></a>databases 16</h3><p>Redis 会在启动的时候，如果标准输出日志是 TTY，则会在开始记录标准输出日志的时候展示一个 ASCII 字符组成的 Redis logo。也就是说，通常只在交互的会话中会展示该 logo。</p>
+<h3 id="always-show-logo-yes"><a href="#always-show-logo-yes" class="headerlink" title="always-show-logo yes"></a>always-show-logo yes</h3><h2 id="SNAPSHOTTING（快照）"><a href="#SNAPSHOTTING（快照）" class="headerlink" title="SNAPSHOTTING（快照）"></a>SNAPSHOTTING（快照）</h2><p>在硬盘保存数据库：</p>
+<p>#save <seconds> <changes>，如果 seconds 和 写操作都配置了，那么一旦达到了配置条件 Redis 会将 DB 保存到硬盘。</changes></seconds></p>
+<p>以本配置文件的默认配置举例，达到了以下条件会触发写磁盘：</p>
+<p>900 秒内（15 分钟）且数据库中至少有一个 key 被改变。</p>
+<p>300 秒内（5 分钟）且数据库中至少有10 个 key 被改变。</p>
+<p>60 秒内 且数据库中只有一个 10000 个 key 被改变。</p>
+<p>提醒：你可以通过注释以下所有的 save 配置行以取消该功能。</p>
+<p>也可以通过添加一个带空串的 save 指令来让配置的 save 选择失效。比如：</p>
+<p>save “”</p>
+<p>save 900 1</p>
+<p>save 300 10</p>
+<h3 id="save-60-10000"><a href="#save-60-10000" class="headerlink" title="save 60 10000"></a>save 60 10000</h3><p>在开启了 RDB 快照后，如果最近的一次 RDB 快照在后台生成失败的话，Redis 默认会拒绝所有的写请求。这么做的目的是为了让用户注意到后台持久化可能出现了问题。否则用户可能一直无法注意到问题，进而可能导致灾难级别的事情发生。</p>
+<p>如果后台存储（bgsave）能继续顺利工作，Redis 会自动的继续处理写请求。</p>
+<p>但是，如果你已经为你的 Redis 实例和持久化配置了合适的监控手段，且希望 Redis 在非理想情况下（比如硬盘问题，权限问题等等）仍继续提供服务，可以将此项配置为 no。</p>
+<h3 id="stop-writes-on-bgsave-error-yes"><a href="#stop-writes-on-bgsave-error-yes" class="headerlink" title="stop-writes-on-bgsave-error yes"></a>stop-writes-on-bgsave-error yes</h3><p>想要在生成 rdb 文件的时候使用 LZF 压缩 String 对象？</p>
+<p>将该配置保持默认为 ‘yes’ 几乎不会出现意外状况。（it’s almost alwats a win）</p>
+<p>可以将该配置设置为 “no” 来节省 CPU 开销。但是那些原本可以被压缩的 key 和 value 会让数据集更大。</p>
+<h3 id="rdbcompression-yes"><a href="#rdbcompression-yes" class="headerlink" title="rdbcompression yes"></a>rdbcompression yes</h3><p>从 5.0 版本开始 RDB 文件的末尾会默认放置一个 CRC64 的校验码。</p>
+<p>这会让文件的格式更加容易检验验证，代价是生成和加载 RDB 文件的性能会损失 10% 左右。你可以把该配置关闭以求更佳的性能。</p>
+<p>没有开启校验码配置的 RDB 文件会将校验码设置为 0，加载该文件的程序就会跳过校验过程。</p>
+<h3 id="rdbchecksum-yes"><a href="#rdbchecksum-yes" class="headerlink" title="rdbchecksum yes"></a>rdbchecksum yes</h3><p>配置 rdb 文件的名称。</p>
+<h3 id="dbfilename-dump-rdb"><a href="#dbfilename-dump-rdb" class="headerlink" title="dbfilename dump.rdb"></a>dbfilename dump.rdb</h3><p>存储 rdb 文件的目录。</p>
+<p>数据库会使用该配置放置 rdb 文件，文件的名字使用上面的 ‘dbfilename’ 指定的文件名。</p>
+<p>AOF 文件的存储位置也会使用这个配置项。</p>
+<p>注意：配置一个目录而不是文件名。</p>
+<h3 id="dir"><a href="#dir" class="headerlink" title="dir ./"></a>dir ./</h3><h2 id="REPLICATION（复制）"><a href="#REPLICATION（复制）" class="headerlink" title="REPLICATION（复制）"></a>REPLICATION（复制）</h2><p>主从复制。使用 replicaof 来让一个 Redis 实例复制另一个 Redis 实例。接来下是关于 Redis 复制需要了解的一些事情。</p>
+<p><img src="/2020/09/25/redis-conf-zh-cn/image-20210925113724247.png" alt="image-20210925113724247"></p>
+<p>1）Redis 复制时异步进行的，但是可以通过配置让 Redis 主节点拒绝写请求：配置会给定一个值，主节点至少需要和大于该值的从节点个数成功连接。</p>
+<p>2）如果 Redis 从节点和主节点意外断连了很少的一段时间，从节点可以向主节点进行<strong>增量复制</strong>。你可以根据你的需要配置复制的备份日志文件大小（在下一部分可以看到相关的配置）</p>
+<p>3）复制会自动进行且不需要人为介入（intervention）。在网络划分后复制会自动与主节点重连且同步数据。</p>
+<h3 id="replicaof"><a href="#replicaof" class="headerlink" title="#replicaof  "></a>#replicaof <masterip> <masterport></masterport></masterip></h3><p>如果主节点配置了密码（使用了 “requirepass” 配置项），从节点需要进行密码认证才能进行复制同步的过程，否则主节点会直接拒绝从节点的复制请求。</p>
+<h3 id="masterauth"><a href="#masterauth" class="headerlink" title="#masterauth "></a>#masterauth <master-password></master-password></h3><p>当复制过程与主节点失去连接，或者当复制正在进行时，复制可以有两种行为模式：</p>
+<p>1）如果 replica-serve-stale-data 设置为 ‘yes’（默认设置），从节点仍可以处理客户端请求，但该从节点的数据很可能和主节点不同步，从节点的数据也可能是空数据集，如果这是与主节点进行的第一次同步。</p>
+<p>2）如果 replica-serve-stale-data 设置成 ‘no’，从节点会对除了 INFO，replicaOF，AUTH，PING，SHUTDOWN，REPLCONF，ROLE，CONFIG，SUBSCRIBE，UNSUBSCRIBE，PSUBSCRIBE，PUNSUBSCRIBE，PUBLISH，PUBSUB，COMMAND， POST，HOST： and LATENCY 这些命令之外的请求均返回 “SYNC with master in process”。</p>
+<h3 id="replica-serve-stale-data-yes"><a href="#replica-serve-stale-data-yes" class="headerlink" title="replica-serve-stale-data yes"></a>replica-serve-stale-data yes</h3><p>可以配置从节点是否可以处理写请求。针对从节点开启写权限来存储时效低的（ephemeral）数据可能是一种有效的方式（因为写入到从节点的数据很可能随着重新同步而被删除），但是开启该配置也会导致一些问题。</p>
+<p>从 Redis 2.6 开始从节点默认是仅可读的。</p>
+<p>提示：可读的从节点一般不会暴露给网络中不信任的客户端。这仅是针对不正确使用实例的一层保护。从节点默认仍会响应管理层级的命令，比如 CONFIG，DEBUG 等等。在一定程度上可以使用 ‘rename-command’ 避免那些 管理/危险 的命令，提高安全性（To a limited extent you can improve security of read only replicas using ‘rename-command’ to shadow all the administrative / dangerous commands）。</p>
+<h3 id="replica-read-only-yes"><a href="#replica-read-only-yes" class="headerlink" title="replica-read-only yes"></a>replica-read-only yes</h3><p>同步复制策略：硬盘或者套接字。</p>
+<hr>
+<p>警告：不使用硬盘的复制策略目前还在实验阶段</p>
+<hr>
+<p>新建立连接和重连的副本不会根据数据情况进行恢复传输，只会进行全量复制。主节点会传输在从节点之间传输 RDB 文件。传输行为有两种方式：</p>
+<p>1）硬盘备份：Redis 主节点创建一个子进程来向硬盘写 RDB 文件。之后由父进程持续的文件传给副本。</p>
+<p>2）不使用硬盘：Redis 主节点建立一个进程直接向副本的网络套接字写 RDB 文件，不涉及到硬盘。</p>
+<p>对于方式 1，在生成 RDB 文件时，多个副本会进行入队并在当前子进程完成 RDB 文件时立即为副本进行 RDB 传输。</p>
+<p>对于方式 2，一旦传输开始，新来的副本传输请求会入队且只在当前的传输断开后才建立新的传输连接。</p>
+<p>如果使用方式 2，主节点会等待一段时间，根据具体的配置，等待是为了可以在开始传输前可以有期望的副本同步请求到达，这样可以使用并行传输提高效率。</p>
+<p>对于配置是比较慢的硬盘，而网络很快（带宽大）的情况下，使用方式 2 进行副本同步会更适合。</p>
+<h3 id="repl-diskless-sync-no"><a href="#repl-diskless-sync-no" class="headerlink" title="repl-diskless-sync no"></a>repl-diskless-sync no</h3><p>如果 diskless sync 是开启的话，就需要配置一个延迟的秒数，这样可以服务更多通过 socket 传输 RDB 文件的副本。</p>
+<p>这个配置很主要，因为一旦传输开始，就不能为新来的副本传输服务，只能入队等待下一次 RDB 传输，所以该配置一个延迟的值就是为了让更多的副本请求到达。</p>
+<p>延迟配置的单位是秒，默认是 5 秒。不想要该延迟的话可以配置为 0 秒，传输就会立即开始。</p>
+<h3 id="repl-diskless-sync-delay-5"><a href="#repl-diskless-sync-delay-5" class="headerlink" title="repl-diskless-sync-delay 5"></a>repl-diskless-sync-delay 5</h3><p>副本会根据配置好的时间间隔（interval）想主节点发送 PING 命令。可以通过 repl_ping_replica_period 配置修改时间间隔。默认为 10 秒。</p>
+<h3 id="repl-ping-replica-period-10"><a href="#repl-ping-replica-period-10" class="headerlink" title="#repl-ping-replica-period 10"></a>#repl-ping-replica-period 10</h3><p>下面的配置会将副本进行超时处理，为了：</p>
+<p>1）在副本的角度，在同步过程中批量进行 I/O 传输。</p>
+<p>2）从副本s的角度，主节点超时了。</p>
+<p>3）从主节点的角度，副本超时了。</p>
+<p>需要重视的一点是确保该选项的配置比 repl-ping-replica-period 配置的值更高，否则每次主从之间的网络比较拥挤时就容易被判定为超时。</p>
+<h3 id="repl-timeout-60"><a href="#repl-timeout-60" class="headerlink" title="#repl-timeout 60"></a>#repl-timeout 60</h3><p>同步过后在副本套接字上关闭 TCP_NODELAY？</p>
+<p>如果你选择了 ‘yes’ ，Redis 会使用很小的 TCP 包，占用很低的带宽来想副本发送数据。但是这么做到达副本的数据会有一些延迟，使用默认的配置值且是 Linux 内核该延迟最多可能 40 毫秒。</p>
+<p>如果你选择 ‘no’，副本的数据延迟会更低但是占用的带宽会更多一些。</p>
+<p>我们默认会为了低延迟进行优化，但是在比较拥挤网络情况下或者是主节点和副本之间的网络情况比较复杂，比如中间有很多路由跳转的情况下，把选项设置为 ‘yes’ 应该会比较适合。</p>
+<h3 id="repl-disable-tcp-nodelay-no"><a href="#repl-disable-tcp-nodelay-no" class="headerlink" title="repl-disable-tcp-nodelay no"></a>repl-disable-tcp-nodelay no</h3><p>配置副本的缓冲区（backlog）大小。该缓冲区用来在副本断开连接后暂存副本数据。这样做的因为但副本重新连接后，不一定要重新进行全量复制，很多时候增量复制同步（仅同步断连期间副本可能丢失的数据）完全足够了。</p>
+<p>配置的缓冲区越大，副本可以承受的断连时间可以更长。</p>
+<p>至少有一个副本连接时缓冲区才会进行分配。</p>
+<h3 id="repl-backlog-size-1mb"><a href="#repl-backlog-size-1mb" class="headerlink" title="#repl-backlog-size 1mb"></a>#repl-backlog-size 1mb</h3><p>主节点如果一段时间没有副本连接，上面提到的缓冲区会被释放。你可以通过配置一个指定的时间来释放缓冲区，如果主节点在这个时间内还没有与新的副本建立连接。</p>
+<p>需要注意的是副本不会因为超时释放缓冲区，因为副本可能会被晋升（promot）为主节点，需要保持对其他副本进行增量复制的能力：因此他们总是积累缓冲区。</p>
+<p>配置为 0 意味着不释放缓冲区。</p>
+<h3 id="repl-backlog-ttl-3600"><a href="#repl-backlog-ttl-3600" class="headerlink" title="#repl-backlog-ttl 3600"></a>#repl-backlog-ttl 3600</h3><p>副本的优先级是一个整型树字，可以由 Redis 的 INFO 命令显示。优先级的作用在于当主节点无法提供服务后，Redis 哨兵会使用到优先级进行选举副本，晋升为主节点。</p>
+<p>值越低，代表该副本晋升成为主节点的优先级越高，比如说有三个副本，优先级的值分别为 10，100，25，Redis 哨兵会选择最低的那个，即优先级配置为10的那个。</p>
+<p>但是，一个特殊的配置值 ‘0’，意味着该副本不可能充当主节点的角色，故优先级配置为 0 的副本永远不会被 Redis 哨兵选择晋升。</p>
+<p>默认的优先级配置时 100.</p>
+<h3 id="replica-priority-100"><a href="#replica-priority-100" class="headerlink" title="replica-priority 100"></a>replica-priority 100</h3><p>主节点可以根据目前连接的延迟小于 M 秒的副本数量，选择是否拒绝写请求。</p>
+<p>数量 N 的副本需要是 “online” 的状态。</p>
+<p>延迟的秒数（The lag（落后） in seconds） M ，计算方式是根据上一次副本发送 ping 命令到主节点的时间计算。通常每秒都会发送 ping 命令。</p>
+<p>这个选项不保证 N 个副本会接受写请求，但是如果没有足够的副本可用，则会限制那些丢失写请求的暴露窗口至特定的秒数（This option does not GUARANTEE that N replicas will accept the write, but will limit the window of exposure for lost writes in case not enough replicas are available, to the specified number of seconds.）</p>
+<p>比如要求至少有三个延迟小等于 10 秒的副本，你可以这么配置：</p>
+<h3 id="min-replicas-to-write-3"><a href="#min-replicas-to-write-3" class="headerlink" title="#min-replicas-to-write 3"></a>#min-replicas-to-write 3</h3><h3 id="min-replicas-max-lag-10"><a href="#min-replicas-max-lag-10" class="headerlink" title="#min-replicas-max-lag 10"></a>#min-replicas-max-lag 10</h3><p>配置设置为 0 会关闭该功能。</p>
+<p>默认的 min-replicas-to-write 被设置为 0（功能关闭），min-replicas-max-lag 设置为 10.</p>
+<p>主节点应该有多种方式来列举出依附与它的副本的信息（ip 和 port）。比如 “INFO replication” 就可以提供这些信息，它也会被其他的功能使用，比如 Redis 哨兵就会使用该命令列举副本实例。还有一种方式是在主节点运行 “ROLE” 命令来获取这些信息。</p>
+<p>副本获取监听的 IP 和 地址分别通过以下的方式：</p>
+<ul>
+<li>IP：IP 地址在副本和主节点建立的 socket 连接中自动被检测到。</li>
+<li>Port：端口信息会在副本进行复制的 TCP 握手中交流传递，端口也是副本用来监听连接的一部分。</li>
+</ul>
+<p>然而，如果使用了端口转发或者 NAT（Network Address Translation），实际连接到副本很可能通过的是不同的 IP 和 端口对。下面的两个配置选项用来让副本上报特定的 IP 和 端口 集合给它连接的主节点，之后主节点使用 “INFO” 或者 “ROLE” 命令都可以输出这些上报的值。</p>
+<p>如果你只想上报 ip 或 端口其中一个，就没有必要两个都使用。</p>
+<h3 id="replica-announce-ip-5-5-5-5"><a href="#replica-announce-ip-5-5-5-5" class="headerlink" title="#replica-announce-ip 5.5.5.5"></a>#replica-announce-ip 5.5.5.5</h3><h3 id="replica-announce-port-1234"><a href="#replica-announce-port-1234" class="headerlink" title="#replica-announce-port 1234"></a>#replica-announce-port 1234</h3><h2 id="SECURITY（安全）"><a href="#SECURITY（安全）" class="headerlink" title="SECURITY（安全）"></a>SECURITY（安全）</h2><p>要求客户端先使用命令 AUTH <PASSWORD> 进行认证，才能处理其他命令。 在一个可不信的环境，也就是说你不想所有知道该主机的客户端都可以与之建立连接的情况下很有用。</PASSWORD></p>
+<p>该配置为了向后的兼容器应该保持被注释不使用，因为大多数的使用者不需要认证（e.g. 他们只是在自己的机器上跑实例）</p>
+<p>警告：因为 Redis 的响应速率很快，所以恶意攻击者可能在每秒中发送 150k 数据量的密码尝试解密。这意味着你设置的密码强度要足够大，否则很容易被破解。</p>
+<h3 id="requirepass-foobared"><a href="#requirepass-foobared" class="headerlink" title="#requirepass foobared"></a>#requirepass foobared</h3><p>命名的重命名。</p>
+<p>可以在共享的环境中重命名那些比较危险的命令。比如把 CONFIG 命令重命名成一个不好猜的名字，这样内部的功能还可以使用，且可以避免大部分的客户端使用。</p>
+<p>例如：rename-command CONFIG b840fc02d524045429941cc15f59e41cb7be6c52</p>
+<p>甚至可以将命名重命名成一个空串，使其失效。</p>
+<h3 id="rename-command-CONFIG-“”"><a href="#rename-command-CONFIG-“”" class="headerlink" title="#rename-command CONFIG “”"></a>#rename-command CONFIG “”</h3><p>请注意修改命令名称的行为会记录在 AOF 文件中或传输到副本可能会导致意外情况。</p>
+<h2 id><a href="#" class="headerlink" title></a></h2><h2 id="CLIENTS（客户端）"><a href="#CLIENTS（客户端）" class="headerlink" title="CLIENTS（客户端）"></a>CLIENTS（客户端）</h2><p>设置可以同时连接客户端的最大数量。默认该项设置为 10000 个客户端，但是如果 Redis server 不能配置过程文件来限制最大的同时连接数，那么实际的最大连接数会变成当前文件配置的数组再减去 32（因为 Redis 内部需要维护一部分文件描述符）</p>
+<p>一旦达到该限制数 Redis 会拒绝所有的新连接并返回错误信息 ‘max number of clients reached’。</p>
+<h3 id="maxclients-10000"><a href="#maxclients-10000" class="headerlink" title="#maxclients 10000"></a>#maxclients 10000</h3><h2 id="MEMEORY-MANAGEMENT（内存管理）"><a href="#MEMEORY-MANAGEMENT（内存管理）" class="headerlink" title="MEMEORY MANAGEMENT（内存管理）"></a>MEMEORY MANAGEMENT（内存管理）</h2><p>设置限定的最大内存使用。</p>
+<p>但内存使用达到限制 Redis 会根据配置的淘汰策略（见 maxmemory-policy）移除键值对。</p>
+<p>如果根据淘汰策略，Redis 不能移除键值对，Redis 会拒绝那些申请更大内存的命令，比如 SET，LPUSH 等等，但是仍可以处理读请求，比如 GET 等。</p>
+<p>该选项对那些使用 Redis 进行 LRU，LFU 缓存系统或者硬性限制内存很友好（使用 ‘noeviction’ 策略）。</p>
+<p>警告：如果你为实例配置了 maxmemory，且该实例配置了子节点，那么已使用内存的大小就需要加上为副本配置的输出缓冲区的大小。这样因为 网络问题/重新同步 不会一直触发键的淘汰行为。相反的，副本缓冲区中充满了对键的删除或淘汰的情况可能触发更多 key 被淘汰，以此类推直到库完全被清空。</p>
+<blockquote>
+<p>WARNING: If you have replicas attached to an instance with maxmemory on, the size of the output buffers needed to feed the replicas are subtracted from the used memory count, so that network problems / resyncs will not trigger a loop where keys are evicted, and in turn the output buffer of replicas is full with DELs of keys evicted triggering the deletion of more keys, and so forth until the database is completely emptied.</p>
+</blockquote>
+<p>简单说就是，如果你为实例配置了副本，那么建议你设置一个较低的 maxmemory 值，这样系统中就有更多的内存空间留给 副本缓冲区（如果淘汰策略是 ‘noeviction’ 那上面说的就没有必要）。</p>
+<h3 id="maxmemory"><a href="#maxmemory" class="headerlink" title="#maxmemory  "></a>#maxmemory  <bytes></bytes></h3><p>MAXMEMORY POLICY：在内存使用达到 maxmemory 后，Redis 如何选择 键值对 进行淘汰。有以下几种：</p>
+<ul>
+<li>volatile-lru，使用 LRU 算法，在设置了过期时间的 key 中选择。</li>
+<li>allkeys-lru，使用 LRU 算法，在所有的 key 中选择。</li>
+<li>volatile-lfu，使用 LFU 算法，在设置了过期时间 key 中选择。</li>
+<li>allkeys-lfu，使用 LFU 算法，在所有的 key 中选择。</li>
+<li>volatile-random，在设置了过期时间的 key 中随机选择。</li>
+<li>allkeys-random，在所有 key 中随机选择。</li>
+<li>volatile-ttl，在设置了过期时间的 key 中，选择过期时间最近的 key。</li>
+<li>noeviction，不淘汰 key ，对任何写操作（使用额外内存）返回错误。</li>
+</ul>
+<p>LRU 代表最近最少未使用。</p>
+<p>LFU 代码最近最不常使用。</p>
+<p>LRU，LFU 和 volatile-ttl 均由近似的随机算法实现。</p>
+<p>提示：不管采用了以上的哪种策略，对于新的写请求，如果没有合适的 key 可以淘汰，Redis 均会响应一个 error。</p>
+<p>比如如下的写命令：</p>
+<p>set setnx setex append incr decr rpush lpush rpushx lpushx linsert lset rpoplpush sadd</p>
+<p>sinter sinterstore sunion sunionstore sdiff sdiffstore zadd zincrby zunionstore zinterstore hset hsetnx hmset hincrby incrby decrby getset mset msetnx exec sort。</p>
+<p>默认策略是：</p>
+<h3 id="maxmemory-policy-noeviction"><a href="#maxmemory-policy-noeviction" class="headerlink" title="#maxmemory-policy noeviction"></a>#maxmemory-policy noeviction</h3><p>LRU，LFU 以及最小 TTL 的实现都不是精确的而是比较粗略的近似算法（为了节省内存），为了速度或者精确度，你可以进行相应的配置。默认 Redis 会检查 5 个 key，在其中选择最近最少使用的，你也可以直接在下面的配置项中配置 Redis 选择的样本数量。</p>
+<p>默认配置的值是 5，已经可以有一个很完美的结果。10 的话可能会让选择策略更像真正意义上的 LRU 算法，但是需要更多 CPU 资源。3 的话会更快，但是不够精确。</p>
+<h3 id="maxmemory-samples-5"><a href="#maxmemory-samples-5" class="headerlink" title="#maxmemory-samples 5"></a>#maxmemory-samples 5</h3><p>从 Redis 5.0 之后，副本默认会忽略为其配置的 maxmemory 选项（除非因为故障转移（failover）或者选择将其晋升为主节点）。也就是说 key 的淘汰只会由主节点执行，副本对应的是主节点发送对应的删除命令给副本作为 key 的淘汰方式。</p>
+<p>这个行为模式保证了主副节点的一致性（这通常也是你需要的），但是如果你的副本是可写的或者你想要你的副本有不同的内存配置，而且你也很确认到达副本的写操作能保证幂等性（idempotenet），那你可以修改这个默认值（但是最好保证你理解了这么做的原因）。</p>
+<p>提示：因为副本默认没有 maxmemory 和淘汰策略，副本实际的内存占用可能比 maxmemeory 配置的值大（可能因为副本缓冲区，或者某些数据结构占用了额外的内存等等原因）。所以确保对副本有合适的监控手段，保证在主节点达到配置的 maxmemory 设置之前，副本有足够的内存保证不会出现真正的 out-of-memory 条件。</p>
+<h3 id="replica-ignore-maxmemory-yes"><a href="#replica-ignore-maxmemory-yes" class="headerlink" title="#replica-ignore-maxmemory yes"></a>#replica-ignore-maxmemory yes</h3><h2 id="LAZY-FREEING（懒释放）"><a href="#LAZY-FREEING（懒释放）" class="headerlink" title="LAZY FREEING（懒释放）"></a>LAZY FREEING（懒释放）</h2><p>Redis 有两个可以删除 key 的原语（primitive）。其中一种是调用 DEL ，阻塞地删除对象。也就是说 Redis Server 需要通过同步的方式确认回收了所有和刚才删除的 key 相关的内存后，才能处理接下来的命令。如果要删除的 key 很小，执行 DEL 命令的时间也很短，和其他时间复杂度为 O(1) 或 O(log_N) 的命令差不多。但是，如果要删除的 key 涉及到一个存储着百万级别元素的集合，Redis server 就可能因此阻塞一段时间（甚至到秒的级别）。</p>
+<p>由于同步的处理方式可能带来的问题，Redis 提供了非阻塞的删除原语比如 UNLINK 以及异步的选项比如 FLUSHALL 和 FLUSHDB 命名，为的就是在后台回收内存。这些命名会在固定时间执行（in constant time）。另外的线程会在后台以尽可能快的速度释放这些对象。</p>
+<p>DEL，UNLINK 和带有 ASYNC 选项的 FLUSHALL 和 FLUSHDB 命名都可以由用户控制。这取决于应用层面是否理解且合适的使用相应的命令来达到目的。但是还是有一些情况要注意，Redis 有时会因为其他操作的副作用导致触发 key 的删除或者刷新整个数据库。特别是在用户调用了对象删除的以下场景：</p>
+<ol>
+<li>在淘汰策略下，因为配置了 maxmemory 和 maxmemory policy，为了在不超过配置的内存限制下腾出空间给新来的数据。</li>
+<li>因为过期时间的配置：当一个 key 配置了 expire 时间且时间到了，那它必须从内存中移除。</li>
+<li>命名在已经存在的 key 上进行数据的存储操作的副作用。比如 RENAME 命名在替换的时候需要删除原本的 key 的内容。类似的带有 STORE 选项的 SUNIONSTORE 或者 SORT 命名可能会删除已存在的 key。SET 命令本身为了用新的值替换，会将要操作的 key 的旧值先删除掉。</li>
+<li>在 REPLICATION 期间，当副本执行了全量同步复制，副本的整个数据库会被清空，然后加载传输来的 RDB 文件。</li>
+</ol>
+<p>上面的场景在默认情况下都是以阻塞的方式删除对象，比如调用 DEL 的时候。你在本配置项中为每个场景进行配置，这样就可以像 UNLINK 被调用时以非阻塞的方式释放内存。</p>
+<h3 id="lazyfree-lazy-eviction-no"><a href="#lazyfree-lazy-eviction-no" class="headerlink" title="lazyfree-lazy-eviction no"></a>lazyfree-lazy-eviction no</h3><h3 id="lazyfree-lazy-expire-no"><a href="#lazyfree-lazy-expire-no" class="headerlink" title="lazyfree-lazy-expire no"></a>lazyfree-lazy-expire no</h3><h3 id="lazyfree-lazy-server-del-no"><a href="#lazyfree-lazy-server-del-no" class="headerlink" title="lazyfree-lazy-server-del no"></a>lazyfree-lazy-server-del no</h3><h3 id="lazyfree-lazy-flush-no"><a href="#lazyfree-lazy-flush-no" class="headerlink" title="lazyfree-lazy-flush no"></a>lazyfree-lazy-flush no</h3><h2 id="APPEND-ONLY-MODE（附加模式）"><a href="#APPEND-ONLY-MODE（附加模式）" class="headerlink" title="APPEND ONLY MODE（附加模式）"></a>APPEND ONLY MODE（附加模式）</h2><p>Redis 默认使用异步方式转储文件到硬盘。这种模式在很多应用场景下都很适用，但是在 Redis 处理出现问题或者设备断电的意外期间可能丢失相应的写操作（取决于 save 配置的时间点）。</p>
+<p>AOF 文件是 Redis 提供的另外一种提供更好的持久性的持久化模式。例如如果使用默认的数据传输策略（根据之后提供的配置）Redis 在发生意外情况下比如设备断电，或者 Redis 本身的进程出现了一些问题的情况下（操作系统正常运行），Redis 可以仅仅丢失 1 秒钟的写操作。</p>
+<p>AOF 和 RDB 的持久化策略可以同时启用。如果打开了 AOF，Redis 启动时会加载 AOF，因为 AOF 的持久化表现更好。</p>
+<p>点击<a href="http://redis.io/topics/persistence">http://redis.io/topics/persistence</a>获取更多相关的信息。</p>
+<h3 id="appendonly-on"><a href="#appendonly-on" class="headerlink" title="appendonly on"></a>appendonly on</h3><p>AOF 的文件名（默认：”appendonly.aof”）</p>
+<h3 id="appendfilename-“appendonly-aof”"><a href="#appendfilename-“appendonly-aof”" class="headerlink" title="appendfilename “appendonly.aof”"></a>appendfilename “appendonly.aof”</h3><p>函数 fsync() 会告诉操作系统立即把数据写到磁盘上而不是等输出缓冲区有更多的数据时才进行。有些 OS 会马上把数据刷到硬盘，有些 OS 只保证尽快进行刷盘操作。</p>
+<p>Redis 支持三种模式：</p>
+<p>no：不 fsync，让操作系统来决定什么时候进行刷盘。最不会影响 Server 响应。</p>
+<p>always：每写入 aof 文件就进行 fsync。影响 Server 响应，但是数据更安全。</p>
+<p>everysec：每秒进行 fsync。最稳健的形式。</p>
+<p>默认的模式是 everysec，在响应速度和数据安全方面最稳妥的选择。以上三种模式的选择都取决你对应用的理解，选择 no ，让 OS 选择写入时机，这样有更好的性能表现（但是如果你的业务可以忍受一些数据的丢失，其实你可以考虑使用默认的持久化策略 - RDB）。又或者使用 always，可以会让响应变慢一些但是数据的安全性会更高。</p>
+<p>更多的相关知识戳下面的文章链接：</p>
+<p><a href="http://antirez.com/post/redis-persistence-demystified.html">http://antirez.com/post/redis-persistence-demystified.html</a></p>
+<p>如果你不确定选哪种的话，那就用 “everysec” 吧。</p>
+<h3 id="appendfsync-always"><a href="#appendfsync-always" class="headerlink" title="#appendfsync always"></a>#appendfsync always</h3><h3 id="appendfsync-everysec"><a href="#appendfsync-everysec" class="headerlink" title="appendfsync everysec"></a>appendfsync everysec</h3><h3 id="appendfsync-no"><a href="#appendfsync-no" class="headerlink" title="#appendfsync no"></a>#appendfsync no</h3><p>当 AOF fsync 策略是 always 或者  everysec，会启动一个后台进程（后台进行保存或者 AOF 文件的后台重写），该进程会在磁盘上频繁的 I/O，在一些 Linux 配置下 Redis 的 fsync() 调用可能会阻塞太久。需要注意的是目前还没有相应的优化策略，极端情况下在不同线程进行的  fsync 可能阻塞同步的 write(2) 调用。</p>
+<p>为了减缓上面提到的问题，可以在主线程调用 BGSAVE 或者 BGREWRITEAOF 命名避免 fsync() 在主线程上调用。</p>
+<p>这意味着但其他的子节点在保存的时候，Redis 的持久化就和 “appendfsync none” 策略一样。这意味着在实际中的最糟糕的场景下（在默认的 Linux 配置下）有可能丢失超过 30s 时间粒度的 log。</p>
+<p>如果你的应用不能忍受延迟问题，将下面的选项配置为 “yes”。否则保持为 “no”，这样才持久化的角度上是最安全的选择。</p>
+<h3 id="no-appendfsync-on-rewrite-no"><a href="#no-appendfsync-on-rewrite-no" class="headerlink" title="no-appendfsync-on-rewrite no"></a>no-appendfsync-on-rewrite no</h3><p>自动重写 aof 文件。</p>
+<p>Redis 支持调用 BGREWRITEAOF 命名，并在 AOF 文件达到特定的百分比的时候自动重写 AOF 文件。</p>
+<p>一般是这么工作的：Redis 会记录最近一次重写后的 AOF 文件大小（如果启动后没有重写过，则记录启动时的 AOF 文件大小）。</p>
+<p>基础的文件大小和当前的文件大小进行比较。如果当前的大小比配置的百分比大，则触发重写操作。同时也应该配置一个触发重写的最小文件大小，这么做可以避免当 AOF 文件达到了配置的百分比，但是 AOF 文件还是很小的情况触发重写操作。</p>
+<p>配置百分比为 0 意味着关闭自动重写 AOF 的特性。</p>
+<h3 id="auto-aof-rewtire-percentage-100"><a href="#auto-aof-rewtire-percentage-100" class="headerlink" title="auto-aof-rewtire-percentage 100"></a>auto-aof-rewtire-percentage 100</h3><h3 id="auto-aof-rewrite-min-size-64mb"><a href="#auto-aof-rewrite-min-size-64mb" class="headerlink" title="auto-aof-rewrite-min-size 64mb"></a>auto-aof-rewrite-min-size 64mb</h3><p>当 AOF 文件的数据加载到内存的时候，AOF 文件可能在 Redis 启动的时候在末尾被截断。这可能在跑 Redis 进程的系统崩溃的情况下出现，特别是当一个 ext4 文件系统挂载的时候没有使用 data=ordered 选项（但是，在 Redis 进程自己崩溃或者中止，但是操作系统还正常运行时，这种情况就不会发生）。</p>
+<p>当 Redis 发现 AOF 在末尾被截断的时候，Redis 可以主动退出进程或者尽可能的加载更多的数据（目前的默认行为）并正常启动。下面的配置可以控制这一行为。</p>
+<p>如果 aof-load-truncated 设置成 yes，Redis 加载被截断的 AOF 文件，启动，并将相关的信息写到 log 中通知用户有这一现象发生。如果设置成 no，Redis 错误充电并拒绝启动。当该配置设置为 no 的时候，就要求用户在重启服务前使用 “redis-check-aof” 来修复 AOF 文件。</p>
+<p>注意：如果 AOF 文件的中间位置出现了问题，Redis 仍会错误退出。这个配置选项只在 Redis 想从 AOF 文件中读取更多数据但是实在没有新的可以读取的情况下才有作用。</p>
+<h3 id="aof-load-truncated-yes"><a href="#aof-load-truncated-yes" class="headerlink" title="aof-load-truncated yes"></a>aof-load-truncated yes</h3><p>当重写 AOF 文件的时候，Redis 也可以在 AOF 文件中 preamble 应用 RDB 文件来更快的重写和恢复。当该配置选项开启，AOF 文件的重写组成由这两部分组成：</p>
+<p>[RDB file][AOF tail]</p>
+<p>Redis 加载 AOF 文件的时候发现 AOF 文件里由 “REDIS” 字符串打头，Redis 就会加载预先的 RDB 文件，接着在尾部加载 AOF 文件。</p>
+<h3 id="aof-use-rdb-preamble-yes"><a href="#aof-use-rdb-preamble-yes" class="headerlink" title="aof-use-rdb-preamble yes"></a>aof-use-rdb-preamble yes</h3><h2 id="LUA-SCRIPTING（LUA-脚本）"><a href="#LUA-SCRIPTING（LUA-脚本）" class="headerlink" title="LUA SCRIPTING（LUA 脚本）"></a>LUA SCRIPTING（LUA 脚本）</h2><p>Lua 脚本的最大限制执行时间（单位：毫秒）</p>
+<p>如果 Lua 执行时间达到了最大时间限制，Redis 会记录该脚本的执行时间达到了限制且还未结束，并会对那些查询响应错误。</p>
+<p>当一个脚本运行了太久触及了配置的最大执行时间，那么只有 SCRIPT KILL 和 SHUTDOWN NOSVAE 命名可以使用。第一个命令可以用来停止还没有调用写命名的脚本。而当你的脚本已经运行了写命令但是你又不想要等待脚本自己主动断开连接，那么第二个命令就是你唯一可以用来停止服务的命令。</p>
+<p>将该配置设置为 0 或者负值，则无最长执行时间的限制且没有相关的报警。</p>
+<h3 id="lua-time-limit-5000"><a href="#lua-time-limit-5000" class="headerlink" title="lua-time-limit 5000"></a>lua-time-limit 5000</h3><h2 id="REDIS-CLUSTER（Redis-集群）"><a href="#REDIS-CLUSTER（Redis-集群）" class="headerlink" title="REDIS CLUSTER（Redis 集群）"></a>REDIS CLUSTER（Redis 集群）</h2><p>一般的 Redis 实例不能成为 Redis 集群的一部分；只有作为集群启动的节点才可以。如果想要将 Redis 实例用作集群节点只需要把下面的配置取消掉注释即可：</p>
+<h3 id="cluster-enable-yes"><a href="#cluster-enable-yes" class="headerlink" title="#cluster-enable yes"></a>#cluster-enable yes</h3><p>每个集群节点都有一个集群配置文件。这个文件不倾向于去手动编辑。它由 Redis 节点创建和更新。每个 Redis 集群节点要求有不同的集群配置文件。需要确保跑在同一个系统的实例没有重叠的集群配置文件名。</p>
+<h3 id="cluster-config-file-nodes-6379-conf"><a href="#cluster-config-file-nodes-6379-conf" class="headerlink" title="#cluster-config-file nodes-6379.conf"></a>#cluster-config-file nodes-6379.conf</h3><p>集群节点的超时时间配置（单位：毫秒）应该不超过被视为连接失败的时间。</p>
+<p>大部分的内部时间限制配置一般是集群节点超时时间的倍数。</p>
+<h3 id="cluster-node-time-15000"><a href="#cluster-node-time-15000" class="headerlink" title="#cluster-node-time 15000"></a>#cluster-node-time 15000</h3><p>如果主节点故障，如果副本的数据太旧，应该避免使用该副本进行故障转移。</p>
+<p>对于副本的 “数据新旧” 并没有一个简单的衡量方式，但是至少应该具备以下的两个特点：</p>
+<ol>
+<li>如果有多个副本可以进行故障转移，它们之间会互相交换信息，然后给那些从主节点复制更多数据的副本更高的优先级。副本之间通过复制的程度进行排序，然后根据它们的排名，以一定比较的时延开始故障转移（and apply to the start of the failover a delay proportional to their rank）。</li>
+<li>每个副本都会计算自己最近一次和主节点进行通信的时间。这个时间可以由最近的一次 ping 或者接受到命令的时间（如果主节点还处于 “connected” 状态），又或者是自从上一次和主节点断开连接的时间（如果复制的连接已经断开）。如果上一次的通信时间太早了，那该副本完全没有进行故障转移的资格。</li>
+</ol>
+<p>第 2 点可以由用户来调整。但是还有一个条件就是，如果副本自从上次和主节点通信以来，超过了下面这个公式的时候后，这个副本无论如何都不能被选来进行故障转移：</p>
+<p>(node-timeout * replica-validity-factor) + repl-ping-replica-period</p>
+<p>比如，node-timeout 为 30s，replica-validity-factor 为 10s，假设 repl - ping - replica - period 为默认值 10s，那么副本如果超过 310s 还没有和主节点通上信，那么该副本不会被选择为故障转移的对象。</p>
+<p>replica-validity-factor 值比较大的话，副本的数据延迟就会比较高。如果太小的话，cluster 就可以无法选举合适的进行故障转移。</p>
+<p>为了更好的可用性，可以把  replica - validity - factor 的值设置为 0，也就是说，不管副本上次和主节点进行通信的时间过了多久，副本都有机会尝试进行故障转移。（但是他们总会尝试按照偏移量的排名应用延迟）（However they’ll always try to apply a delay proportional to their offset rank）</p>
+<p>Zero is the only value able to guarantee that when all the partitions heal the cluster will always be able to continue.</p>
+<h3 id="cluster-replica-validity-factor-10"><a href="#cluster-replica-validity-factor-10" class="headerlink" title="#cluster-replica-validity - factor 10"></a>#cluster-replica-validity - factor 10</h3><p>副本集群可以向孤独的主节点转移，孤独的意思就是该主节点没有依附的副本可用。这样可以提升集群抵抗风险的能力，毕竟如果孤独主节点异常后可能没有可用的副本可选。</p>
+<p>副本集群向孤独主节点进行迁移是有条件的，这个条件是主节点至少还有给定数量的副本仍为其服务。这个数量值一般称为 “migration barrier”。比如该值配置为 1，说明副本迁移的条件是该主节点至少还有 1 个副本为其工作，以此类推。这一般也反映了你想要为主节点配置的集群的副本数量。</p>
+<p>该配置项默认值是 1（副本迁移只在目标主节点至少还有一个副本为其工作的条件下才会进行）。想要禁止迁移的话只要把该项的值设置的大一点即可。也可以设置为 0 值，但是最好是在测试环境下使用，生产环境下是危险的配置。</p>
+<h3 id="cluster-migration-barrier-1"><a href="#cluster-migration-barrier-1" class="headerlink" title="#cluster-migration-barrier 1"></a>#cluster-migration-barrier 1</h3><p>默认情况下，如果 Redis 集群节点检测到至少有一个哈希槽没有覆盖到（没有可用的节点来服务它），集群节点会停止接受查询。这样子的话，如果集群部分瘫痪（比如一个范围内的哈希槽没有被覆盖），最终整个集群都会停止服务。当所有的槽都被覆盖后，集群会自动恢复服务。</p>
+<p>但有时候你又想在集群部分瘫痪的情况下，让那些还在工作且正常进行覆盖的节点继续接受查询。那么只要把配置选项设置为 no 即可。</p>
+<h3 id="cluster-require-full-coverage-yes"><a href="#cluster-require-full-coverage-yes" class="headerlink" title="#cluster-require-full-coverage yes"></a>#cluster-require-full-coverage yes</h3><p>把该配置设置为 yes 的话，主节点发生故障期间副本无法进行自动转移。但主节点仍然可以进行手动故障转移。</p>
+<p>这个配置项在多场景中可以发挥作用，特别…</p>
+<h3 id="cluster-replica-no-failover-no"><a href="#cluster-replica-no-failover-no" class="headerlink" title="#cluster-replica-no-failover no"></a>#cluster-replica-no-failover no</h3><p>通过阅读官方的<a href="http://redis.io/">在线文档</a>来确保正确地配置你的 cluster 吧。</p>
+<h2 id="CLUSTER-DOCKER-NAT-support"><a href="#CLUSTER-DOCKER-NAT-support" class="headerlink" title="CLUSTER DOCKER/NAT support"></a>CLUSTER DOCKER/NAT support</h2><p>在某些部署情况中，Redis 集群节点可能会出现地址发现失败，原因是地址是 NAT-ted 或者端口转发（一个典型的场景就是 Docker 或者其他容器）。</p>
+<p>为了让 Redis 集群在这种环境下正常工作，就需要个静态的配置文件来让集群节点知晓他们的公共地址。下面两个选项就有这个作用：</p>
+<ul>
+<li>cluster-announce-ip</li>
+<li>cluster-announce-port</li>
+<li>cluster-announce-bus-port</li>
+</ul>
+<h2 id="SLOW-LOG（慢日志）"><a href="#SLOW-LOG（慢日志）" class="headerlink" title="SLOW LOG（慢日志）"></a>SLOW LOG（慢日志）</h2><p>Redis 的慢日志用来记录那些执行了超过特定时间的查询行为。这里的执行时间不包括 I/O 操作，比如和客户端的通信，发送回复的时间等等。而应该只是执行了这个命令本身需要的时间（就是说执行这个命令期间，线程会阻塞且不会同时响应其他的请求）。</p>
+<p>慢日志有两个属性可以配置：一个用来告诉 Redis 执行时间的定义，什么样的执行时间才要被记录。另一个用来配置慢日志的长度。记录一个新的命令，队列中的最旧的命令会被移除。</p>
+<p>下面配置的时间单位是<strong>微秒</strong>，所以 1000000 相当于 1 秒。注意如果配置的是负值，慢日志则不起作用。如果是 0 的话，慢日志则会记录每个命令。</p>
+<h3 id="slowlog-log-slower-than-10000"><a href="#slowlog-log-slower-than-10000" class="headerlink" title="slowlog-log-slower-than 10000"></a>slowlog-log-slower-than 10000</h3><p>长度的配置没有任何限制。但是主要内存的消耗。你可以使用慢日志的 SLOWLOG RESET 来回收内存。</p>
+<h3 id="slowlog-max-len-128"><a href="#slowlog-max-len-128" class="headerlink" title="slowlog-max-len 128"></a>slowlog-max-len 128</h3><h2 id="LATENCY-MONITOR（延迟监控）"><a href="#LATENCY-MONITOR（延迟监控）" class="headerlink" title="LATENCY MONITOR（延迟监控）"></a>LATENCY MONITOR（延迟监控）</h2><p>Redis 的延迟监控系统会在 Redis 运行期间以不同的操作对象为样本，收集和 Redis 实例相关的延迟行为。</p>
+<p>用户可以通过 LETENCY 命令，打印相关的图形信息和获取相关的报告。</p>
+<p>延迟监控系统只会收集那些执行时间超过了我们通过 latency-monitor-threshold 配置的值的操作。当 latency-monitor-threshold 的值设置为 0 的时候，延迟监控系统就会关闭。</p>
+<p>默认情况下延迟监控是关闭的，因为大多数情况下你可能没有延迟相关的问题，而且收集数据对性能表现是有影响的，虽然影响很小，但是在系统高负载运行情况下还是不能忽视的。延迟监控系统可以在运行期间使用 “CONFIG SET latency-monitor-threshold <milliseconds>“ 开启。</milliseconds></p>
+<h3 id="latency-monitor-threshold-0"><a href="#latency-monitor-threshold-0" class="headerlink" title="#latency-monitor-threshold 0"></a>#latency-monitor-threshold 0</h3><h2 id="EVENT-NOTIFICATION（事件通知）"><a href="#EVENT-NOTIFICATION（事件通知）" class="headerlink" title="EVENT NOTIFICATION（事件通知）"></a>EVENT NOTIFICATION（事件通知）</h2><p>Redis 可以将键空间中的事件通知到 发布/订阅 客户端。这一特性在<a href="http://redis.io/topics/notifications">http://redis.io/topics/notifications</a>有详细的文档记录。</p>
+<p>如果实例上的键空间时间通知开启的话，这时候客户端对存储在 Database 0 的 “foo” 键执行 DEL 操作，那么会有两条信息通过 发布/订阅 被公布：</p>
+<ul>
+<li>PUBLISH __keyspace@0__：foo del</li>
+<li>PUBLISH __keyevent@0__：del foo</li>
+</ul>
+<p>也可以在一组 classes 中选择 Redis 会通知的事件。每个 class 通过一个字符定义：</p>
+<ul>
+<li>K     Keyspace events, published with <strong>keyspace@<db></db></strong> prefix.</li>
+<li>E     Keyevent events, published with <strong>keyevent@<db></db></strong> prefix.</li>
+<li>g     Generic commands (non-type specific) like DEL, EXPIRE, RENAME, …</li>
+<li>$     String commands</li>
+<li>l     List commands</li>
+<li>s     Set commands</li>
+<li>h     Hash commands</li>
+<li>z     Sorted set commands</li>
+<li>x     Expired events (events generated every time a key expires)</li>
+<li>e     Evicted events (events generated when a key is evicted for maxmemory)</li>
+<li>A     Alias for g$lshzxe, so that the “AKE” string means all the events.</li>
+</ul>
+<p>“notify-keyspace-events” 的参数采用一个由 0 个或者多个字符的字符串。空串意味着关闭通知事件。</p>
+<p>比如：开启 list 和 generic 事件，从事件名称的角度，可以使用：notify-keyspace-events Elg</p>
+<p>比如：为了获得订阅了 <strong>keyevnet@0</strong>:expired 的过期键的流，使用：notify-keyspace-evnets Ex</p>
+<p>默认所有的通知事件都是关闭的因为大多数的用户不需要这个功能且这个功能需要额外的开销（has some overhead）。注意：如果你没有配置至少一个 K 或者 E，没有事件会被传递。</p>
+<p>notify-keyspace-events “”</p>
+<h2 id="ADVANCED-CONFIG（高级配置）"><a href="#ADVANCED-CONFIG（高级配置）" class="headerlink" title="ADVANCED CONFIG（高级配置）"></a>ADVANCED CONFIG（高级配置）</h2><p>哈希（数据类型）如果保存的 entry 很少的话，其底层的数据结构会采用更加节省内存的方式存储。最大的 entry 不应该超过给定的阈值。可以通过下面的配置项配置阈值。</p>
+<h3 id="hash-max-ziplist-entries-512"><a href="#hash-max-ziplist-entries-512" class="headerlink" title="hash-max-ziplist-entries 512"></a>hash-max-ziplist-entries 512</h3><h3 id="hash-max-ziplist-value-64"><a href="#hash-max-ziplist-value-64" class="headerlink" title="hash-max-ziplist-value 64"></a>hash-max-ziplist-value 64</h3><p>Lists（数据类型）底层也采用特殊的编码来节省空间。</p>
+<p>每个 list 节点内部的 entry 数目可以通过固定的最大大小和最大元素数量来指定。</p>
+<p>比如一个固定的最大大小，使用 -5 到 -1，说明：</p>
+<ul>
+<li>-5：最大大小：64kb，对正常的工作量来说不推荐</li>
+<li>-4：最大大小：32kb，不推荐</li>
+<li>-3：最大大小：16kb，可能不太推荐</li>
+<li>-2：最大大小：8kb，推荐</li>
+<li>-1：最大大小：4kb，推荐</li>
+</ul>
+<p>正数值代表每个 list 节点可以存储的元素数量。</p>
+<p>各方面表现最好的选择一般是 -2（8kb 大小）或者 -1（4kb 大小），当然如果你的应用场景比较特殊的话，你可以自己进行调整。</p>
+<h3 id="list-max-ziplist-size-2"><a href="#list-max-ziplist-size-2" class="headerlink" title="list-max-ziplist-size -2"></a>list-max-ziplist-size -2</h3><p>Lists 也可以压缩。</p>
+<p>压缩程度的值是指从 ziplist 节点的一侧到 list 的另一侧之间进行压缩。为了保持 list 的 push/pop 命令可以快速的执行，list 的头结点和尾节点总是不会被压缩。具体的设置如下：</p>
+<ul>
+<li>0：不进行任何的压缩操作</li>
+<li>1：depth 1 指的是排除了头尾的一个节点长度，其余的进行压缩。比如 [head]-&gt;node1-&gt;[tail]，除了头尾节点，node1 会被压缩。</li>
+<li>2： [head]-&gt;node1-&gt;node2-&gt;node3-&gt;node4-&gt;[tail]，2 意味着 head + node1，tail + node4 不会被压缩。之间的节点会被压缩。</li>
+<li>以此类推…</li>
+</ul>
+<h3 id="list-compress-depth-0"><a href="#list-compress-depth-0" class="headerlink" title="list-compress-depth 0"></a>list-compress-depth 0</h3><p>Sets 只在一种情况下会进行特殊编码：当该 set 仅仅由 strings 组成，且恰好是在基数为 10 的 64 位有符号整数范围内的整数。</p>
+<p>此项配置限制了 sets 进行特殊编码策略的最大 set 大小。</p>
+<h3 id="set-max-intset-entries-512"><a href="#set-max-intset-entries-512" class="headerlink" title="set-max-intset-entries 512"></a>set-max-intset-entries 512</h3><p>和 hashes，lists 类似，sorted set 也有特殊的节省空间的编码策略。这个编码策略只在 sorted set 的长度和元素低于下面的限制才会生效：</p>
+<h3 id="zset-max-ziplist-entries-128"><a href="#zset-max-ziplist-entries-128" class="headerlink" title="zset-max-ziplist-entries 128"></a>zset-max-ziplist-entries 128</h3><h3 id="zset-max-ziplist-value-64"><a href="#zset-max-ziplist-value-64" class="headerlink" title="zset-max-ziplist-value 64"></a>zset-max-ziplist-value 64</h3><p>HyperLogLog 稀疏代表字节的限制配置。该限制包括了 16 个字节的首部。如果 HyperLogLog 使用稀疏代表的字节超过了该配置的限制，就会转换成密集的表示形式。</p>
+<p>该值超过了 16000 就起不到作用了。因为到达了该限制时使用密集的表示形式在内存上会更高效。</p>
+<p>建议配置的值大约在 3000 左右，这个值在使用高效的空间编码同时，还不会让在稀疏编码情况下时间复杂度为 O(N) 的 PFADD 命令性能下降的太厉害。如果你的 CPU 完全够用，比较关心空间的话，且数据集合大部分是由基数在 0 ~ 15000 范围内组成的 HyperLogLog 组成，该配置值可以提高至约 10000。</p>
+<h3 id="hll-sparse-max-bytes-3000"><a href="#hll-sparse-max-bytes-3000" class="headerlink" title="hll-sparse-max-bytes 3000"></a>hll-sparse-max-bytes 3000</h3><p>Streams 集节点的最大 大小 / 个数。 stream 这一数据结构大概是一个带有多个节点，节点中包含了多个项的一棵树。这个配置可以决定每个节点最大的大小，以及当增加了新的 stream 条目，在旧节点向新节点转换之前可以包含的最大的项数量。其中的任何一项设置成 0 就可以取消对应的限制。所以如果你只想要其中的一项就把另一个项设置为 0 即可。</p>
+<h3 id="stream-node-max-bytes-4096"><a href="#stream-node-max-bytes-4096" class="headerlink" title="stream-node-max-bytes 4096"></a>stream-node-max-bytes 4096</h3><h3 id="stream-node-max-entries-100"><a href="#stream-node-max-entries-100" class="headerlink" title="stream-node-max-entries 100"></a>stream-node-max-entries 100</h3><p>Active rehash 会使用 CPU 时间 100 毫秒中的 1 个毫秒来 rehash Redis 的主哈希表（该哈希表是用 key 来定位 value 的位置）。Redis 的这个哈希表实现使用了 lazy-rehash：对该哈希表的操作越多，哈希表的 rehash 步骤进行的越多。如果你的 Redis 实例很空闲，rehash 就不会完成且哈希表可能占用更多的内存空间。</p>
+<p>默认的话 active rehash 会使用 1 秒中的 10 毫秒来 rehash 哈希表，且在可以的时候释放内存空间。</p>
+<p>如果你不确定该不该用的话（可以进行如下参考）：</p>
+<p>对于延迟的要求很高，比如 Redis 对查询的延迟有 2 毫秒的延迟都无法忍受的话，使用 “no” 选项。</p>
+<p>对延迟的要求不高，在希望在可以的时候尽快(assp，as soon as possible)释放内存空间，使用 “yes”。</p>
+<h3 id="activerehashing-yes"><a href="#activerehashing-yes" class="headerlink" title="activerehashing yes"></a>activerehashing yes</h3><p>客户端输出缓冲区限制可以在客户端因为某些原因无法及时从服务端读取数据时（一个常见的原因是一个 发布/订阅 的客户端的消费速度匹配不上发布端的生产速度），用来强制客户端断开链接。</p>
+<p>因为存在三种不同类型的客户端，这个限制也有三种：</p>
+<ul>
+<li>normal，正常的客户端包括了 MONITOR 客户端。</li>
+<li>replica，副本客户端。</li>
+<li>pubsub，那些至少订阅了 pubsub 频道或者模式的客户端。</li>
+</ul>
+<p>client-output-buffer-limit 的语法如下：</p>
+<p>client-output-buffer-limit <class> <hard limit> <soft limit> <soft seconds></soft></soft></hard></class></p>
+<p>客户端输出缓冲区一达到 hard limit 或者达到了 soft limit 且持续了 soft seconds ，客户端会立即断开连接。</p>
+<p>比如说一个实例配置的 hard limit 是 32 megebytes，soft limit 是 16 megabytes / 10 seconds，客户端会因为输出缓冲区到达了 32 megebytes 或者超过了 16 megabytes 且持续 10 秒 时被断连。</p>
+<p>默认的 normal 客户端没有这种限制因为他们没有进行请求的话一般不会收到数据，如果这种客户端发送了一个请求，其实也只有异步客户端可能会出现发出请求的待接收数据超出了客户端的接收能力。</p>
+<p>pubsub 和 replica 客户端是有默认限制的，因为订阅端和副本端接收数据通过另一方推送决定的。</p>
+<p>hard 和 soft limit 都可以通过设置为 0 来取消。</p>
+<h3 id="client-outputbuffer-limit-normal-0-0-0"><a href="#client-outputbuffer-limit-normal-0-0-0" class="headerlink" title="client-outputbuffer-limit normal 0 0 0"></a>client-outputbuffer-limit normal 0 0 0</h3><h3 id="client-outputbuffer-limit-replica-256mb-64mb-60"><a href="#client-outputbuffer-limit-replica-256mb-64mb-60" class="headerlink" title="client-outputbuffer-limit replica 256mb 64mb 60"></a>client-outputbuffer-limit replica 256mb 64mb 60</h3><h3 id="client-outputbuffer-limit-norma-32mb-8mb-60"><a href="#client-outputbuffer-limit-norma-32mb-8mb-60" class="headerlink" title="client-outputbuffer-limit norma 32mb 8mb 60"></a>client-outputbuffer-limit norma 32mb 8mb 60</h3><p>客户端用来累计新命令的查询缓冲区（Client query buffers accumulate new commands）。他们默认被限制成一个固定的值来避免比如不进行同步的协议（很可能是客户端的 bug）导致在查询缓冲区未绑定的内存占用。如果你有比如巨大的 multi/exec 请求这种特殊的需求，你也可以关系这项配置。</p>
+<h3 id="client-query-buffer-limit-1gb"><a href="#client-query-buffer-limit-1gb" class="headerlink" title="client-query-buffer-limit 1gb"></a>client-query-buffer-limit 1gb</h3><p>在 Redis 协议中，块请求，即单个请求的元素，通常限制在 512 mb。你也可以在这里改变这个配置。</p>
+<h3 id="proto-max-bulk-len-512-mb"><a href="#proto-max-bulk-len-512-mb" class="headerlink" title="proto-max-bulk-len 512 mb"></a>proto-max-bulk-len 512 mb</h3><p>Redis 的内部调用用来执行很多后台任务，比如关闭超时的客户端连接，清除（purging）一直没有被访问的过期键值对，等等等等。</p>
+<p>每个任务调用不一定都是在一个频率，Redis 会通过配置的 “hz” 值来检测需要执行的任务。</p>
+<p>默认的 “hz” 设置为 10。提高这个值的话 Redis 在<strong>空闲时</strong>会占用更多 CPU，但是同时也会让 Redis 对于处理上面提到的那些任务更加快速和精确。</p>
+<p>“hz” 可以配置的范围在 1 到 500。但是超过 100 就已经不是一个好选择了。大部分的用户应该用默认值就足够了，如果严格要求低延迟的话可以把这个值提到 100。</p>
+<h3 id="hz-10"><a href="#hz-10" class="headerlink" title="hz 10"></a>hz 10</h3><p>通常来说，对于数量会改变的客户端连接来说，HZ 值可以根据这个进行成比例的改变是很有效的。例如，这有助于避免每次后台的任务调用处理过多客户端连接，这样可以避免延迟飙升。</p>
+<p>由于 Redis 提供的默认值设定为 10，比较保守。为此 Redis 也默认开启了可以暂时提高 HZ 的值以应对过多客户端连接的情况。</p>
+<p>默认 HZ 动态配置是开启的，该动态值以配置的静态值为基准，在客户端连接数多的时候，HZ 值可以上升到基准值的数倍。这样的好处是空闲的实例占用更少的 CPU 同时繁忙的实例响应速度会更好。</p>
+<h3 id="dynamic-hz-yes"><a href="#dynamic-hz-yes" class="headerlink" title="dynamic-hz yes"></a>dynamic-hz yes</h3><p>当子节点重写 AOF 文件时，同时这个配置开启的话，AOF 文件每生成 32 MB 就会进行一次同步。这样做的好处是文件可以分步写到磁盘且避免了阻塞导致的高延迟。</p>
+<h3 id="aof-rewrite-incremental-fsync-yes"><a href="#aof-rewrite-incremental-fsync-yes" class="headerlink" title="aof-rewrite-incremental-fsync yes"></a>aof-rewrite-incremental-fsync yes</h3><p>Redis 存储 RDB 文件时，同时这个配置开启的话，RDB 文件每生成 32 MB 就会进行一次同步。这样做的好处是文件可以分步写到磁盘且避免了阻塞导致的高延迟。</p>
+<h3 id="rdb-save-incremental-fsync-yes"><a href="#rdb-save-incremental-fsync-yes" class="headerlink" title="rdb-save-incremental-fsync yes"></a>rdb-save-incremental-fsync yes</h3><p>Redis 的 LFU 淘汰策略（看 maxmemroy setting 那一部分）可以进行调整。但是最好的情况还是保持默认的配置。最好对这些配置的影响有深刻的理解，且明白 LFU 对 key 的影响（可以通过 OBJECT FREQ 命令了解），再进行 LFU 策略的调整。</p>
+<p>Redis 的 LFU 实现有两个小配置可以调整：the counter logarithm factor and the counter decay time。在该这两个配置前一定要有充分的理解。</p>
+<p>LFU 计数器每个 key 最少 8 个比特，最大可以到 255 比特。Redis 使用对数的形式进行概率性的增长。对一个旧的计数器值，当这个 key 被访问后，计数器增长方式如下：</p>
+<ol>
+<li>先给一个 0 到 1 的随机值 R。</li>
+<li>在通过 1/(old_value*lfu_log_factor+1) 算出一个概率值 P。</li>
+<li>如果 R &lt; P，计数器的值才会进行增长。</li>
+</ol>
+<p>lfu_log_factor 的默认值为 10。下面这个表展示了不同的 lfu_log_factor 值以及 key 访问频率对应的计数器变化的频率：</p>
+<p><img src="/2020/09/25/redis-conf-zh-cn/image-20210925114039445.png" alt="image-20210925114039445"></p>
+<p>注意 1：上面的表可以通过以下的命令获取：</p>
+<p>redis-benchmark -n 1000000 incr foo</p>
+<p>redis-cli object freq foo</p>
+<p>注意 2：为了给新的 key 计算命中数的机会，计数器的值会初始化为 5 。</p>
+<p>计数器的衰减时间（单位：分钟），必须足够让 key counter 变为一半（值小等 10 的话，则递减）。</p>
+<p>默认的 lfu-decay-time 值是 1。配置为 0 意味着每次扫描到的话都会衰减 计数器。</p>
+<h3 id="lfu-log-factor-10"><a href="#lfu-log-factor-10" class="headerlink" title="#lfu-log-factor 10"></a>#lfu-log-factor 10</h3><h3 id="lfu-decay-time-1"><a href="#lfu-decay-time-1" class="headerlink" title="#lfu-decay-time 1"></a>#lfu-decay-time 1</h3><h2 id="ACTIVE-DEFRAGMENTATION（碎片整理）"><a href="#ACTIVE-DEFRAGMENTATION（碎片整理）" class="headerlink" title="ACTIVE DEFRAGMENTATION（碎片整理）"></a>ACTIVE DEFRAGMENTATION（碎片整理）</h2><p><strong>警告：以下的特性都是实验性的。</strong>但这些配置在生产环境中由多名工程师进行过多次的压力测试。</p>
+<p><strong>什么是碎片整理？</strong></p>
+<p>活动碎片整理可以让 Redis 在分配和回收内存后，整理聚合随之产生的内存碎片，以此来进行内存回收。</p>
+<p>每个分配器（幸运的是用  Jemalloc 会产生的更少）工作时或多或少都会产生碎片。通常 Server 需要通过重启减少碎片，或者至少要通过冲刷所有数据并重新生成来减少碎片。我们得感谢 Oran Agra 从 Redis 4.0 开始实现的可以在 Server 运行时进行上面描述的操作来减少碎片。</p>
+<p>当产生的碎片超过了某个程度后（可以看下面的配置项了解），Redis 就会利用 Jemalloc 提供的特性开始在一个连接的内存区域创建值的副本，同时会释放有了副本的数据。对所有的 key 重复的进行这样的处理会让碎片化程度回到正常的范围。</p>
+<p>一定要理解的几点：</p>
+<ol>
+<li>这个特性默认关闭，且只当你使用 Jemalloc 来重新编译 Redis 的源码才会生效。Linux 下默认是这么做的。</li>
+<li>如果没有碎片化的问题，这个特性最好永远不要打开。</li>
+<li>一旦你遇到了碎片化的问题，你可以在需要的时候通过命令 “CONFIG SET activedefrag yes” 开启该特性。</li>
+</ol>
+<p>该配置还有很多参数就是用来配置上述提到的有关碎片整理的功能特性的。如果你不确定他们的意思的话那最好还是保持默认的配置选择。</p>
+<p>开启碎片整理。</p>
+<h3 id="activedefrag-yes"><a href="#activedefrag-yes" class="headerlink" title="#activedefrag yes"></a>#activedefrag yes</h3><p>开始碎片整理的最低碎片浪费空间大小。</p>
+<h3 id="active-defrag-ignore-bytes-100mb"><a href="#active-defrag-ignore-bytes-100mb" class="headerlink" title="#active-defrag-ignore-bytes 100mb"></a>#active-defrag-ignore-bytes 100mb</h3><p>开始碎片整理的最低碎片空间占用百分比。</p>
+<h3 id="active-defrag-threshold-lower-10"><a href="#active-defrag-threshold-lower-10" class="headerlink" title="#active-defrag-threshold-lower 10"></a>#active-defrag-threshold-lower 10</h3><p>我们最大程度进行整理的最大碎片程度（Maximum percentage of fragmentation at which we use maximum effort）。</p>
+<h3 id="active-defrag-threshold-upper-100"><a href="#active-defrag-threshold-upper-100" class="headerlink" title="#active-defrag-threshold-upper 100"></a>#active-defrag-threshold-upper 100</h3><p>碎片整理的最小的 CPU 占用百分比。</p>
+<h3 id="active-defrag-cycle-min-5"><a href="#active-defrag-cycle-min-5" class="headerlink" title="#active-defrag-cycle-min 5"></a>#active-defrag-cycle-min 5</h3><p>碎片整理的最大的 CPU 占用比。</p>
+<h3 id="active-defrag-cycle-max-75"><a href="#active-defrag-cycle-max-75" class="headerlink" title="#active-defrag-cycle-max 75"></a>#active-defrag-cycle-max 75</h3><p>在主哈希表扫描中，最多进行处理的 set/hash/zset/list 域的数量。</p>
+<h3 id="active-defrag-max-scan-fields-1000"><a href="#active-defrag-max-scan-fields-1000" class="headerlink" title="#active-defrag-max-scan-fields 1000"></a>#active-defrag-max-scan-fields 1000</h3>]]></content>
+      <categories>
+        <category>Redis</category>
+      </categories>
+      <tags>
+        <tag>翻译</tag>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+</search>

@@ -1,17 +1,17 @@
 ---
-title: Hexo+GithubPages部署过程问题记录
-date: 2020-06-02 21:54:14
+title: Hexo+GithubPages+Mac+Win 部署问题记录
+date: 2020-01-08 21:54:14
+updated: 2020-01-08 21:54:14
+categories: hexo
 tags: 
-  -- blog
+  - blog
 ---
-
-
 
 ## 本地初始化一个Hexo项目
 
 **注意：本地的目录不要动**，**可以重命名**。
 
-重新新建一个空目录，作为你的博客目录。进入该目录，初始化一个Hexo项目：
+重新新建一个空目录，作为你的博客目录。进入该目录，初始化一个Hexo项目：<!--more-->
 
 ```
 hexo init
@@ -21,7 +21,7 @@ npm install hexo-deployer-git *--save
 
 然后用自己原来博客里的文件替换掉这里的`source\`, `scaffolds\`, `themes\`,`_config.yml`替换成自己原来博客里的。**注意，一定要把themes/next中的.git/目录删除**
 
-<!--more-->
+
 
 然后上传到代码仓库，同时初始化了 main 分支。
 
@@ -43,7 +43,7 @@ npm install
 npm install hexo-deployer-git --save
 ```
 
-#### 不过滤 .gitignore 的内容协作尝试
+### 不过滤 .gitignore 的内容协作尝试
 
 hexo clean，hexo generate 正常，hexo d 部署的时候报错
 
@@ -53,12 +53,31 @@ hexo clean，hexo generate 正常，hexo d 部署的时候报错
 
 解决方法：删除 .deploy_git，重新 hexo d 生成即可。（我们可以在 .gitignore 里过滤这个文件夹）
 
-# 
 
-参考链接：
+
+## 常见语法
+
+- tag: 
+  - -&nbsp;tag1
+  - -&nbsp;tag2
+- 空格：'&nbsp + ;'
+- 文章缩略显示：<!--more-- >
+
+
+
+## 样式设置
+
+[关于footer修改问题 · Issue #928 · iissnan/hexo-theme-next (github.com)](https://github.com/iissnan/hexo-theme-next/issues/928)
+
+[Hexo 显示分类、标签问题](https://blog.csdn.net/Wonz5130/article/details/84666519)
+
+[Hexo-Next 主题博客个性化配置](https://blog.csdn.net/as480133937/article/details/100138838)
+
+- 目录自动展开和换行：主题配置文件搜索 toc。
+
+## 参考链接
 
 [mac和windows协同写hexo博客](https://wandouduoduo.github.io/articles/902dbefe.html)
 
 [hexo 图片显示+typora](https://www.caoayu.xyz/post/hexo/)
 
-[Hexo 显示分类、标签问题](https://blog.csdn.net/Wonz5130/article/details/84666519)
