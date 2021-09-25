@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico">
+  <link rel="mask-icon" href="/images/favicon.ico" color="#222">
+  <link rel="manifest" href="/manifest.json">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-bounce.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<meta name="description" content="复杂度时间复杂度：代码执行时间随着数据规模变化的趋势 空间复杂度：代码消耗空间随着数据规模变化的趋势">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据结构与算法学习记录概览">
+<meta property="og:url" content="http://example.com/2020/11/06/ds-algo-study-record-overview/index.html">
+<meta property="og:site_name" content="Crayon">
+<meta property="og:description" content="复杂度时间复杂度：代码执行时间随着数据规模变化的趋势 空间复杂度：代码消耗空间随着数据规模变化的趋势">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2020/11/06/ds-algo-study-record-overview/1.png">
+<meta property="article:published_time" content="2020-11-06T10:54:14.000Z">
+<meta property="article:modified_time" content="2020-11-06T10:54:14.000Z">
+<meta property="article:author" content="Hexin Fang">
+<meta property="article:tag" content="数据结构">
+<meta property="article:tag" content="算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/11/06/ds-algo-study-record-overview/1.png">
+
+
+<link rel="canonical" href="http://example.com/2020/11/06/ds-algo-study-record-overview/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2020/11/06/ds-algo-study-record-overview/","path":"2020/11/06/ds-algo-study-record-overview/","title":"数据结构与算法学习记录概览"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>数据结构与算法学习记录概览 | Crayon</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Crayon</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">Keep going</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A4%8D%E6%9D%82%E5%BA%A6"><span class="nav-number">1.</span> <span class="nav-text">复杂度</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%B0%E7%BB%84"><span class="nav-number">2.</span> <span class="nav-text">数组</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E7%82%B9"><span class="nav-number">2.1.</span> <span class="nav-text">特点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%93%BE%E8%A1%A8"><span class="nav-number">3.</span> <span class="nav-text">链表</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E9%93%BE%E8%A1%A8"><span class="nav-number">3.1.</span> <span class="nav-text">单链表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BE%AA%E7%8E%AF%E9%93%BE%E8%A1%A8"><span class="nav-number">3.2.</span> <span class="nav-text">循环链表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%8C%E5%90%91%E9%93%BE%E8%A1%A8%EF%BC%8C%E5%8F%8C%E5%90%91%E5%BE%AA%E7%8E%AF%E9%93%BE%E8%A1%A8"><span class="nav-number">3.3.</span> <span class="nav-text">双向链表，双向循环链表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E6%80%A7"><span class="nav-number">3.4.</span> <span class="nav-text">特性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%93%BE%E8%A1%A8%E4%BB%A3%E7%A0%81"><span class="nav-number">3.5.</span> <span class="nav-text">链表代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%93%BE%E8%A1%A8%E7%9A%84%E8%BE%B9%E7%95%8C%E6%9D%A1%E4%BB%B6%E5%A4%84%E7%90%86"><span class="nav-number">3.5.1.</span> <span class="nav-text">链表的边界条件处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%93%A8%E5%85%B5%E7%BB%93%E7%82%B9"><span class="nav-number">3.5.2.</span> <span class="nav-text">哨兵结点</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A0%86%E6%A0%88"><span class="nav-number">4.</span> <span class="nav-text">堆栈</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E6%A0%88%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">4.1.</span> <span class="nav-text">简单栈的实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BA%94%E7%94%A8"><span class="nav-number">4.2.</span> <span class="nav-text">应用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88"><span class="nav-number">4.2.1.</span> <span class="nav-text">函数调用栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A1%A8%E8%BE%BE%E5%BC%8F%E8%AE%A1%E7%AE%97"><span class="nav-number">4.2.2.</span> <span class="nav-text">表达式计算</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8B%AC%E5%8F%B7%E5%8C%B9%E9%85%8D"><span class="nav-number">4.2.3.</span> <span class="nav-text">括号匹配</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%98%9F%E5%88%97"><span class="nav-number">5.</span> <span class="nav-text">队列</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0"><span class="nav-number">5.1.</span> <span class="nav-text">队列实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BA%94%E7%94%A8-1"><span class="nav-number">5.2.</span> <span class="nav-text">应用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95"><span class="nav-number">6.</span> <span class="nav-text">排序算法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E7%9A%84%E4%B8%80%E4%BA%9B%E6%8C%87%E6%A0%87"><span class="nav-number">6.1.</span> <span class="nav-text">分析排序算法的一些指标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F"><span class="nav-number">6.2.</span> <span class="nav-text">冒泡排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8F%92%E5%85%A5%E6%8E%92%E5%BA%8F"><span class="nav-number">6.3.</span> <span class="nav-text">插入排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%89%E6%8B%A9%E6%8E%92%E5%BA%8F"><span class="nav-number">6.4.</span> <span class="nav-text">选择排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F"><span class="nav-number">6.5.</span> <span class="nav-text">归并排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8F"><span class="nav-number">6.6.</span> <span class="nav-text">快速排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E6%80%A7%E6%8E%92%E5%BA%8F"><span class="nav-number">6.7.</span> <span class="nav-text">线性排序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A1%B6%E6%8E%92%E5%BA%8F"><span class="nav-number">6.7.1.</span> <span class="nav-text">桶排序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A1%E6%95%B0%E6%8E%92%E5%BA%8F"><span class="nav-number">6.7.2.</span> <span class="nav-text">计数排序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E6%95%B0%E6%8E%92%E5%BA%8F"><span class="nav-number">6.7.3.</span> <span class="nav-text">基数排序</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E5%88%86%E6%9F%A5%E6%89%BE"><span class="nav-number">7.</span> <span class="nav-text">二分查找</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%B7%B3%E8%A1%A8"><span class="nav-number">8.</span> <span class="nav-text">跳表</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%A3%E5%88%97%E8%A1%A8"><span class="nav-number">9.</span> <span class="nav-text">散列表</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%A3%E5%88%97%E5%87%BD%E6%95%B0"><span class="nav-number">9.1.</span> <span class="nav-text">散列函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%A3%E5%88%97%E5%86%B2%E7%AA%81"><span class="nav-number">9.2.</span> <span class="nav-text">散列冲突</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%95%A3%E5%88%97%E5%86%B2%E7%AA%81"><span class="nav-number">9.2.1.</span> <span class="nav-text">解决散列冲突</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95"><span class="nav-number">10.</span> <span class="nav-text">哈希算法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A0%91%EF%BC%8C%E4%BA%8C%E5%8F%89%E6%A0%91"><span class="nav-number">11.</span> <span class="nav-text">树，二叉树</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E5%8F%89%E6%A0%91"><span class="nav-number">11.1.</span> <span class="nav-text">二叉树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%BB%A1%E4%BA%8C%E5%8F%89%E6%A0%91"><span class="nav-number">11.2.</span> <span class="nav-text">满二叉树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%8C%E5%85%A8%E4%BA%8C%E5%8F%89%E6%A0%91"><span class="nav-number">11.3.</span> <span class="nav-text">完全二叉树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%AD%98%E5%82%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">11.4.</span> <span class="nav-text">二叉树的存储方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%81%8D%E5%8E%86%E4%BA%8C%E5%8F%89%E6%A0%91"><span class="nav-number">11.5.</span> <span class="nav-text">遍历二叉树</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E5%8F%89%E6%9F%A5%E6%89%BE%E6%A0%91"><span class="nav-number">12.</span> <span class="nav-text">二叉查找树</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BA%A2%E9%BB%91%E6%A0%91"><span class="nav-number">13.</span> <span class="nav-text">红黑树</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A0%86%E6%8E%92%E5%BA%8F"><span class="nav-number">14.</span> <span class="nav-text">堆排序</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%93%8D%E4%BD%9C%E5%A0%86"><span class="nav-number">14.1.</span> <span class="nav-text">操作堆</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A0%86%E6%8E%92%E5%BA%8F-1"><span class="nav-number">14.2.</span> <span class="nav-text">堆排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A0%86%E5%BA%94%E7%94%A8"><span class="nav-number">14.3.</span> <span class="nav-text">堆应用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Trie-%E5%AD%97%E5%85%B8%E6%A0%91"><span class="nav-number">15.</span> <span class="nav-text">Trie 字典树</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9B%BE%E7%9A%84%E8%A1%A8%E7%A4%BA"><span class="nav-number">16.</span> <span class="nav-text">图的表示</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%82%BB%E6%8E%A5%E7%9F%A9%E9%98%B5"><span class="nav-number">16.1.</span> <span class="nav-text">邻接矩阵</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%82%BB%E6%8E%A5%E8%A1%A8%E3%80%81%E9%80%86%E9%82%BB%E6%8E%A5%E8%A1%A8"><span class="nav-number">16.2.</span> <span class="nav-text">邻接表、逆邻接表</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Hexin Fang"
+      src="/images/avatar_2.JPG">
+  <p class="site-author-name" itemprop="name">Hexin Fang</p>
+  <div class="site-description" itemprop="description">Keep going.</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/06/ds-algo-study-record-overview/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar_2.JPG">
+      <meta itemprop="name" content="Hexin Fang">
+      <meta itemprop="description" content="Keep going.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Crayon">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          数据结构与算法学习记录概览
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-11-06 18:54:14" itemprop="dateCreated datePublished" datetime="2020-11-06T18:54:14+08:00">2020-11-06</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Data-Structures-Algo/" itemprop="url" rel="index"><span itemprop="name">Data Structures & Algo</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="复杂度"><a href="#复杂度" class="headerlink" title="复杂度"></a>复杂度</h1><p><strong>时间复杂度：</strong>代码执行时间随着数据规模变化的趋势</p>
+<p><strong>空间复杂度：</strong>代码消耗空间随着数据规模变化的趋势</p>
+<span id="more"></span>
+
+<h1 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h1><p>一组连续的，存储相同数据类型的内存空间。</p>
+<h2 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h2><p>提供 根据下标 的 时间复杂度为 O(1) 的元素访问</p>
+<p>插入，删除操作。<strong>交换，标记</strong></p>
+<h1 id="链表"><a href="#链表" class="headerlink" title="链表"></a><strong>链表</strong></h1><p><strong>通过 指针(引用) 将零散的内存块连接起来</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public class ListNode &#123;</span><br><span class="line">    int value;</span><br><span class="line">    ListNode next;</span><br><span class="line">    public ListNode (int value) &#123;</span><br><span class="line">        this.value = value;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="单链表"><a href="#单链表" class="headerlink" title="单链表"></a><strong>单链表</strong></h2><h2 id="循环链表"><a href="#循环链表" class="headerlink" title="循环链表"></a>循环链表</h2><h2 id="双向链表，双向循环链表"><a href="#双向链表，双向循环链表" class="headerlink" title="双向链表，双向循环链表"></a><strong>双向链表，双向循环链表</strong></h2><h2 id="特性"><a href="#特性" class="headerlink" title="特性"></a>特性</h2><p>理论上，删除，插入操作只需要修改指针的指向，为 O(1) 的操作。但是，在实际生产环境中，删除，插入操作有两种情况（双向链表的好处）</p>
+<ol>
+<li>操作<strong>给定值</strong>条件的结点。这种情况需要遍历链表，找到目标</li>
+<li>操作<strong>给定指针</strong>指向的结点。这时已经可以访问到目标结点，但是要对它进行操作，需要知道它的前驱结点。这时双向链表就可以提供 O(1) 的操作，单链表则需进行遍历。</li>
+</ol>
+<h2 id="链表代码"><a href="#链表代码" class="headerlink" title="链表代码"></a>链表代码</h2><p><strong>务必理解 指针 或者 引用的概念</strong></p>
+<h3 id="链表的边界条件处理"><a href="#链表的边界条件处理" class="headerlink" title="链表的边界条件处理"></a>链表的边界条件处理</h3><pre><code>1. 空链表
+2. 链表只剩一个结点
+3. 链表剩两个结点
+4. 对于代码处理到 **头结点，尾结点**的情况
+</code></pre>
+<p>例如删除操作，正常情况下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">p.next = p.next.next;</span><br></pre></td></tr></table></figure>
+
+<p>如果链表只剩一个结点，则会出现错误，改进方法</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">if (p.next == null) p = null;</span><br></pre></td></tr></table></figure>
+
+<p>对于插入操作</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">newNode.next = p.next;</span><br><span class="line">p.next = newNode;</span><br></pre></td></tr></table></figure>
+
+<p>如果是空链表，p.next 会出问题（null.next），改进方法</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">if (p == null) p = newNode;</span><br></pre></td></tr></table></figure>
+
+<h3 id="哨兵结点"><a href="#哨兵结点" class="headerlink" title="哨兵结点"></a>哨兵结点</h3><p>对 <strong>插入第一个结点</strong> 和 <strong>删除最后一个结点</strong> 需要进行特殊处理</p>
+<p>在任何时候，不管链表是否为空，head 指针始终指向该虚拟结点。</p>
+<p>对于插入操作的空链表情况，删除操作的只剩一个结点情况</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">// 插入操作，head 始终指向 dummy</span><br><span class="line">Node dummy = new Node(..);</span><br><span class="line">newNode.next = p.next; //此时 p 指向 dummy</span><br><span class="line">p.next = newNode</span><br><span class="line"></span><br><span class="line">// 删除操作</span><br><span class="line">p.next = p.next.next; // 此时 p 指向 dummy 结点</span><br></pre></td></tr></table></figure>
+
+<h1 id="堆栈"><a href="#堆栈" class="headerlink" title="堆栈"></a>堆栈</h1><p>栈，操作受限的线性表。只允许在其一端进行操作(pop,push)</p>
+<h2 id="简单栈的实现"><a href="#简单栈的实现" class="headerlink" title="简单栈的实现"></a>简单栈的实现</h2><p>顺序栈，链式栈 (一个 top 指针)</p>
+<h2 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h2><h3 id="函数调用栈"><a href="#函数调用栈" class="headerlink" title="函数调用栈"></a>函数调用栈</h3><p>操作系统给每个线程分配了一块独立的内存空间，这块内存被组织成“栈”这种结构, 用来存储函数调用时的临时变量。<strong>每</strong>进入一个函数，就会将临时变量作为<strong>一个栈帧</strong>入栈，当被调用函数执行完成，返回之后，将这个<strong>函数对应的栈帧</strong>出栈。</p>
+<h3 id="表达式计算"><a href="#表达式计算" class="headerlink" title="表达式计算"></a>表达式计算</h3><p>编译器通过两个栈，操作数栈，运算符栈。从左向右扫描表达式，遇到数字压入操作数栈，遇到运算符，和运算符栈的栈顶元素比较运算符优先级，如果较高，压入栈顶。如果优先级相同或者比较低，取出栈顶运算符，从操作数栈取两个数运算。把结果压入操作数栈顶，运算符继续和运算符栈顶元素比较。</p>
+<h3 id="括号匹配"><a href="#括号匹配" class="headerlink" title="括号匹配"></a>括号匹配</h3><h1 id="队列"><a href="#队列" class="headerlink" title="队列"></a>队列</h1><p>先进先出，后进后出。</p>
+<p>enqueue，dequeue</p>
+<h2 id="队列实现"><a href="#队列实现" class="headerlink" title="队列实现"></a>队列实现</h2><p>顺序队列，链式队列</p>
+<p>循环队列</p>
+<p><img src="/2020/11/06/ds-algo-study-record-overview/1.png" alt="1"></p>
+<h2 id="应用-1"><a href="#应用-1" class="headerlink" title="应用"></a>应用</h2><h1 id="排序算法"><a href="#排序算法" class="headerlink" title="排序算法"></a>排序算法</h1><h2 id="分析排序算法的一些指标"><a href="#分析排序算法的一些指标" class="headerlink" title="分析排序算法的一些指标"></a>分析排序算法的一些指标</h2><ul>
+<li><strong>稳定的排序算法。对于相等的元素，他们的前后顺序会不会改变。</strong></li>
+<li><strong>是否是原地排序。没有使用额外空间，空间复杂度为 O(1) 的排序算法</strong></li>
+<li><strong>最好，最坏，平均时间复杂度</strong></li>
+<li><strong>比较，交换次数</strong></li>
+</ul>
+<h2 id="冒泡排序"><a href="#冒泡排序" class="headerlink" title="冒泡排序"></a><strong>冒泡排序</strong></h2><p>在比较相邻元素时，相等时不交换彼此之间的位置。<strong>稳定。</strong></p>
+<p>最好情况下，发现没有交换元素操作，提前退出。O(n)</p>
+<p>最坏，O(n^2)</p>
+<h2 id="插入排序"><a href="#插入排序" class="headerlink" title="插入排序"></a>插入排序</h2><p>把第一个元素先作为<strong>已处理区间</strong>，之后每次在<strong>未处理区间</strong>中选择元素插入到已处理区间的合适位置。</p>
+<h2 id="选择排序"><a href="#选择排序" class="headerlink" title="选择排序"></a>选择排序</h2><p>一开始全视为未处理区间，在未处理区间中选择最小（最大）的元素，依次放到已处理区间中。（交换思想）</p>
+<h2 id="归并排序"><a href="#归并排序" class="headerlink" title="归并排序"></a>归并排序</h2><h2 id="快速排序"><a href="#快速排序" class="headerlink" title="快速排序"></a>快速排序</h2><p>分区函数。</p>
+<h2 id="线性排序"><a href="#线性排序" class="headerlink" title="线性排序"></a>线性排序</h2><p>时间复杂度为 O(n) 的排序算法。对待排序数据的要求苛刻，即比较小众。</p>
+<h3 id="桶排序"><a href="#桶排序" class="headerlink" title="桶排序"></a>桶排序</h3><h3 id="计数排序"><a href="#计数排序" class="headerlink" title="计数排序"></a>计数排序</h3><h3 id="基数排序"><a href="#基数排序" class="headerlink" title="基数排序"></a>基数排序</h3><h1 id="二分查找"><a href="#二分查找" class="headerlink" title="二分查找"></a>二分查找</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">// 无重复的已排序区间</span><br><span class="line">public int binarySearch(int[] nums, int value) &#123;</span><br><span class="line">    int low = 0;</span><br><span class="line">    int high = nums.length - 1;</span><br><span class="line">    while(low &lt;= high) &#123;</span><br><span class="line">        int mid = (low + high) &gt;&gt; 2; // 傻逼了</span><br><span class="line">        int mid = (low + high) &gt;&gt; 1;</span><br><span class="line">        int mid = （low &gt;&gt; 1）+ （high &gt;&gt; 1）; // 位运算符的优先级和 int 溢出问题。 </span><br><span class="line">        if (nums[mid] == value) &#123;</span><br><span class="line">            return mid;</span><br><span class="line">        &#125; else if (value &lt; nums[mid]) &#123;</span><br><span class="line">            high = mid - 1;</span><br><span class="line">        &#125; else low = mid + 1;</span><br><span class="line">    &#125;</span><br><span class="line">    return -1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>二分虽然效率高，但是要求苛刻。</p>
+<ol>
+<li><p>底层需要是数组，可以提供 O(1) 的随机访问</p>
+</li>
+<li><p>数据严格有序，且不重复（看情况）。</p>
+</li>
+<li><h1 id="跳表"><a href="#跳表" class="headerlink" title="跳表"></a>跳表</h1></li>
+</ol>
+<h1 id="散列表"><a href="#散列表" class="headerlink" title="散列表"></a>散列表</h1><h2 id="散列函数"><a href="#散列函数" class="headerlink" title="散列函数"></a>散列函数</h2><h2 id="散列冲突"><a href="#散列冲突" class="headerlink" title="散列冲突"></a>散列冲突</h2><h3 id="解决散列冲突"><a href="#解决散列冲突" class="headerlink" title="解决散列冲突"></a>解决散列冲突</h3><pre><code>1. 开放寻址
+    1. 线性探测。散列表中的 **空闲位置 ，**往下探测。
+    2. 2 次探测
+    3. 双重散列
+2. 链表法。后面不一定
+</code></pre>
+<p>![image (1)](ds-algo-study-record-overview/image (1).png)</p>
+<h1 id="哈希算法"><a href="#哈希算法" class="headerlink" title="哈希算法"></a>哈希算法</h1><p>将任意长度的二进制串映射成 <strong>固定长度</strong> 的二进制串。</p>
+<h1 id="树，二叉树"><a href="#树，二叉树" class="headerlink" title="树，二叉树"></a>树，二叉树</h1><ul>
+<li>叶子节点</li>
+<li>根节点，在第一层，深度为 零</li>
+<li>层</li>
+<li>深度</li>
+<li>高度</li>
+</ul>
+<h2 id="二叉树"><a href="#二叉树" class="headerlink" title="二叉树"></a>二叉树</h2><h2 id="满二叉树"><a href="#满二叉树" class="headerlink" title="满二叉树"></a>满二叉树</h2><h2 id="完全二叉树"><a href="#完全二叉树" class="headerlink" title="完全二叉树"></a>完全二叉树</h2><h2 id="二叉树的存储方式"><a href="#二叉树的存储方式" class="headerlink" title="二叉树的存储方式"></a>二叉树的存储方式</h2><p>链式存储</p>
+<p>顺序存储。基于数组的顺序存储方式，<strong>完全二叉树</strong> 的组织结构，数组空间连续被填满，中间不会浪费过多数组空间。</p>
+<h2 id="遍历二叉树"><a href="#遍历二叉树" class="headerlink" title="遍历二叉树"></a>遍历二叉树</h2><p><strong>前中后序遍历的代码实现</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public void preorderTraversal(ListNode p) &#123;</span><br><span class="line">    if (p == null) return;</span><br><span class="line">    sys(p.getVal());</span><br><span class="line">    preorderTraversal(p.left);</span><br><span class="line">    preorderTraversal(p.right);</span><br><span class="line">&#125;</span><br><span class="line">public void midorderTraversal(ListNode p) &#123;</span><br><span class="line">    if (p == null) return;</span><br><span class="line">    midorderTraversal(p.left);</span><br><span class="line">    sys(p.getVal());</span><br><span class="line">    midorderTraversal(p.right);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="二叉查找树"><a href="#二叉查找树" class="headerlink" title="二叉查找树"></a>二叉查找树</h1><p><strong>二叉查找树 中的<strong><strong>每个节点</strong></strong>，其左子树中的<strong><strong>每个节点都小于这个节点</strong></strong>，右子树中的都大于这个节点。（相对于 散列表，二叉查找树数据的组织方式相对有序，且中序遍历出的数据有序）也称为 二叉排序树。</strong></p>
+<h1 id="红黑树"><a href="#红黑树" class="headerlink" title="红黑树"></a><strong>红黑树</strong></h1><h1 id="堆排序"><a href="#堆排序" class="headerlink" title="堆排序"></a><strong>堆排序</strong></h1><p><strong>堆，是一颗完全二叉树，且树中的每个节点都必须大于等于（或小等于）其所有子树中的每个节点的值。</strong></p>
+<h2 id="操作堆"><a href="#操作堆" class="headerlink" title="操作堆"></a>操作堆</h2><h2 id="堆排序-1"><a href="#堆排序-1" class="headerlink" title="堆排序"></a>堆排序</h2><h2 id="堆应用"><a href="#堆应用" class="headerlink" title="堆应用"></a>堆应用</h2><h1 id="Trie-字典树"><a href="#Trie-字典树" class="headerlink" title="Trie 字典树"></a>Trie 字典树</h1><h1 id="图的表示"><a href="#图的表示" class="headerlink" title="图的表示"></a>图的表示</h1><h2 id="邻接矩阵"><a href="#邻接矩阵" class="headerlink" title="邻接矩阵"></a>邻接矩阵</h2><p>![image (2)](ds-algo-study-record-overview/image (2)-2562505.png)</p>
+<p>好处是 计算简单，获取顶点之间的关系快速。</p>
+<p>比较费空间。对于无向图来说，A[i][j] 和 A[j][i] 的值相同，矩阵一半的空间都被浪费掉了。</p>
+<h2 id="邻接表、逆邻接表"><a href="#邻接表、逆邻接表" class="headerlink" title="邻接表、逆邻接表"></a>邻接表、逆邻接表</h2><p>![image (3)](ds-algo-study-record-overview/image (3).png)</p>
+<p>好处是，比较节省空间，拉出的结构可以是链表，也可以是其他更高效的结构，比如红黑树，跳表等。</p>
+<p>链表的存储方式对缓存不友好。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag"># 数据结构</a>
+              <a href="/tags/%E7%AE%97%E6%B3%95/" rel="tag"># 算法</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/10/25/mysql-index-3star-principle/" rel="prev" title="MySQL 索引概要">
+                  <i class="fa fa-chevron-left"></i> MySQL 索引概要
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/01/06/redis-gee-study-record/" rel="next" title="Redis 学习记录">
+                  Redis 学习记录 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hexin Fang</span>
+</div><script color="0,0,255" opacity="1.0" zIndex="-1" count="111" src="https://cdn.jsdelivr.net/npm/canvas-nest.js@1/dist/canvas-nest.js"></script>
+
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+
+
+
+
+
+</body>
+</html>

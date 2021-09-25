@@ -182,7 +182,7 @@ body {
   background: var(--body-bg-color);
   color: var(--text-color);
   font-family: Lato, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  font-size: 1em;
+  font-size: 0.99em;
   line-height: 2;
   min-height: 100%;
   position: relative;
@@ -1351,6 +1351,7 @@ pre code {
   border: 1px solid #eee;
   max-width: 120px;
   padding: 2px;
+  border-radius: 50%;
 }
 .site-author-name {
   color: var(--text-color);
@@ -1585,7 +1586,7 @@ pre code {
 }
 .site-state-item-count {
   display: block;
-  font-size: 1em;
+  font-size: 1.1em;
   font-weight: 600;
 }
 .site-state-item-name {
@@ -1716,7 +1717,7 @@ pre code {
   z-index: 1500;
 }
 .back-to-top {
-  font-size: 12px;
+  font-size: 20px;
   bottom: -100px;
   box-sizing: border-box;
   color: #fff;
@@ -2146,7 +2147,7 @@ pre code {
 .post-eof {
   background: #ccc;
   height: 1px;
-  margin: 80px auto 60px;
+  margin: 20px auto 40px;
   width: 8%;
 }
 .post-block:last-of-type .post-eof {
