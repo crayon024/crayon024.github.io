@@ -1770,10 +1770,17 @@ pre code {
   margin-top: 40px;
   text-align: center;
 }
-.use-motion .post-block,
+.use-motion .post-block {
+  opacity: visible;
+  margin-top: 50px;
+  margin-bottom: 50px;
+  padding: 25px;
+  -webkit-box-shadow: 0 0 5px rgba(91,132,209,0.79);
+  -moz-box-shadow: 0 0 5px rgba(91,132,209,0.79);
+}
 .use-motion .pagination,
 .use-motion .comments {
-  visibility: hidden;
+  opacity: visible;
 }
 .use-motion .post-header {
   visibility: hidden;

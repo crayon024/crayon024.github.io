@@ -18,8 +18,16 @@
 
 .use-motion {
   if (hexo-config('motion.transition.post_block')) {
-    .post-block, .pagination, .comments {
-      visibility: hidden;
+.post-block{
+     opacity: visible;
+     margin-top: 50px;
+     margin-bottom: 50px;
+     padding: 25px;
+     -webkit-box-shadow: 0 0 5px rgba(91, 132, 209, 0.79);
+     -moz-box-shadow: 0 0 5px rgba(91, 132, 209, 0.79);
+     }
+    .pagination, .comments {
+      opacity: visible;
     }
   }
 

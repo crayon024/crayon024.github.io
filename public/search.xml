@@ -1,171 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>GC 策略总结</title>
-    <url>/2021/03/06/GC-Algo/</url>
-    <content><![CDATA[<h1 id="GC-算法"><a href="#GC-算法" class="headerlink" title="GC 算法"></a>GC 算法</h1><ul>
-<li>标记-复制。<ul>
-<li>优点：存活的对象越少，复制需要的空间就越小；而且复制后的对象们内存空间排布紧凑，避免空间碎片的问题。</li>
-<li>缺点：有一部分空间被浪费。如果存活对象大且多的话复制成本比较高。<span id="more"></span></li>
-<li><strong>适用每次 GC 存活对象小而美的情况。年轻代</strong></li>
-</ul>
-</li>
-<li>标记-清除。直接清除可回收对象，不进行内存整理。，<ul>
-<li>优点：单次 STW 的时间可能要短一些。</li>
-<li>缺点：但是产生的内存碎片，可能导致内存总空间足够，但是没一块连续的空间存放对象的问题，内存利用率降低；对象放不下，可能触发额外的 GC。</li>
-<li><strong>适用对象存活率高的情况。老年代</strong></li>
-</ul>
-</li>
-<li>标记-清除-整理。STW 时间可能会稍长一些，内存碎片问题得到解决。适用对象存活率高的情况。</li>
-</ul>
-<h1 id="Serial-GC"><a href="#Serial-GC" class="headerlink" title="Serial GC"></a>Serial GC</h1><p>-XX:+UseSerialGC</p>
-<p>串行 GC 单线程执行，在 GC 期间其他业务线程均暂停，暂停的时间长。</p>
-<p>串行 GC 对年轻代采用标记复制算法。对老年代使用标记-清除-整理算法。</p>
-<p>串行 GC 简单直接，在单核 CPU 环境下比较适用。</p>
-<h2 id="XX-UseParNewGC"><a href="#XX-UseParNewGC" class="headerlink" title="-XX:+UseParNewGC"></a>-XX:+UseParNewGC</h2><p>ParNew 收集器，多线程版本的 Serial。配合 CMS 使用。</p>
-<h1 id="Parallel-GC"><a href="#Parallel-GC" class="headerlink" title="Parallel GC"></a>Parallel GC</h1><p>-XX:UseParallelGC -XX:UseParallelOldGC</p>
-<p>使用的 GC 算法和串行的一样。</p>
-<p>默认的 GC 线程数是 CPU core 数，该收集器的目标更倾向于<strong>提高系统吞吐量</strong>，有时候单次的 GC 暂停时间较长。</p>
-<h1 id="CMS-GC"><a href="#CMS-GC" class="headerlink" title="CMS GC"></a>CMS GC</h1><p>-XX:UseConcMarkSweepGC</p>
-<p>对老年代没有整理操作，使用 free-list 进行内存空间的管理。默认的核心线程数 CPU 核数 / 4。</p>
-<p>可以和业务线程并发执行，GC 暂停时间少。</p>
-<h1 id="G1-GC"><a href="#G1-GC" class="headerlink" title="G1 GC"></a>G1 GC</h1><p>打破整个分区的理论，把内存划分成多个小块进行管理。对每个小块的垃圾数量进行预估，优先回收垃圾多的 Region。可预期的垃圾停顿时间。</p>
-<h1 id="验证总结"><a href="#验证总结" class="headerlink" title="验证总结"></a>验证总结</h1><p>首先需要提到的一点是 GC 的时间和存活的对象数量有关，和堆内存的大小关系没有那么大。</p>
-<p>配置堆内存 512M，YGC 后年轻代存活对象大概 20M。</p>
-<ul>
-<li>串行 GC 利用单线程执行，GC 暂停的时间明显会比较长。在实际的测试下，在小堆内存空间的情况下，YGC 和并行 GC 的 YGC 差不多。FGC 使用的时间明显较长，<strong>大概是并行 GC 的一倍（存活对象 300M 左右）</strong>。老年代存活对象占用的空间大，整理移动的时间就长。</li>
-<li>CMS GC 的老年代清理明显的暂停时间降低。在 GC 日志中有发现 concurrent mode failure 的情况。查询资料后明白，CMS 在 cleanup 是并发执行的，这时的对象引用关系发生改变，也可能有新的对象需要分配空间。如果没有预留足够的空间内存分配就会导致并发失败。可能重新 CMS ，或者 GC 退化成 Serial。</li>
-<li>G1 GC 出现了 Humongous Allocation 因为大对象分配失败，触发了 initial-mark。也是重新标记，或者 GC 退化的问题。</li>
-</ul>
-<p>堆内存越大，内存中可容纳的对象越多，GC 的次数随之减少，单次 GC 的暂停时间可能更长（取决于存活对象的数量）。</p>
-<p>总的来说，注意不同 GC 策略采用的算法，以及设计的目的。比如 CMS 在于并发执行，提高系统响应。Parallel 更倾向于提高吞吐量；G1 GC 倾向于可配置可预估的暂停时间。</p>
-<p>CMS - 老年代 没有整理，使用 free-list 管理回收内存；真正的 STW 时间小，但是步骤多，还有浮动垃圾，GC 退化问题。G1 GC 也存在 GC 退化问题。</p>
-<p>配置堆内存的时候，注意 JVM 自身需要的内存和系统需要的内存，预留一定的空间。</p>
-<p>-Xms -Xmx 直接一步到位，扩容的时候有性能的抖动。</p>
-<p>年轻代和老年代的比例默认 1:2，新生代:from:to = 8：1：1，根据情况来调整。</p>
-<p>根据对象晋升回收速率的计算，进行空间，晋升年龄的配置。</p>
-]]></content>
-      <categories>
-        <category>Java</category>
-      </categories>
-      <tags>
-        <tag>jvm</tag>
-        <tag>gc</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Linux 零拷贝</title>
-    <url>/2021/07/20/Linux-Zero-Copy/</url>
-    <content><![CDATA[<blockquote>
-<p><strong>原文地址</strong>：<a href="https://www.linuxjournal.com/article/6345?page=0,0">https://www.linuxjournal.com/article/6345?page=0,0</a></p>
-<p>wiki词条：<a href="https://en.wikipedia.org/wiki/Zero-copy">https://en.wikipedia.org/wiki/Zero-copy</a></p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="零拷贝"><a href="#零拷贝" class="headerlink" title="零拷贝"></a>零拷贝</h2><p><strong>前置知识</strong></p>
-<ul>
-<li><strong>系统调用：操作系统为了统一接口提供的函数以供操作资源，比如 read，write方法</strong></li>
-<li><strong>用户态：用户程序运行的用户空间，无法直接访问底层硬件资源</strong></li>
-<li><strong>内核态：用户程序进行系统调用，委托内核态间接操作硬件资源</strong></li>
-<li><strong>DMA：直接存储技术，不通过 CPU 进行</strong></li>
-</ul>
-<p>假设你打算使用某软件将本机磁盘上的文件传输给某个客户端。</p>
-<p>因为计算机系统的保护机制，用户应用程序是在用户空间上运行，在涉及到硬件资源操作时，通过系统调用（比如调用 read() 方法读取文件内容），借助内核间接访问资源。</p>
-<p><img src="/2021/07/20/Linux-Zero-Copy/image-20210925123537658.png" alt="image-20210925123537658"></p>
-<p>可以看到，整个过程有四次文件复制操作。过程中，因为涉及到内核态与用户态之间的上下文转换和频繁且缓慢的 I/O 操作，其读写性能是比较糟糕的。</p>
-<p><img src="/2021/07/20/Linux-Zero-Copy/image-20210925123558017.png" alt="image-20210925123558017"></p>
-<p>零拷贝技术可以简单的理解成将参与到整个过程中的 <strong>用户空间态</strong> 省去，省去上下文切换的开销，减少 I/O 操作，很好的提高了效率。</p>
-<p><img src="/2021/07/20/Linux-Zero-Copy/image-20210925123623123.png" alt="image-20210925123623123"></p>
-<p>图片中，从内核缓存到 socket buffer 的 copy 操作被优化了。这需要硬件技术的帮忙。</p>
-<p> 通过支持聚集操作的网络接口，待传输的数据不必占用主存的连续空间，网卡的 DMA 引擎也可以将分布在不同位置的数据集中到一个数据传输中。</p>
-<blockquote>
-<p>有疑惑的话可以戳<a href="https://stackoverflow.com/questions/9770125/zero-copy-with-and-without-scatter-gather-operations">这里</a></p>
-<p>大概的解释就是，如果网卡不支持聚集操作，那么就需要将内核缓冲区中物理分布分散的数据通过 CPU 拷贝，连续的存放在 socket buffer 中以供 DMA 引擎拷贝。</p>
-</blockquote>
-<p>在 Linux 的 2.4 内核版本，socket buffer 的描述符就被修改升级以支持适应刚才说的特性 - 这也是 Linux 零拷贝的基础。</p>
-<p>不同之前的整个复制操作，内核将待传输数据的分布位置，待传输数据的长度等通过描述符复制给 socket buffer。 DMA 引擎（支持聚集操作）直接将数据从 kernel buffer 复制到协议引擎。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>实际上整个复制过程仍然包括了使用 DMA 引擎进行数据拷贝，所有不能说这是真正意义上的零拷贝。</p>
-<p>但我们站在 CPU 角度，在没有引入零拷贝技术前，都会涉及到 CPU 拷贝的步骤。引入之后，CPU 参与的步骤变少，且没有了用户态和内核态的上下文切换，节省了 CPU 开销。</p>
-<p>所以，可以在 CPU 角度看这个 “零”，而不是零次拷贝操作。</p>
-]]></content>
-      <categories>
-        <category>Linux</category>
-      </categories>
-      <tags>
-        <tag>翻译</tag>
-        <tag>linux</tag>
-        <tag>io</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>HashMap 源码分析</title>
-    <url>/2020/05/06/HashMap-SourceCode-Anaylise/</url>
-    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><h2 id="哈希算法"><a href="#哈希算法" class="headerlink" title="哈希算法"></a>哈希算法</h2><p>哈希算法的作用是：对于输入的数据，输出<strong>固定长度</strong>的数据摘要。</p>
-<p>哈希算法的特点：<span id="more"></span></p>
-<ol>
-<li>同一个输入，输出的哈希值一定是一致的。</li>
-<li>不同输入，哪怕是一个 Bit 的差别，得到的哈希值有明显的差别。</li>
-<li>对于不同的输入，是有可能得到相同的哈希值的。这种情况一般也称作哈希碰撞。原因很简单，因为计算得到的哈希值是固定长度的，总量有限制。而输入的值可能是无限的。</li>
-</ol>
-<p>一个优秀的哈希算法至少得满足两点：</p>
-<ol>
-<li>计算哈希值的速度很快。</li>
-<li>出现哈希碰撞的概率很低。</li>
-</ol>
-<p>哈希算法的实际应用场景很多，常见的有这几种：</p>
-<ol>
-<li>数据加密。符合的点有两个：很难根据哈希值反推出原始数据；哈希冲突的概率低；</li>
-<li>数据校验。校验文件的完整性。</li>
-<li>哈希表。</li>
-</ol>
-<p>对于业务上保存用户的密码，有一些思路顺便记录一下。</p>
-<ul>
-<li>hash + 随机 salt。</li>
-<li>采用计算时间慢的算法来降低硬件计算的速度。</li>
-<li>不规律的计算时间，避免得到与密码有关的联系的信息，比如字符串的长度信息。</li>
-<li>时序攻击：<a href="https://www.zhihu.com/question/20156213?fileGuid=9CXxDy6PxXx6yDVH">https://www.zhihu.com/question/20156213</a>。</li>
-</ul>
-<h2 id="HashMap"><a href="#HashMap" class="headerlink" title="HashMap"></a>HashMap</h2><p>HashMap 根据 key 的 hashCode 值，寻找对应的位置保存数据。在没有哈希冲突的前提下，可以通过 O(1) 的时间复杂度定位到的 key。</p>
-<p>Java 的 HashMap 通过额外链表法来解决哈希冲突的问题。在 Java 1.8 之后，如果某个哈希槽上的链表元素个数超过了 TREEIFY_THRESHOLD ，会将链表树化为红黑树，进一步提高性能。</p>
-<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><h2 id="存储结构"><a href="#存储结构" class="headerlink" title="存储结构"></a>存储结构</h2><p>HashMap 类中的字段 Node&lt;K,V&gt;[] table，即使用 Node&lt;K,V&gt; 数组来存储数据。</p>
-<p><img src="/2020/05/06/HashMap-SourceCode-Anaylise/image-20210925122839366.png" alt="image-20210925122839366">Node&lt;K,V&gt; 中有一个 Node&lt;K,V&gt; next 字段，当某个哈希槽上已经存储了数据，next 就用来在该哈希槽上拉出链表来解决哈希冲突。</p>
-<p>HashMap 的默认字段定义</p>
-<h2 id><a href="#" class="headerlink" title></a><img src="/2020/05/06/HashMap-SourceCode-Anaylise/image-20210925122854595.png" alt="image-20210925122854595"></h2><h2 id="hash-Object-key-方法"><a href="#hash-Object-key-方法" class="headerlink" title="hash(Object key) 方法"></a>hash(Object key) 方法</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public V put(K key, V value) &#123;</span><br><span class="line">return putVal(hash(key), key, value, false, true);</span><br><span class="line">&#125;</span><br><span class="line">static final int hash(Object key) &#123;</span><br><span class="line">    int h;</span><br><span class="line">    return (key == null) ? 0 : (h = key.hashCode()) ^ (h &gt;&gt;&gt; 16);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>不管是在 put 或者 get，都会先通过 hash(key) ，根据 key 的 hashCode 重新计算一个 hash 值用于索引定位。<br>事先通过 hash(key) 将 key 的 hashCode 重新散列，将 hashCode 的高位向右移 16 位，异或计算后得到的 hash 值进行索引定位（否则这些高位可能由于 (table.length -1) &amp; hash 的取模方式永远参与不到取模的运算中，取模运算的结果其实就是 hash 中对应的后几位的值）。</p>
-<h2 id="索引定位方式"><a href="#索引定位方式" class="headerlink" title="索引定位方式"></a>索引定位方式</h2><p>HashMap 的源码定位哈希槽的位置的方式是通过位运算计算哈希槽的位置，具体的计算方式是：**(table.length - 1) &amp; hash**。</p>
-<p>由于 table.length 在初始化或者扩容后总是<strong>取 2 的某个幂次方数</strong>，在将其减去 1 之后，二进制的低位上数据都是 1，再于 hash 进行 &amp; 运算，将计算后的值限制在 table.length 内。相当于高效率的 % 运算。</p>
-<h2 id="插入方法"><a href="#插入方法" class="headerlink" title="插入方法"></a>插入方法</h2><p><img src="/2020/05/06/HashMap-SourceCode-Anaylise/image-20210925122935800.png" alt="image-20210925122935800"></p>
-<p>(图来自美团技术团队博客)</p>
-<h2 id="扩容机制"><a href="#扩容机制" class="headerlink" title="扩容机制"></a>扩容机制</h2><p>HashMap 扩容默认是原始容量的两倍。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">final</span> Node&lt;K,V&gt;[] resize() &#123;</span><br><span class="line">    Node&lt;K,V&gt;[] oldTab = table;</span><br><span class="line">    <span class="keyword">int</span> oldCap = (oldTab == <span class="keyword">null</span>) ? <span class="number">0</span> : oldTab.length;</span><br><span class="line">    <span class="keyword">int</span> oldThr = threshold;</span><br><span class="line">    <span class="keyword">int</span> newCap, newThr = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (oldCap &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 超过最大容量，随你碰撞好了</span></span><br><span class="line">        <span class="keyword">if</span> (oldCap &gt;= MAXIMUM_CAPACITY) &#123;</span><br><span class="line">            threshold = Integer.MAX_VALUE;</span><br><span class="line">            <span class="keyword">return</span> oldTab;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// oldCap 向左移动一位，newCap = 2 *oldCap </span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> ((newCap = oldCap &lt;&lt; <span class="number">1</span>) &lt; MAXIMUM_CAPACITY &amp;&amp;</span><br><span class="line">                 oldCap &gt;= DEFAULT_INITIAL_CAPACITY)</span><br><span class="line">            newThr = oldThr &lt;&lt; <span class="number">1</span>; <span class="comment">// double threshold</span></span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@SuppressWarnings(&#123;&quot;rawtypes&quot;,&quot;unchecked&quot;&#125;)</span></span><br><span class="line">    Node&lt;K,V&gt;[] newTab = (Node&lt;K,V&gt;[])<span class="keyword">new</span> Node[newCap];</span><br><span class="line">    table = newTab;</span><br><span class="line">    <span class="comment">//数据重新进行索引定位</span></span><br><span class="line">    <span class="keyword">if</span> (oldTab != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; oldCap; ++j) &#123;</span><br><span class="line">            Node&lt;K,V&gt; e;</span><br><span class="line">            <span class="keyword">if</span> ((e = oldTab[j]) != <span class="keyword">null</span>) &#123;</span><br><span class="line">                oldTab[j] = <span class="keyword">null</span>;</span><br><span class="line">                <span class="comment">// 该哈希槽上没有哈希冲突，重新索引定位位置存储</span></span><br><span class="line">                <span class="keyword">if</span> (e.next == <span class="keyword">null</span>) </span><br><span class="line">                    newTab[e.hash &amp; (newCap - <span class="number">1</span>)] = e;</span><br><span class="line">                <span class="comment">// 该哈希槽上的节点是 TreeNode，</span></span><br><span class="line">                <span class="keyword">else</span> <span class="keyword">if</span> (e <span class="keyword">instanceof</span> TreeNode)</span><br><span class="line">                    ((TreeNode&lt;K,V&gt;)e).split(<span class="keyword">this</span>, newTab, j, oldCap);</span><br><span class="line">                <span class="comment">// 该哈希槽上的节点存在哈希冲突保存的其他元素</span></span><br><span class="line">                <span class="keyword">else</span> &#123; <span class="comment">// 链表数据重新定位</span></span><br><span class="line">                    <span class="comment">// loHead,loTail 的含义是重新进行索引定位后仍在原哈希槽位置上的节点和链表节点元素。比如 e = oldTab[j]，重新索引定位后，newTab[j] = e;</span></span><br><span class="line">                    Node&lt;K,V&gt; loHead = <span class="keyword">null</span>, loTail = <span class="keyword">null</span>;</span><br><span class="line">                    <span class="comment">// hiHead,hiTail 的含义是重新进行索引定位后的节点和链表节点元素在 j + oldCap 上。比如 e = oldTab[j]，重新索引定位后，newTab[j + oldCap] = e;</span></span><br><span class="line">                    Node&lt;K,V&gt; hiHead = <span class="keyword">null</span>, hiTail = <span class="keyword">null</span>;</span><br><span class="line">                    Node&lt;K,V&gt; next;</span><br><span class="line">                    <span class="keyword">do</span> &#123;</span><br><span class="line">                        next = e.next;</span><br><span class="line">                        <span class="comment">//计算哈希值的高一位是 0 还是 1</span></span><br><span class="line">                        <span class="keyword">if</span> ((e.hash &amp; oldCap) == <span class="number">0</span>) &#123; <span class="comment">// 为 0</span></span><br><span class="line">                            <span class="keyword">if</span> (loTail == <span class="keyword">null</span>)</span><br><span class="line">                                loHead = e;</span><br><span class="line">                            <span class="keyword">else</span></span><br><span class="line">                                loTail.next = e;</span><br><span class="line">                            loTail = e;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">else</span> &#123; <span class="comment">// 高一位为 1</span></span><br><span class="line">                            <span class="keyword">if</span> (hiTail == <span class="keyword">null</span>)</span><br><span class="line">                                hiHead = e;</span><br><span class="line">                            <span class="keyword">else</span></span><br><span class="line">                                hiTail.next = e;</span><br><span class="line">                            hiTail = e;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; <span class="keyword">while</span> ((e = next) != <span class="keyword">null</span>);</span><br><span class="line">                    <span class="keyword">if</span> (loTail != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        loTail.next = <span class="keyword">null</span>;</span><br><span class="line">                        <span class="comment">// 高一位为 0 时，元素的存储位置数组下标没有变化</span></span><br><span class="line">                        newTab[j] = loHead;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (hiTail != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        hiTail.next = <span class="keyword">null</span>;</span><br><span class="line">                        <span class="comment">// 为 1，元素存储位置为 旧数组下标 + 原容量 。</span></span><br><span class="line">                        newTab[j + oldCap] = hiHead;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> newTab;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>重点看一下 43 行对链表的 rehash 操作。代码为什么通过 (e.hash &amp; oldCap) == 0 || != 0 就可以判断元素经过 rehash 后在新哈希桶中的位置。<br>因为 HashMap 的索引定位方式是 (table.length - 1) &amp; hash ，且扩容之后的容量是原容量的 2 倍。索引定位方式舍弃了 table.length 的那个高位 1，经过扩容后，rehash 的索引定位方式相比于原来的只需要计算之前舍弃的那个高位 1 就可以确实位置。<strong>这样在扩容时重新定位元素时巧妙的避免了重新计算 hash(key) 值。</strong></p>
-<p>举个例子，HashMap 的大小是 8 , 插入元素的时候触发了扩容，扩容后的大小是 16。</p>
-<p>有一个 key A 经过 hash(key) 后的 hash 值是 0100 0110。</p>
-<p><img src="/2020/05/06/HashMap-SourceCode-Anaylise/image-20210925123011727.png" alt="image-20210925123011727">11-14 行计算的是 k.hash &amp; oldCap，即如果结果是 0，说明 key A 的存储位置还是在 [6] 中。如果不为 0，说明第四位是 1，那么第 9 行的结果应该是 0000 1110 = 14 , 就是 j + oldCap 的位置。</p>
-<h2 id="hashCode-与-equals-方法"><a href="#hashCode-与-equals-方法" class="headerlink" title="hashCode() 与 equals() 方法"></a>hashCode() 与 equals() 方法</h2><p>重写了 equals() 方法，没有重写 hashCode() 方法。当我们用该对象作为 key 时，且业务上有 “逻辑相等” 的概念时，可能会导致预期外的行为。没有重写 hashCode() 方法的话，会使用 Object#hashCode() 方法，该方法生成的哈希值无法提供 “逻辑相同” 的概念。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
-<li>使用 HashMap 存储时，如果有 “逻辑相等” 的概念，需要同时重写 hashCode() 方法。</li>
-<li>在初始化的时候根据需求给定一个合适的大小，避免频繁扩容。</li>
-<li>HashMap 不是线程安全的容器，JDK 1.7 之前的实现并发使用在扩容搬移时可能出现 “无限循环” bug。</li>
-<li>线程安全的类似 HashMap 有 Hashtable 和 ConcurrentHashMap 可以使用。</li>
-</ol>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
-<li><a href="https://tech.meituan.com/2016/06/24/java-hashmap.html?fileGuid=9CXxDy6PxXx6yDVH">https://tech.meituan.com/2016/06/24/java-hashmap.html</a>，美团技术团队博客</li>
-<li><a href="https://en.wikipedia.org/wiki/Timing_attack?fileGuid=9CXxDy6PxXx6yDVH">https://en.wikipedia.org/wiki/Timing_attack</a>，时序攻击</li>
-<li><a href="https://en.wikipedia.org/wiki/Hash_function?fileGuid=9CXxDy6PxXx6yDVH">https://en.wikipedia.org/wiki/Hash_function</a>，哈希函数</li>
-</ol>
-]]></content>
-      <categories>
-        <category>Java</category>
-      </categories>
-      <tags>
-        <tag>java 集合</tag>
-        <tag>java</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ConcurrentHashMap 源码分析</title>
     <url>/2020/04/25/ConcurrentHashMap-Analyse/</url>
     <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>ConcurrentHashMap 是高性能的线程安全的哈希容器。</p>
@@ -234,8 +69,352 @@
         <category>Java</category>
       </categories>
       <tags>
-        <tag>java 集合</tag>
         <tag>java</tag>
+        <tag>java 集合</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Java 异常处理</title>
+    <url>/2020/01/13/Java-Exception/</url>
+    <content><![CDATA[<h2 id="Throwable、Error、Exception"><a href="#Throwable、Error、Exception" class="headerlink" title="Throwable、Error、Exception"></a>Throwable、Error、Exception</h2><p>Throwable 接口可以理解成是 Java 异常世界中的 Object。因为 Java 中的所有异常一定都是 Throwable 的子类。</p>
+<span id="more"></span>
+
+<p><img src="/2020/01/13/Java-Exception/image-20210925115913274.png" alt="image-20210925115913274"></p>
+<p>Error 描述的是那些系统本身出现的错误，比如 Java 虚拟机内部问题等等。这些错误一般和 Java 应用程序没什么关系，Java 程序则不应该在任何 Java 方法中使用 throws 关键字说明可能抛出 Error 及其子类相关的异常。</p>
+<p>Exception 描述的是那些 Java 应用应该合理进行捕获的的异常。所有 Exception 的子类但不是 RuntimeException 的子类都被定义为<strong>受检异常</strong>。</p>
+<p>对于<strong>运行时异常</strong>，比如数组范围越界，访问空指针，类型转换异常，这些异常都是由于 Java 代码的问题导致，最好在程序编写的时候就避免。</p>
+<blockquote>
+<p>总之，一个方法必须声明所有可能抛出的受查异常， 而非受查异常要么不可控制（ Error),<br>要么就应该避免发生（ RuntimeException)。如果方法没有声明所有可能发生的受查异常， 编译器就会发出一个错误消息。</p>
+</blockquote>
+<h2 id="try-catch-finally"><a href="#try-catch-finally" class="headerlink" title="try/catch/finally"></a>try/catch/finally</h2><p>如果方法中发生了某些异常但是没有进行捕获，程序则会在异常发生的地方终止然后输出异常信息。异常信息一般包含调用栈等信息。</p>
+<p>程序可以通过 try/catch 代码块捕获包含在 try{} 中<strong>可能发生的异常</strong>，并在 catch 到<strong>对应的异常类型</strong>时执行 catch 中的代码。</p>
+<p>try 中发生异常<strong>且</strong> catch 声明的异常类型<strong>可以匹配</strong>，try 中剩余的语句不执行，转而执行 catch 中的语句。没异常或不匹配就忽略 catch 中的内容。注意和 switch 语句不同，switch 需要在每个 case 后跟一个 break 避免执行后续的 case。</p>
+<p>catch 块中可以继续抛出异常交给上层来处理。如果直接抛出其他类型的异常，这样会丢失原始的异常信息。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">  <span class="comment">// 刚捕获到的异常对象 e 被丢弃</span></span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;待会再试&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>更推荐的方法是**在抛出其他异常前保存原始异常或者将原始异常作为新异常的 cause(内因)**。且在抛出异常时，要提供合适的消息（对应下面代码的 “待会再试”）。</p>
+<p><img src="/2020/01/13/Java-Exception/image-20210925115943257.png" alt="image-20210925115943257"></p>
+<p>如果在 catch 块中<strong>直接重新抛出刚捕获的异常</strong>，那么 printStackTrace() 方法显示的是原本的调用栈信息，而不是新的抛出点信息。想更新抛出点信息的话，可以调用 fillInStackTrace() 方法。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">  <span class="keyword">throw</span> e.fillInStackTrace();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有时候我们需要 <strong>finally 子句</strong>来回收特定的资源，不管异常有没有发生，finally 子句的内容在最终都会执行。</p>
+<h2 id="try-with-resource"><a href="#try-with-resource" class="headerlink" title="try-with-resource"></a>try-with-resource</h2><p>但是要小心 finally 中的语句也可能发生异常，<strong>且在 finally 中抛出的异常会覆盖原始可能抛出的异常。</strong>这样就丢失了原始的异常。</p>
+<p>我们可以在 finally 中添加 try/catch 来捕获并处理异常。或者将 try 中发生的异常贴附给 finally 中的异常。</p>
+<p><img src="/2020/01/13/Java-Exception/image-20210925120011394.png" alt="image-20210925120011394"></p>
+<p><img src="/2020/01/13/Java-Exception/image-20210925120030689.png" alt="image-20210925120030689"></p>
+<p>结果：</p>
+<p><img src="/2020/01/13/Java-Exception/image-20210925120052598.png" alt="image-20210925120052598"></p>
+<p>其实对于在 finally 语句块中发生异常情况的上述处理（通过 addSuppressed() 依附异常），正是 try-with-resource 语法做的事情。对于实现了 AutoCloseable 接口的<strong>资源，</strong>可以使用 try-with-resource 语法来自动回收资源。</p>
+<p><img src="/2020/01/13/Java-Exception/image-20210925120113611.png" alt="image-20210925120113611"></p>
+<p>输出结果和上面的代码类似，说明 try-with-resource 内部的实现方式也是类似的：对 close() 方法可能抛出的异常，将其 Suppressed 到原始异常中抛出。</p>
+<p><img src="/2020/01/13/Java-Exception/image-20210925120128233.png" alt="image-20210925120128233"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>最后，结合《Effective Java》等相关资料，总结处理 Java 异常时的一些要点。</p>
+<ul>
+<li>异常只用在异常发生的情况，不该用来进行程序流程控制。</li>
+<li>注意区分 RuntimeException 和 受检异常，以及使用条件。</li>
+<li>抛出异常时结合带 String 参数的构造方法提供更多信息。</li>
+<li>捕获异常后并重新抛出异常时，注意保留原始的异常对象。</li>
+<li>优先用 try-with-resource，而不是 try / finally。</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>HashMap 源码分析</title>
+    <url>/2020/05/06/HashMap-SourceCode-Anaylise/</url>
+    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><h2 id="哈希算法"><a href="#哈希算法" class="headerlink" title="哈希算法"></a>哈希算法</h2><p>哈希算法的作用是：对于输入的数据，输出<strong>固定长度</strong>的数据摘要。</p>
+<p>哈希算法的特点：<span id="more"></span></p>
+<ol>
+<li>同一个输入，输出的哈希值一定是一致的。</li>
+<li>不同输入，哪怕是一个 Bit 的差别，得到的哈希值有明显的差别。</li>
+<li>对于不同的输入，是有可能得到相同的哈希值的。这种情况一般也称作哈希碰撞。原因很简单，因为计算得到的哈希值是固定长度的，总量有限制。而输入的值可能是无限的。</li>
+</ol>
+<p>一个优秀的哈希算法至少得满足两点：</p>
+<ol>
+<li>计算哈希值的速度很快。</li>
+<li>出现哈希碰撞的概率很低。</li>
+</ol>
+<p>哈希算法的实际应用场景很多，常见的有这几种：</p>
+<ol>
+<li>数据加密。符合的点有两个：很难根据哈希值反推出原始数据；哈希冲突的概率低；</li>
+<li>数据校验。校验文件的完整性。</li>
+<li>哈希表。</li>
+</ol>
+<p>对于业务上保存用户的密码，有一些思路顺便记录一下。</p>
+<ul>
+<li>hash + 随机 salt。</li>
+<li>采用计算时间慢的算法来降低硬件计算的速度。</li>
+<li>不规律的计算时间，避免得到与密码有关的联系的信息，比如字符串的长度信息。</li>
+<li>时序攻击：<a href="https://www.zhihu.com/question/20156213?fileGuid=9CXxDy6PxXx6yDVH">https://www.zhihu.com/question/20156213</a>。</li>
+</ul>
+<h2 id="HashMap"><a href="#HashMap" class="headerlink" title="HashMap"></a>HashMap</h2><p>HashMap 根据 key 的 hashCode 值，寻找对应的位置保存数据。在没有哈希冲突的前提下，可以通过 O(1) 的时间复杂度定位到的 key。</p>
+<p>Java 的 HashMap 通过额外链表法来解决哈希冲突的问题。在 Java 1.8 之后，如果某个哈希槽上的链表元素个数超过了 TREEIFY_THRESHOLD ，会将链表树化为红黑树，进一步提高性能。</p>
+<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><h2 id="存储结构"><a href="#存储结构" class="headerlink" title="存储结构"></a>存储结构</h2><p>HashMap 类中的字段 Node&lt;K,V&gt;[] table，即使用 Node&lt;K,V&gt; 数组来存储数据。</p>
+<p><img src="/2020/05/06/HashMap-SourceCode-Anaylise/image-20210925122839366.png" alt="image-20210925122839366">Node&lt;K,V&gt; 中有一个 Node&lt;K,V&gt; next 字段，当某个哈希槽上已经存储了数据，next 就用来在该哈希槽上拉出链表来解决哈希冲突。</p>
+<p>HashMap 的默认字段定义</p>
+<h2 id><a href="#" class="headerlink" title></a><img src="/2020/05/06/HashMap-SourceCode-Anaylise/image-20210925122854595.png" alt="image-20210925122854595"></h2><h2 id="hash-Object-key-方法"><a href="#hash-Object-key-方法" class="headerlink" title="hash(Object key) 方法"></a>hash(Object key) 方法</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public V put(K key, V value) &#123;</span><br><span class="line">return putVal(hash(key), key, value, false, true);</span><br><span class="line">&#125;</span><br><span class="line">static final int hash(Object key) &#123;</span><br><span class="line">    int h;</span><br><span class="line">    return (key == null) ? 0 : (h = key.hashCode()) ^ (h &gt;&gt;&gt; 16);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不管是在 put 或者 get，都会先通过 hash(key) ，根据 key 的 hashCode 重新计算一个 hash 值用于索引定位。<br>事先通过 hash(key) 将 key 的 hashCode 重新散列，将 hashCode 的高位向右移 16 位，异或计算后得到的 hash 值进行索引定位（否则这些高位可能由于 (table.length -1) &amp; hash 的取模方式永远参与不到取模的运算中，取模运算的结果其实就是 hash 中对应的后几位的值）。</p>
+<h2 id="索引定位方式"><a href="#索引定位方式" class="headerlink" title="索引定位方式"></a>索引定位方式</h2><p>HashMap 的源码定位哈希槽的位置的方式是通过位运算计算哈希槽的位置，具体的计算方式是：**(table.length - 1) &amp; hash**。</p>
+<p>由于 table.length 在初始化或者扩容后总是<strong>取 2 的某个幂次方数</strong>，在将其减去 1 之后，二进制的低位上数据都是 1，再于 hash 进行 &amp; 运算，将计算后的值限制在 table.length 内。相当于高效率的 % 运算。</p>
+<h2 id="插入方法"><a href="#插入方法" class="headerlink" title="插入方法"></a>插入方法</h2><p><img src="/2020/05/06/HashMap-SourceCode-Anaylise/image-20210925122935800.png" alt="image-20210925122935800"></p>
+<p>(图来自美团技术团队博客)</p>
+<h2 id="扩容机制"><a href="#扩容机制" class="headerlink" title="扩容机制"></a>扩容机制</h2><p>HashMap 扩容默认是原始容量的两倍。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">final</span> Node&lt;K,V&gt;[] resize() &#123;</span><br><span class="line">    Node&lt;K,V&gt;[] oldTab = table;</span><br><span class="line">    <span class="keyword">int</span> oldCap = (oldTab == <span class="keyword">null</span>) ? <span class="number">0</span> : oldTab.length;</span><br><span class="line">    <span class="keyword">int</span> oldThr = threshold;</span><br><span class="line">    <span class="keyword">int</span> newCap, newThr = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (oldCap &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 超过最大容量，随你碰撞好了</span></span><br><span class="line">        <span class="keyword">if</span> (oldCap &gt;= MAXIMUM_CAPACITY) &#123;</span><br><span class="line">            threshold = Integer.MAX_VALUE;</span><br><span class="line">            <span class="keyword">return</span> oldTab;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// oldCap 向左移动一位，newCap = 2 *oldCap </span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> ((newCap = oldCap &lt;&lt; <span class="number">1</span>) &lt; MAXIMUM_CAPACITY &amp;&amp;</span><br><span class="line">                 oldCap &gt;= DEFAULT_INITIAL_CAPACITY)</span><br><span class="line">            newThr = oldThr &lt;&lt; <span class="number">1</span>; <span class="comment">// double threshold</span></span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@SuppressWarnings(&#123;&quot;rawtypes&quot;,&quot;unchecked&quot;&#125;)</span></span><br><span class="line">    Node&lt;K,V&gt;[] newTab = (Node&lt;K,V&gt;[])<span class="keyword">new</span> Node[newCap];</span><br><span class="line">    table = newTab;</span><br><span class="line">    <span class="comment">//数据重新进行索引定位</span></span><br><span class="line">    <span class="keyword">if</span> (oldTab != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; oldCap; ++j) &#123;</span><br><span class="line">            Node&lt;K,V&gt; e;</span><br><span class="line">            <span class="keyword">if</span> ((e = oldTab[j]) != <span class="keyword">null</span>) &#123;</span><br><span class="line">                oldTab[j] = <span class="keyword">null</span>;</span><br><span class="line">                <span class="comment">// 该哈希槽上没有哈希冲突，重新索引定位位置存储</span></span><br><span class="line">                <span class="keyword">if</span> (e.next == <span class="keyword">null</span>) </span><br><span class="line">                    newTab[e.hash &amp; (newCap - <span class="number">1</span>)] = e;</span><br><span class="line">                <span class="comment">// 该哈希槽上的节点是 TreeNode，</span></span><br><span class="line">                <span class="keyword">else</span> <span class="keyword">if</span> (e <span class="keyword">instanceof</span> TreeNode)</span><br><span class="line">                    ((TreeNode&lt;K,V&gt;)e).split(<span class="keyword">this</span>, newTab, j, oldCap);</span><br><span class="line">                <span class="comment">// 该哈希槽上的节点存在哈希冲突保存的其他元素</span></span><br><span class="line">                <span class="keyword">else</span> &#123; <span class="comment">// 链表数据重新定位</span></span><br><span class="line">                    <span class="comment">// loHead,loTail 的含义是重新进行索引定位后仍在原哈希槽位置上的节点和链表节点元素。比如 e = oldTab[j]，重新索引定位后，newTab[j] = e;</span></span><br><span class="line">                    Node&lt;K,V&gt; loHead = <span class="keyword">null</span>, loTail = <span class="keyword">null</span>;</span><br><span class="line">                    <span class="comment">// hiHead,hiTail 的含义是重新进行索引定位后的节点和链表节点元素在 j + oldCap 上。比如 e = oldTab[j]，重新索引定位后，newTab[j + oldCap] = e;</span></span><br><span class="line">                    Node&lt;K,V&gt; hiHead = <span class="keyword">null</span>, hiTail = <span class="keyword">null</span>;</span><br><span class="line">                    Node&lt;K,V&gt; next;</span><br><span class="line">                    <span class="keyword">do</span> &#123;</span><br><span class="line">                        next = e.next;</span><br><span class="line">                        <span class="comment">//计算哈希值的高一位是 0 还是 1</span></span><br><span class="line">                        <span class="keyword">if</span> ((e.hash &amp; oldCap) == <span class="number">0</span>) &#123; <span class="comment">// 为 0</span></span><br><span class="line">                            <span class="keyword">if</span> (loTail == <span class="keyword">null</span>)</span><br><span class="line">                                loHead = e;</span><br><span class="line">                            <span class="keyword">else</span></span><br><span class="line">                                loTail.next = e;</span><br><span class="line">                            loTail = e;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">else</span> &#123; <span class="comment">// 高一位为 1</span></span><br><span class="line">                            <span class="keyword">if</span> (hiTail == <span class="keyword">null</span>)</span><br><span class="line">                                hiHead = e;</span><br><span class="line">                            <span class="keyword">else</span></span><br><span class="line">                                hiTail.next = e;</span><br><span class="line">                            hiTail = e;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; <span class="keyword">while</span> ((e = next) != <span class="keyword">null</span>);</span><br><span class="line">                    <span class="keyword">if</span> (loTail != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        loTail.next = <span class="keyword">null</span>;</span><br><span class="line">                        <span class="comment">// 高一位为 0 时，元素的存储位置数组下标没有变化</span></span><br><span class="line">                        newTab[j] = loHead;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (hiTail != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        hiTail.next = <span class="keyword">null</span>;</span><br><span class="line">                        <span class="comment">// 为 1，元素存储位置为 旧数组下标 + 原容量 。</span></span><br><span class="line">                        newTab[j + oldCap] = hiHead;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> newTab;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>重点看一下 43 行对链表的 rehash 操作。代码为什么通过 (e.hash &amp; oldCap) == 0 || != 0 就可以判断元素经过 rehash 后在新哈希桶中的位置。<br>因为 HashMap 的索引定位方式是 (table.length - 1) &amp; hash ，且扩容之后的容量是原容量的 2 倍。索引定位方式舍弃了 table.length 的那个高位 1，经过扩容后，rehash 的索引定位方式相比于原来的只需要计算之前舍弃的那个高位 1 就可以确实位置。<strong>这样在扩容时重新定位元素时巧妙的避免了重新计算 hash(key) 值。</strong></p>
+<p>举个例子，HashMap 的大小是 8 , 插入元素的时候触发了扩容，扩容后的大小是 16。</p>
+<p>有一个 key A 经过 hash(key) 后的 hash 值是 0100 0110。</p>
+<p><img src="/2020/05/06/HashMap-SourceCode-Anaylise/image-20210925123011727.png" alt="image-20210925123011727">11-14 行计算的是 k.hash &amp; oldCap，即如果结果是 0，说明 key A 的存储位置还是在 [6] 中。如果不为 0，说明第四位是 1，那么第 9 行的结果应该是 0000 1110 = 14 , 就是 j + oldCap 的位置。</p>
+<h2 id="hashCode-与-equals-方法"><a href="#hashCode-与-equals-方法" class="headerlink" title="hashCode() 与 equals() 方法"></a>hashCode() 与 equals() 方法</h2><p>重写了 equals() 方法，没有重写 hashCode() 方法。当我们用该对象作为 key 时，且业务上有 “逻辑相等” 的概念时，可能会导致预期外的行为。没有重写 hashCode() 方法的话，会使用 Object#hashCode() 方法，该方法生成的哈希值无法提供 “逻辑相同” 的概念。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
+<li>使用 HashMap 存储时，如果有 “逻辑相等” 的概念，需要同时重写 hashCode() 方法。</li>
+<li>在初始化的时候根据需求给定一个合适的大小，避免频繁扩容。</li>
+<li>HashMap 不是线程安全的容器，JDK 1.7 之前的实现并发使用在扩容搬移时可能出现 “无限循环” bug。</li>
+<li>线程安全的类似 HashMap 有 Hashtable 和 ConcurrentHashMap 可以使用。</li>
+</ol>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a href="https://tech.meituan.com/2016/06/24/java-hashmap.html?fileGuid=9CXxDy6PxXx6yDVH">https://tech.meituan.com/2016/06/24/java-hashmap.html</a>，美团技术团队博客</li>
+<li><a href="https://en.wikipedia.org/wiki/Timing_attack?fileGuid=9CXxDy6PxXx6yDVH">https://en.wikipedia.org/wiki/Timing_attack</a>，时序攻击</li>
+<li><a href="https://en.wikipedia.org/wiki/Hash_function?fileGuid=9CXxDy6PxXx6yDVH">https://en.wikipedia.org/wiki/Hash_function</a>，哈希函数</li>
+</ol>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
+        <tag>java 集合</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Lambda 和 StreamAPI</title>
+    <url>/2020/04/16/Lambda-StreamAPI/</url>
+    <content><![CDATA[<h1 id="Lambda-表达式"><a href="#Lambda-表达式" class="headerlink" title="Lambda 表达式"></a>Lambda 表达式</h1><p><strong>Java 8 开始，可以用 Lambda 表示只有一个抽象方法的接口</strong>（<strong>函数式接口，该类型的接口一般标有 @FuntionalInterface 注解</strong>）。此前我们只能通过繁琐的匿名实现类表示。</p>
+<p>比如，Runnable 接口就是一个<strong>函数式接口</strong>。<span id="more"></span></p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121336491.png" alt="image-20210925121336491"></p>
+<p>所以我们可以用 Lambda 表达式创建一个该接口的匿名实现。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121400282.png" alt="image-20210925121400282"></p>
+<p><strong>() 表示</strong>函数式<strong>接口中定义的抽象方法的参数</strong>，因为 Runnable 接口中的 run() 方法没有参数，所以用空的 () 表示。</p>
+<p><strong>箭头后的内容表示</strong>该方法的实现，这里就是指 void run() 的具体实现，且因为其返回类型是 void，所以无需返回特定类型，这里只进行了一个输出语句。</p>
+<p>再比如下图的这个函数式接口 Predicate<T>，抽象方法的返回类型是 boolean，方法参数为泛型 T。</T></p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121415893.png" alt="image-20210925121415893"></p>
+<p>使用 Lambda 表示式实现的几种方式：</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121427947.png" alt="image-20210925121427947"></p>
+<p>第 6 行中，第一个 s 表示入参，其中 s 为 String 类型。</p>
+<p>箭头后的代码调用了 String 的 equals 方法，该方法返回 boolean，要和<strong>函数接口中定义的方法一致。</strong></p>
+<p>第 8 行到 第 16 行，说明 Lambda 的方法实现可以像普通方法的方法那样<strong>有方法体和显式的 return 语句（需要用 { } 包括</strong>）。</p>
+<p>还有一个点就是 Lambda 很多参数类型都不需要声明，编译器会为我们自动进行类型推导。如果 Lambda 表达式的类型有歧义，编译器会告诉你需要指定对应的类型。</p>
+<p>以下部分的代码几乎都由 List<Dish> 类型的 menu 变量作为构建流的基本元素。代码大致如下：</Dish></p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121440379.png" alt="image-20210925121440379"></p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121450024.png" alt="image-20210925121450024"></p>
+<h1 id="Stream"><a href="#Stream" class="headerlink" title="Stream"></a>Stream</h1><p>了解 Lambda 表示式之后，来看看新的 Stream API。</p>
+<h2 id="什么是流"><a href="#什么是流" class="headerlink" title="什么是流"></a>什么是流</h2><p>Stream<T> 接口的注释是这样的:</T></p>
+<p><em>“A sequence of elements supporting sequential and parallel aggregate operations.”</em></p>
+<p>支持有顺序，可以并行地聚合操作的一串<strong>元素序列</strong>。</p>
+<p>流的数据源头可以从集合，数组获得。有了基础流之后，可以对流进行数据处理，Stream API 定义了一系列简易的方法供我们使用。</p>
+<p>虽然流和集合都是包含特定的元素序列，但是他们之间是有一些明显区别的。这两者可以类比成我们生活中的 DVD 和在线看电影。DVD 相当于集合，已经有了电影所有的帧。流则需要我们从网络中进行数据加载再处理。</p>
+<h2 id="操作流"><a href="#操作流" class="headerlink" title="操作流"></a>操作流</h2><p>图中是两种筛选 Dish 的实现。</p>
+<p>第一种（第 16 行开始）使用常规的集合进行筛选。第二种（第 30 行开始）使用流进行筛选。</p>
+<p>明显第二种方式简洁且可读性也好。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121553922.png" alt="image-20210925121553922"></p>
+<p>来看看使用流操作（第二种方式，第 30 行开始）中每个操作的含义：</p>
+<p>第 31 行，<strong>stream()</strong> 方法从 menu 这一集合中（源头）产生流（Stream<Dish> 类型）供接下来操作。</Dish></p>
+<p>第 32 行，<strong>filter()</strong> 方法筛选出卡路里高于 500 的菜肴，将筛选后的元素变成一个新的流（Stream<Dish> 类型）供接下来操作。</Dish></p>
+<p>第 33 行，<strong>sorted()</strong> 方法按照卡路里高低排序，继续返回一个 Stream<Dish> 类型的流。</Dish></p>
+<p>第 34 行，<strong>limit()</strong> 方法只从流中截断出只包含 2 个元素的流。</p>
+<p>第 35 行，<strong>map()</strong> 方法将 Stream&lt;**Dish**&gt; 映射成 Stream&lt;**String**&gt;，返回一个菜肴名称的流。</p>
+<p>第 36 行，<strong>collect()</strong> 方法将 Stream<String> 中的元素保存到 List 中。到此结束，所以 highCaloriesDish 变量的类型是 List<String> 类型的。</String></String></p>
+<h2 id="Stream-API"><a href="#Stream-API" class="headerlink" title="Stream API"></a>Stream API</h2><h3 id="筛选"><a href="#筛选" class="headerlink" title="筛选"></a>筛选</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Stream&lt;T&gt; filter(Predicate&lt;? super T&gt; predicate);</span><br><span class="line">Stream&lt;T&gt; distinct();</span><br><span class="line">Stream&lt;T&gt; skip(long n);</span><br><span class="line">Stream&lt;T&gt; limit(long maxSize);</span><br></pre></td></tr></table></figure>
+
+<h3 id="映射"><a href="#映射" class="headerlink" title="映射"></a>映射</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;R&gt; Stream&lt;R&gt; map(Function&lt;? super T, ? extends R&gt; mapper);</span><br><span class="line">&lt;R&gt; Stream&lt;R&gt; flatMap(Function&lt;? super T, ? extends Stream&lt;? extends R&gt;&gt; mapper);</span><br></pre></td></tr></table></figure>
+
+<p>map() 方法的功能是根据传入的实现将类型映射为其他类型。</p>
+<p>map() 方法的参数 Function&lt;…&gt; 的定义是这样的：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@FunctionalInterface</span><br><span class="line">public interface Function&lt;T, R&gt; &#123;</span><br><span class="line">    R apply(T t);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>apply() 方法传入一个类型 T，然后根据方法实现返回类型 R。拿下图中的 map() 方法举例，传入参数类型为 Integer 的 i（对应 T），返回 i * i（也是 Integer 类型，对应 R）。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121717843.png" alt="image-20210925121717843"></p>
+<p><strong>扁平流 flatmap</strong> 看下图的箭头部分，String 的 split() 方法返回的是 String[]，经过 map 映射后流中包含了这两个元素  {[H，e，l，l，o]，[W，o，r，l，d]｝。之后如果我们直接调用 distinct()，意味着作用的对象是 [H，e，l，l，o] 和 [W，o，r，l，d] 这两个流中的 String[] 数组，它们肯定是不一样的，故达不到目的。</p>
+<p>Arrays.stream() 方法可以将传入的数组元素产生一个流。其方法签名是这样的：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public static &lt;T&gt; Stream&lt;T&gt; stream(T[] array) &#123;</span><br><span class="line">        return stream(array, 0, array.length);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Arrays::stream 返回 Stream<String> 列表后，map() 方法又将整个内容分别映射到不同的流中。故还是有问题。</String></p>
+<p>再看 flatMap ，flatMap() 方法将流中的每个值都映射到同一个流中。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121734068.png" alt="image-20210925121734068"></p>
+<h3 id="查找和匹配"><a href="#查找和匹配" class="headerlink" title="查找和匹配"></a>查找和匹配</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">boolean anyMatch(Predicate&lt;? super T&gt; predicate);</span><br><span class="line">boolean allMatch(Predicate&lt;? super T&gt; predicate);</span><br><span class="line">boolean noneMatch(Predicate&lt;? super T&gt; predicate);</span><br><span class="line">Optional&lt;T&gt; findFirst();</span><br><span class="line">Optional&lt;T&gt; findAny();</span><br></pre></td></tr></table></figure>
+
+<h3 id="归约"><a href="#归约" class="headerlink" title="归约"></a>归约</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">T reduce(T identity, BinaryOperator&lt;T&gt; accumulator);</span><br><span class="line">Optional&lt;T&gt; reduce(BinaryOperator&lt;T&gt; accumulator);</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122004919.png" alt="image-20210925122004919"></p>
+<p>第 4 行：reduce 接受一个初始值 0，然后逐个比较选择大的那个数。</p>
+<p>第 5 行：一样的功能使用方法引用表示。</p>
+<p>第 6 行：reduce() 方法只接受一个参数，不接受初始值。为了应对 stream() 调用后<strong>流中没有任何元素的可能性，</strong>所以这个方法的返回值是 Optional 类型。</p>
+<h2 id="数值流"><a href="#数值流" class="headerlink" title="数值流"></a>数值流</h2><p>前面我们使用到的流都是针对<strong>对象类型</strong>的，在进行计算的时候其实包括了<strong>隐含的拆装箱</strong>操作。为此 Java 8 引入了三个针对特定<strong>原始类型</strong>的流来进一步简化操作，分别是 IntStream，LongStream 和 DoubleStream。可以通过 Stream<T> 中的 mapToInt/Long/Dubbo 方法将流转换为特性的数值流。</T></p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122154169.png" alt="image-20210925122154169"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">将特化流装箱为对应的对象类型流  </span><br><span class="line">Stream&lt;Integer//Long//.&gt; boxed(); </span><br><span class="line">// 生成范围数值流</span><br><span class="line">public static IntStream range(int startInclusive, int endExclusive);</span><br><span class="line">// 包含起始值的范围数值流</span><br><span class="line">public static IntStream rangeClosed(int startInclusive, int endInclusive);</span><br></pre></td></tr></table></figure>
+
+<h2 id="如何构建一个流"><a href="#如何构建一个流" class="headerlink" title="如何构建一个流"></a>如何构建一个流</h2><p>此前我们获得流的方式都是通过集合调用 stream() 方法生成流，或者使用数值流的 range/rangeClosed 生成特定范围的数值流。这部分就来介绍生成流的其他方式。</p>
+<ul>
+<li>由显式值构建流：<strong>Stream.of()</strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public static&lt;T&gt; Stream&lt;T&gt; of(T... values) &#123; ... &#125;</span><br><span class="line">Stream&lt;String&gt; hello = Stream.of(&quot;hello&quot;, &quot;test&quot;, &quot;hi&quot;);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>由数组构建流，接收各种参数并由之生成对应的流：<strong>Arrays.stream()</strong></li>
+</ul>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122218320.png" alt="image-20210925122218320"></p>
+<ul>
+<li>由文件获得流。Java 中用来处理文件的 API 更新后可以用来支持 Stream API。</li>
+</ul>
+<p>借此顺便再看一下 flatMap ，Array.stream 的用法。注意看返回不同类型的 Stream。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122232527.png" alt="image-20210925122232527"></p>
+<p>注意到第 11 行，我们使用流之前需要重新从文件中生成新的流。因为流只能被消费一次，你会发现如果重复消费会发生类似的异常。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122245419.png" alt="image-20210925122245419"></p>
+<ul>
+<li>由函数生成流：<strong>iterate()，generate()</strong></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public static&lt;T&gt; Stream&lt;T&gt; iterate(final T seed, final UnaryOperator&lt;T&gt; f) &#123;&#125;</span><br><span class="line">public static&lt;T&gt; Stream&lt;T&gt; generate(Supplier&lt;T&gt; s) &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>iterate 接受一个 T 类型的初始值，以及一个<strong>每次都会作用在新值上的函数</strong>（合时宜的话可以说是 Lambda）。有点像 reduce 那样。不同的是<strong>iterate 会不断产生产生新元素</strong>到流中。</p>
+<p>generate 接受<strong>一个不断产生新的值的 Lambda</strong>。看一下其参数 Supplier<T> 接口中定义的方法就知道 generate 做的事情是什么了。</T></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@FunctionalInterface</span><br><span class="line">public interface Supplier&lt;T&gt; &#123;</span><br><span class="line">    T get(); // 唯一要做的就是提供一个生成新元素的实现</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是对那些可以生成无限流一般需要通过 limit() 方法来截断。</p>
+<h2 id="从流中收集数据"><a href="#从流中收集数据" class="headerlink" title="从流中收集数据"></a>从流中收集数据</h2><p>前面的代码中我们经常使用<strong>Stream</strong>的 <strong>collect()</strong> 方法配合入参 toList(）将流中的数据放到一个 List 中。其实这个 toList() 方法是定义在 Collectors 工厂类里面，其中还预定义了很多可以直接使用的方法。</p>
+<p>当我们对流使用 collect() 方法的时候，就是为了使用传入该方法的**”参数”**进行对应的收集操作。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122300501.png" alt="image-20210925122300501"></p>
+<p>我们先来看看 API 为我们预先提供了哪些可以直接用的 “参数”（Collectors 类中提供的现有实现）</p>
+<ul>
+<li>groupingBy</li>
+<li>maxBy</li>
+<li>summarizingInt</li>
+<li>joining 等等。。。</li>
+</ul>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122311199.png" alt="image-20210925122311199"></p>
+<h3 id="归约-1"><a href="#归约-1" class="headerlink" title="归约"></a>归约</h3><p><strong>reducing</strong></p>
+<p>前面提到的都是特定的收集方法，我们也可以通过 reducing() 方法来自己适应更广泛的收集情况。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122319901.png" alt="image-20210925122319901"></p>
+<p>先来看有三个入参的版本，</p>
+<ul>
+<li>第一个参数相当于给一个初始值。应对流中没有元素的情况。</li>
+<li>第二个参数有点像 map() 方法，提供一个映射操作。</li>
+<li>第三个参数就是针对映射后的参数类型进行操作。</li>
+</ul>
+<p>或者也可以直接只提供一个针对流元素进行操作的 Lambda 操作（只有一个参数的版本），这样的话如果流中没有元素应该返回什么呢？所以可以看到返回类型出现了 Optional 类型来应对这种情况。</p>
+<h3 id="分组"><a href="#分组" class="headerlink" title="分组"></a>分组</h3><h4 id="Collectors-groupingBy"><a href="#Collectors-groupingBy" class="headerlink" title="Collectors.groupingBy()"></a>Collectors.groupingBy()</h4><p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122336096.png" alt="image-20210925122336096"></p>
+<p>groupingBy() 先根据传入的 Function 类型参数，将流中的元素映射为特定的类型作为分类的依据（Map 中的 key 类型）。</p>
+<p>groupingBy() 方法也提供了两个参数的版本。</p>
+<p>Map 的 value 类型是 List 则是因为单个参数的 groupingBy() 方法默认传入的第二个参数是 toList() 方法。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122349828.png" alt="image-20210925122349828"></p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122357176.png" alt="image-20210925122357176"></p>
+<p>可以看到第二个参数的类型是 Collector 接口，说明还可以在第一层分组的基础上进行其他的操作。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122405341.png" alt="image-20210925122405341"></p>
+<p>主要看第 1 行和 第 5 行的输出结果，可以说明第二个参数作用在了第一个分组的 value 中，因为传入了 Dish::getType ,所有又在第一次分组中根据类型进行了分组。</p>
+<p>第 10 行的方法的 counting() 方法，计算了每个类别中包含的元素个数。</p>
+<h4 id="分区：Collectors-partitioningBy"><a href="#分区：Collectors-partitioningBy" class="headerlink" title="分区：Collectors.partitioningBy()"></a>分区：Collectors.partitioningBy()</h4><p>分区是分组的一种特殊情况。只是分区返回的分类都是通过 true 和 false 来区分。true 和 false 的定义就取决于你传入的那段 Predicate&lt;&gt; 实现。</p>
+<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122416154.png" alt="image-20210925122416154"></p>
+<p>partitioningBy() 和 groupingBy() 一样也有重载包含两个参数的版本，用法也差不多。</p>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>java 8</tag>
+        <tag>stream api</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Linux 零拷贝</title>
+    <url>/2021/07/20/Linux-Zero-Copy/</url>
+    <content><![CDATA[<blockquote>
+<p><strong>原文地址</strong>：<a href="https://www.linuxjournal.com/article/6345?page=0,0">https://www.linuxjournal.com/article/6345?page=0,0</a></p>
+<p>wiki词条：<a href="https://en.wikipedia.org/wiki/Zero-copy">https://en.wikipedia.org/wiki/Zero-copy</a></p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="零拷贝"><a href="#零拷贝" class="headerlink" title="零拷贝"></a>零拷贝</h2><p><strong>前置知识</strong></p>
+<ul>
+<li><strong>系统调用：操作系统为了统一接口提供的函数以供操作资源，比如 read，write方法</strong></li>
+<li><strong>用户态：用户程序运行的用户空间，无法直接访问底层硬件资源</strong></li>
+<li><strong>内核态：用户程序进行系统调用，委托内核态间接操作硬件资源</strong></li>
+<li><strong>DMA：直接存储技术，不通过 CPU 进行</strong></li>
+</ul>
+<p>假设你打算使用某软件将本机磁盘上的文件传输给某个客户端。</p>
+<p>因为计算机系统的保护机制，用户应用程序是在用户空间上运行，在涉及到硬件资源操作时，通过系统调用（比如调用 read() 方法读取文件内容），借助内核间接访问资源。</p>
+<p><img src="/2021/07/20/Linux-Zero-Copy/image-20210925123537658.png" alt="image-20210925123537658"></p>
+<p>可以看到，整个过程有四次文件复制操作。过程中，因为涉及到内核态与用户态之间的上下文转换和频繁且缓慢的 I/O 操作，其读写性能是比较糟糕的。</p>
+<p><img src="/2021/07/20/Linux-Zero-Copy/image-20210925123558017.png" alt="image-20210925123558017"></p>
+<p>零拷贝技术可以简单的理解成将参与到整个过程中的 <strong>用户空间态</strong> 省去，省去上下文切换的开销，减少 I/O 操作，很好的提高了效率。</p>
+<p><img src="/2021/07/20/Linux-Zero-Copy/image-20210925123623123.png" alt="image-20210925123623123"></p>
+<p>图片中，从内核缓存到 socket buffer 的 copy 操作被优化了。这需要硬件技术的帮忙。</p>
+<p> 通过支持聚集操作的网络接口，待传输的数据不必占用主存的连续空间，网卡的 DMA 引擎也可以将分布在不同位置的数据集中到一个数据传输中。</p>
+<blockquote>
+<p>有疑惑的话可以戳<a href="https://stackoverflow.com/questions/9770125/zero-copy-with-and-without-scatter-gather-operations">这里</a></p>
+<p>大概的解释就是，如果网卡不支持聚集操作，那么就需要将内核缓冲区中物理分布分散的数据通过 CPU 拷贝，连续的存放在 socket buffer 中以供 DMA 引擎拷贝。</p>
+</blockquote>
+<p>在 Linux 的 2.4 内核版本，socket buffer 的描述符就被修改升级以支持适应刚才说的特性 - 这也是 Linux 零拷贝的基础。</p>
+<p>不同之前的整个复制操作，内核将待传输数据的分布位置，待传输数据的长度等通过描述符复制给 socket buffer。 DMA 引擎（支持聚集操作）直接将数据从 kernel buffer 复制到协议引擎。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>实际上整个复制过程仍然包括了使用 DMA 引擎进行数据拷贝，所有不能说这是真正意义上的零拷贝。</p>
+<p>但我们站在 CPU 角度，在没有引入零拷贝技术前，都会涉及到 CPU 拷贝的步骤。引入之后，CPU 参与的步骤变少，且没有了用户态和内核态的上下文切换，节省了 CPU 开销。</p>
+<p>所以，可以在 CPU 角度看这个 “零”，而不是零次拷贝操作。</p>
+]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>翻译</tag>
+        <tag>linux</tag>
+        <tag>io</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Hexo+GithubPages+Mac+Win 部署问题记录</title>
+    <url>/2020/01/08/hexo+win+mac/</url>
+    <content><![CDATA[<h2 id="本地初始化一个Hexo项目"><a href="#本地初始化一个Hexo项目" class="headerlink" title="本地初始化一个Hexo项目"></a>本地初始化一个Hexo项目</h2><p><strong>注意：本地的目录不要动</strong>，<strong>可以重命名</strong>。</p>
+<p>重新新建一个空目录，作为你的博客目录。进入该目录，初始化一个Hexo项目：<span id="more"></span></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo init</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git *--save</span><br></pre></td></tr></table></figure>
+
+<p>然后用自己原来博客里的文件替换掉这里的<code>source\</code>, <code>scaffolds\</code>, <code>themes\</code>,<code>_config.yml</code>替换成自己原来博客里的。<strong>注意，一定要把themes/next中的.git/目录删除</strong></p>
+<p>然后上传到代码仓库，同时初始化了 main 分支。</p>
+<p>最后切换 git checkout -b hexo, 之后基于这个分支做修改，hexo d 部署在配置的分支上，这边就是设置的 main 分支（和 github page 里设置的分支一致可直接在 page 中访问到）。</p>
+<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><p>使用到的插件列表：</p>
+<p><img src="/2020/01/08/hexo+win+mac/Sni_2409222314.png" alt="Sni_2409222314"></p>
+<p><code>.gitignore</code>文件中过滤了<code>node_modules\</code>，所以 clone 来的目录里没有<code>node_modules\</code>，这是hexo所需要的组件，所以要在该目录中重新安装hexo，<strong>但不需要hexo init</strong>。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install hexo</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
+
+<h3 id="不过滤-gitignore-的内容协作尝试"><a href="#不过滤-gitignore-的内容协作尝试" class="headerlink" title="不过滤 .gitignore 的内容协作尝试"></a>不过滤 .gitignore 的内容协作尝试</h3><p>hexo clean，hexo generate 正常，hexo d 部署的时候报错</p>
+<p><img src="/2020/01/08/hexo+win+mac/Sni_2409230640.png" alt="Sni_2409230640"></p>
+<p>.deploy_git 文件夹冲突，猜想应该是 hexo d 的时候操作 .deploy_git 的时候文件无法覆盖类似的冲突。</p>
+<p>解决方法：删除 .deploy_git，重新 hexo d 生成即可。（我们可以在 .gitignore 里过滤这个文件夹）</p>
+<h2 id="常见语法"><a href="#常见语法" class="headerlink" title="常见语法"></a>常见语法</h2><ul>
+<li>tag: <ul>
+<li>-&nbsp;tag1</li>
+<li>-&nbsp;tag2</li>
+</ul>
+</li>
+<li>空格：’&amp;nbsp + ;’</li>
+<li>文章缩略显示：&lt;!–more– &gt;</li>
+</ul>
+<h2 id="样式设置"><a href="#样式设置" class="headerlink" title="样式设置"></a>样式设置</h2><p><a href="https://github.com/iissnan/hexo-theme-next/issues/928">关于footer修改问题 · Issue #928 · iissnan/hexo-theme-next (github.com)</a></p>
+<p><a href="https://blog.csdn.net/Wonz5130/article/details/84666519">Hexo 显示分类、标签问题</a></p>
+<p><a href="https://blog.csdn.net/as480133937/article/details/100138838">Hexo-Next 主题博客个性化配置</a></p>
+<ul>
+<li>目录自动展开和换行：主题配置文件搜索 toc。</li>
+</ul>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://wandouduoduo.github.io/articles/902dbefe.html">mac和windows协同写hexo博客</a></p>
+<p><a href="https://www.caoayu.xyz/post/hexo/">hexo 图片显示+typora</a></p>
+]]></content>
+      <categories>
+        <category>hexo</category>
+      </categories>
+      <tags>
+        <tag>blog</tag>
       </tags>
   </entry>
   <entry>
@@ -522,350 +701,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Lambda 和 StreamAPI</title>
-    <url>/2020/04/16/Lambda-StreamAPI/</url>
-    <content><![CDATA[<h1 id="Lambda-表达式"><a href="#Lambda-表达式" class="headerlink" title="Lambda 表达式"></a>Lambda 表达式</h1><p><strong>Java 8 开始，可以用 Lambda 表示只有一个抽象方法的接口</strong>（<strong>函数式接口，该类型的接口一般标有 @FuntionalInterface 注解</strong>）。此前我们只能通过繁琐的匿名实现类表示。</p>
-<p>比如，Runnable 接口就是一个<strong>函数式接口</strong>。<span id="more"></span></p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121336491.png" alt="image-20210925121336491"></p>
-<p>所以我们可以用 Lambda 表达式创建一个该接口的匿名实现。</p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121400282.png" alt="image-20210925121400282"></p>
-<p><strong>() 表示</strong>函数式<strong>接口中定义的抽象方法的参数</strong>，因为 Runnable 接口中的 run() 方法没有参数，所以用空的 () 表示。</p>
-<p><strong>箭头后的内容表示</strong>该方法的实现，这里就是指 void run() 的具体实现，且因为其返回类型是 void，所以无需返回特定类型，这里只进行了一个输出语句。</p>
-<p>再比如下图的这个函数式接口 Predicate<T>，抽象方法的返回类型是 boolean，方法参数为泛型 T。</T></p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121415893.png" alt="image-20210925121415893"></p>
-<p>使用 Lambda 表示式实现的几种方式：</p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121427947.png" alt="image-20210925121427947"></p>
-<p>第 6 行中，第一个 s 表示入参，其中 s 为 String 类型。</p>
-<p>箭头后的代码调用了 String 的 equals 方法，该方法返回 boolean，要和<strong>函数接口中定义的方法一致。</strong></p>
-<p>第 8 行到 第 16 行，说明 Lambda 的方法实现可以像普通方法的方法那样<strong>有方法体和显式的 return 语句（需要用 { } 包括</strong>）。</p>
-<p>还有一个点就是 Lambda 很多参数类型都不需要声明，编译器会为我们自动进行类型推导。如果 Lambda 表达式的类型有歧义，编译器会告诉你需要指定对应的类型。</p>
-<p>以下部分的代码几乎都由 List<Dish> 类型的 menu 变量作为构建流的基本元素。代码大致如下：</Dish></p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121440379.png" alt="image-20210925121440379"></p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121450024.png" alt="image-20210925121450024"></p>
-<h1 id="Stream"><a href="#Stream" class="headerlink" title="Stream"></a>Stream</h1><p>了解 Lambda 表示式之后，来看看新的 Stream API。</p>
-<h2 id="什么是流"><a href="#什么是流" class="headerlink" title="什么是流"></a>什么是流</h2><p>Stream<T> 接口的注释是这样的:</T></p>
-<p><em>“A sequence of elements supporting sequential and parallel aggregate operations.”</em></p>
-<p>支持有顺序，可以并行地聚合操作的一串<strong>元素序列</strong>。</p>
-<p>流的数据源头可以从集合，数组获得。有了基础流之后，可以对流进行数据处理，Stream API 定义了一系列简易的方法供我们使用。</p>
-<p>虽然流和集合都是包含特定的元素序列，但是他们之间是有一些明显区别的。这两者可以类比成我们生活中的 DVD 和在线看电影。DVD 相当于集合，已经有了电影所有的帧。流则需要我们从网络中进行数据加载再处理。</p>
-<h2 id="操作流"><a href="#操作流" class="headerlink" title="操作流"></a>操作流</h2><p>图中是两种筛选 Dish 的实现。</p>
-<p>第一种（第 16 行开始）使用常规的集合进行筛选。第二种（第 30 行开始）使用流进行筛选。</p>
-<p>明显第二种方式简洁且可读性也好。</p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121553922.png" alt="image-20210925121553922"></p>
-<p>来看看使用流操作（第二种方式，第 30 行开始）中每个操作的含义：</p>
-<p>第 31 行，<strong>stream()</strong> 方法从 menu 这一集合中（源头）产生流（Stream<Dish> 类型）供接下来操作。</Dish></p>
-<p>第 32 行，<strong>filter()</strong> 方法筛选出卡路里高于 500 的菜肴，将筛选后的元素变成一个新的流（Stream<Dish> 类型）供接下来操作。</Dish></p>
-<p>第 33 行，<strong>sorted()</strong> 方法按照卡路里高低排序，继续返回一个 Stream<Dish> 类型的流。</Dish></p>
-<p>第 34 行，<strong>limit()</strong> 方法只从流中截断出只包含 2 个元素的流。</p>
-<p>第 35 行，<strong>map()</strong> 方法将 Stream&lt;**Dish**&gt; 映射成 Stream&lt;**String**&gt;，返回一个菜肴名称的流。</p>
-<p>第 36 行，<strong>collect()</strong> 方法将 Stream<String> 中的元素保存到 List 中。到此结束，所以 highCaloriesDish 变量的类型是 List<String> 类型的。</String></String></p>
-<h2 id="Stream-API"><a href="#Stream-API" class="headerlink" title="Stream API"></a>Stream API</h2><h3 id="筛选"><a href="#筛选" class="headerlink" title="筛选"></a>筛选</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Stream&lt;T&gt; filter(Predicate&lt;? super T&gt; predicate);</span><br><span class="line">Stream&lt;T&gt; distinct();</span><br><span class="line">Stream&lt;T&gt; skip(long n);</span><br><span class="line">Stream&lt;T&gt; limit(long maxSize);</span><br></pre></td></tr></table></figure>
-
-<h3 id="映射"><a href="#映射" class="headerlink" title="映射"></a>映射</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;R&gt; Stream&lt;R&gt; map(Function&lt;? super T, ? extends R&gt; mapper);</span><br><span class="line">&lt;R&gt; Stream&lt;R&gt; flatMap(Function&lt;? super T, ? extends Stream&lt;? extends R&gt;&gt; mapper);</span><br></pre></td></tr></table></figure>
-
-<p>map() 方法的功能是根据传入的实现将类型映射为其他类型。</p>
-<p>map() 方法的参数 Function&lt;…&gt; 的定义是这样的：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@FunctionalInterface</span><br><span class="line">public interface Function&lt;T, R&gt; &#123;</span><br><span class="line">    R apply(T t);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>apply() 方法传入一个类型 T，然后根据方法实现返回类型 R。拿下图中的 map() 方法举例，传入参数类型为 Integer 的 i（对应 T），返回 i * i（也是 Integer 类型，对应 R）。</p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121717843.png" alt="image-20210925121717843"></p>
-<p><strong>扁平流 flatmap</strong> 看下图的箭头部分，String 的 split() 方法返回的是 String[]，经过 map 映射后流中包含了这两个元素  {[H，e，l，l，o]，[W，o，r，l，d]｝。之后如果我们直接调用 distinct()，意味着作用的对象是 [H，e，l，l，o] 和 [W，o，r，l，d] 这两个流中的 String[] 数组，它们肯定是不一样的，故达不到目的。</p>
-<p>Arrays.stream() 方法可以将传入的数组元素产生一个流。其方法签名是这样的：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public static &lt;T&gt; Stream&lt;T&gt; stream(T[] array) &#123;</span><br><span class="line">        return stream(array, 0, array.length);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>Arrays::stream 返回 Stream<String> 列表后，map() 方法又将整个内容分别映射到不同的流中。故还是有问题。</String></p>
-<p>再看 flatMap ，flatMap() 方法将流中的每个值都映射到同一个流中。</p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925121734068.png" alt="image-20210925121734068"></p>
-<h3 id="查找和匹配"><a href="#查找和匹配" class="headerlink" title="查找和匹配"></a>查找和匹配</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">boolean anyMatch(Predicate&lt;? super T&gt; predicate);</span><br><span class="line">boolean allMatch(Predicate&lt;? super T&gt; predicate);</span><br><span class="line">boolean noneMatch(Predicate&lt;? super T&gt; predicate);</span><br><span class="line">Optional&lt;T&gt; findFirst();</span><br><span class="line">Optional&lt;T&gt; findAny();</span><br></pre></td></tr></table></figure>
-
-<h3 id="归约"><a href="#归约" class="headerlink" title="归约"></a>归约</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">T reduce(T identity, BinaryOperator&lt;T&gt; accumulator);</span><br><span class="line">Optional&lt;T&gt; reduce(BinaryOperator&lt;T&gt; accumulator);</span><br></pre></td></tr></table></figure>
-
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122004919.png" alt="image-20210925122004919"></p>
-<p>第 4 行：reduce 接受一个初始值 0，然后逐个比较选择大的那个数。</p>
-<p>第 5 行：一样的功能使用方法引用表示。</p>
-<p>第 6 行：reduce() 方法只接受一个参数，不接受初始值。为了应对 stream() 调用后<strong>流中没有任何元素的可能性，</strong>所以这个方法的返回值是 Optional 类型。</p>
-<h2 id="数值流"><a href="#数值流" class="headerlink" title="数值流"></a>数值流</h2><p>前面我们使用到的流都是针对<strong>对象类型</strong>的，在进行计算的时候其实包括了<strong>隐含的拆装箱</strong>操作。为此 Java 8 引入了三个针对特定<strong>原始类型</strong>的流来进一步简化操作，分别是 IntStream，LongStream 和 DoubleStream。可以通过 Stream<T> 中的 mapToInt/Long/Dubbo 方法将流转换为特性的数值流。</T></p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122154169.png" alt="image-20210925122154169"></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">将特化流装箱为对应的对象类型流  </span><br><span class="line">Stream&lt;Integer//Long//.&gt; boxed(); </span><br><span class="line">// 生成范围数值流</span><br><span class="line">public static IntStream range(int startInclusive, int endExclusive);</span><br><span class="line">// 包含起始值的范围数值流</span><br><span class="line">public static IntStream rangeClosed(int startInclusive, int endInclusive);</span><br></pre></td></tr></table></figure>
-
-<h2 id="如何构建一个流"><a href="#如何构建一个流" class="headerlink" title="如何构建一个流"></a>如何构建一个流</h2><p>此前我们获得流的方式都是通过集合调用 stream() 方法生成流，或者使用数值流的 range/rangeClosed 生成特定范围的数值流。这部分就来介绍生成流的其他方式。</p>
-<ul>
-<li>由显式值构建流：<strong>Stream.of()</strong></li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public static&lt;T&gt; Stream&lt;T&gt; of(T... values) &#123; ... &#125;</span><br><span class="line">Stream&lt;String&gt; hello = Stream.of(&quot;hello&quot;, &quot;test&quot;, &quot;hi&quot;);</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>由数组构建流，接收各种参数并由之生成对应的流：<strong>Arrays.stream()</strong></li>
-</ul>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122218320.png" alt="image-20210925122218320"></p>
-<ul>
-<li>由文件获得流。Java 中用来处理文件的 API 更新后可以用来支持 Stream API。</li>
-</ul>
-<p>借此顺便再看一下 flatMap ，Array.stream 的用法。注意看返回不同类型的 Stream。</p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122232527.png" alt="image-20210925122232527"></p>
-<p>注意到第 11 行，我们使用流之前需要重新从文件中生成新的流。因为流只能被消费一次，你会发现如果重复消费会发生类似的异常。</p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122245419.png" alt="image-20210925122245419"></p>
-<ul>
-<li>由函数生成流：<strong>iterate()，generate()</strong></li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public static&lt;T&gt; Stream&lt;T&gt; iterate(final T seed, final UnaryOperator&lt;T&gt; f) &#123;&#125;</span><br><span class="line">public static&lt;T&gt; Stream&lt;T&gt; generate(Supplier&lt;T&gt; s) &#123;&#125;</span><br></pre></td></tr></table></figure>
-
-<p>iterate 接受一个 T 类型的初始值，以及一个<strong>每次都会作用在新值上的函数</strong>（合时宜的话可以说是 Lambda）。有点像 reduce 那样。不同的是<strong>iterate 会不断产生产生新元素</strong>到流中。</p>
-<p>generate 接受<strong>一个不断产生新的值的 Lambda</strong>。看一下其参数 Supplier<T> 接口中定义的方法就知道 generate 做的事情是什么了。</T></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@FunctionalInterface</span><br><span class="line">public interface Supplier&lt;T&gt; &#123;</span><br><span class="line">    T get(); // 唯一要做的就是提供一个生成新元素的实现</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>需要注意的是对那些可以生成无限流一般需要通过 limit() 方法来截断。</p>
-<h2 id="从流中收集数据"><a href="#从流中收集数据" class="headerlink" title="从流中收集数据"></a>从流中收集数据</h2><p>前面的代码中我们经常使用<strong>Stream</strong>的 <strong>collect()</strong> 方法配合入参 toList(）将流中的数据放到一个 List 中。其实这个 toList() 方法是定义在 Collectors 工厂类里面，其中还预定义了很多可以直接使用的方法。</p>
-<p>当我们对流使用 collect() 方法的时候，就是为了使用传入该方法的**”参数”**进行对应的收集操作。</p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122300501.png" alt="image-20210925122300501"></p>
-<p>我们先来看看 API 为我们预先提供了哪些可以直接用的 “参数”（Collectors 类中提供的现有实现）</p>
-<ul>
-<li>groupingBy</li>
-<li>maxBy</li>
-<li>summarizingInt</li>
-<li>joining 等等。。。</li>
-</ul>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122311199.png" alt="image-20210925122311199"></p>
-<h3 id="归约-1"><a href="#归约-1" class="headerlink" title="归约"></a>归约</h3><p><strong>reducing</strong></p>
-<p>前面提到的都是特定的收集方法，我们也可以通过 reducing() 方法来自己适应更广泛的收集情况。</p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122319901.png" alt="image-20210925122319901"></p>
-<p>先来看有三个入参的版本，</p>
-<ul>
-<li>第一个参数相当于给一个初始值。应对流中没有元素的情况。</li>
-<li>第二个参数有点像 map() 方法，提供一个映射操作。</li>
-<li>第三个参数就是针对映射后的参数类型进行操作。</li>
-</ul>
-<p>或者也可以直接只提供一个针对流元素进行操作的 Lambda 操作（只有一个参数的版本），这样的话如果流中没有元素应该返回什么呢？所以可以看到返回类型出现了 Optional 类型来应对这种情况。</p>
-<h3 id="分组"><a href="#分组" class="headerlink" title="分组"></a>分组</h3><h4 id="Collectors-groupingBy"><a href="#Collectors-groupingBy" class="headerlink" title="Collectors.groupingBy()"></a>Collectors.groupingBy()</h4><p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122336096.png" alt="image-20210925122336096"></p>
-<p>groupingBy() 先根据传入的 Function 类型参数，将流中的元素映射为特定的类型作为分类的依据（Map 中的 key 类型）。</p>
-<p>groupingBy() 方法也提供了两个参数的版本。</p>
-<p>Map 的 value 类型是 List 则是因为单个参数的 groupingBy() 方法默认传入的第二个参数是 toList() 方法。</p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122349828.png" alt="image-20210925122349828"></p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122357176.png" alt="image-20210925122357176"></p>
-<p>可以看到第二个参数的类型是 Collector 接口，说明还可以在第一层分组的基础上进行其他的操作。</p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122405341.png" alt="image-20210925122405341"></p>
-<p>主要看第 1 行和 第 5 行的输出结果，可以说明第二个参数作用在了第一个分组的 value 中，因为传入了 Dish::getType ,所有又在第一次分组中根据类型进行了分组。</p>
-<p>第 10 行的方法的 counting() 方法，计算了每个类别中包含的元素个数。</p>
-<h4 id="分区：Collectors-partitioningBy"><a href="#分区：Collectors-partitioningBy" class="headerlink" title="分区：Collectors.partitioningBy()"></a>分区：Collectors.partitioningBy()</h4><p>分区是分组的一种特殊情况。只是分区返回的分类都是通过 true 和 false 来区分。true 和 false 的定义就取决于你传入的那段 Predicate&lt;&gt; 实现。</p>
-<p><img src="/2020/04/16/Lambda-StreamAPI/image-20210925122416154.png" alt="image-20210925122416154"></p>
-<p>partitioningBy() 和 groupingBy() 一样也有重载包含两个参数的版本，用法也差不多。</p>
-]]></content>
-      <categories>
-        <category>Java</category>
-      </categories>
-      <tags>
-        <tag>java 8</tag>
-        <tag>stream api</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>SpringBoot 起步依赖和自动配置</title>
-    <url>/2019/12/28/SpringBoot-autoconfiguration-starter/</url>
-    <content><![CDATA[<h1 id="起步依赖"><a href="#起步依赖" class="headerlink" title="起步依赖"></a>起步依赖</h1><p>不用定义版本，起步依赖中包含的依赖版本都交由 SpringBoot 的版本进行管理。<span id="more"></span></p>
-<p>如果你想要排除某个起步依赖中包含的不需要的依赖，在起步依赖中加 <exclusions><exclusion><groupId>即可</groupId></exclusion></exclusions></p>
-<p>如果需要制定某个依赖的版本，额外正常定义指定即可，Maven 会使用最近定义的依赖，覆盖传递依赖引入的另一个依赖。如果用 Gradle，<strong>因为 Gradle 倾向于引入较新版本<strong><strong>的</strong></strong>依赖</strong>，如果你需要<strong>指定较低<strong><strong>版本</strong></strong>的依赖</strong>，需要先排除起步依赖中的相关依赖，再引入特需版本依赖。</p>
-<h1 id="自动配置"><a href="#自动配置" class="headerlink" title="自动配置"></a>自动配置</h1><p>每当程序启动的时候，SpringBoot 的自动配置都需要根据 ClassPath 里是否有某个类来做合适的 Bean 配置。根据各种内置的自动配置类的条件是否匹配进行一些配置方便用户直接使用。</p>
-<h2 id="条件化配置"><a href="#条件化配置" class="headerlink" title="条件化配置"></a>条件化配置</h2><p>自动配置的类都在 spring-boot-autoconfigure 这个jar 包中。里面的自动配置类使用到了 Spring 提供的<strong>条件化配置</strong>（Spring 4.0开始引入）。Condition 类与 @Conditional 注解。</p>
-<p><img src="/2019/12/28/SpringBoot-autoconfiguration-starter/image-20210925164916991.png" alt="image-20210925164916991"></p>
-<p>SpringBoot 提供的丰富的条件化注解</p>
-<p><img src="/2019/12/28/SpringBoot-autoconfiguration-starter/image-20210925164929129.png" alt="image-20210925164929129"></p>
-<h2 id="覆盖自动配置"><a href="#覆盖自动配置" class="headerlink" title="覆盖自动配置"></a>覆盖自动配置</h2><p>自动配置的 @ConditionalOnMissingBean 注解，是覆盖自动配置的关键。</p>
-<h2 id="自动配置的各种属性配置微调"><a href="#自动配置的各种属性配置微调" class="headerlink" title="自动配置的各种属性配置微调"></a>自动配置的各种属性配置微调</h2><p><img src="/2019/12/28/SpringBoot-autoconfiguration-starter/image-20210925164941741.png" alt="image-20210925164941741"></p>
-<h1 id="相关书籍"><a href="#相关书籍" class="headerlink" title="相关书籍"></a>相关书籍</h1><p>《SpringBoot 实战》</p>
-]]></content>
-      <categories>
-        <category>Spring Framework</category>
-      </categories>
-      <tags>
-        <tag>spring boot</tag>
-        <tag>spring</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Hexo+GithubPages+Mac+Win 部署问题记录</title>
-    <url>/2020/01/08/hexo+win+mac/</url>
-    <content><![CDATA[<h2 id="本地初始化一个Hexo项目"><a href="#本地初始化一个Hexo项目" class="headerlink" title="本地初始化一个Hexo项目"></a>本地初始化一个Hexo项目</h2><p><strong>注意：本地的目录不要动</strong>，<strong>可以重命名</strong>。</p>
-<p>重新新建一个空目录，作为你的博客目录。进入该目录，初始化一个Hexo项目：<span id="more"></span></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo init</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git *--save</span><br></pre></td></tr></table></figure>
-
-<p>然后用自己原来博客里的文件替换掉这里的<code>source\</code>, <code>scaffolds\</code>, <code>themes\</code>,<code>_config.yml</code>替换成自己原来博客里的。<strong>注意，一定要把themes/next中的.git/目录删除</strong></p>
-<p>然后上传到代码仓库，同时初始化了 main 分支。</p>
-<p>最后切换 git checkout -b hexo, 之后基于这个分支做修改，hexo d 部署在配置的分支上，这边就是设置的 main 分支（和 github page 里设置的分支一致可直接在 page 中访问到）。</p>
-<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><p>使用到的插件列表：</p>
-<p><img src="/2020/01/08/hexo+win+mac/Sni_2409222314.png" alt="Sni_2409222314"></p>
-<p><code>.gitignore</code>文件中过滤了<code>node_modules\</code>，所以 clone 来的目录里没有<code>node_modules\</code>，这是hexo所需要的组件，所以要在该目录中重新安装hexo，<strong>但不需要hexo init</strong>。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install hexo</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
-
-<h3 id="不过滤-gitignore-的内容协作尝试"><a href="#不过滤-gitignore-的内容协作尝试" class="headerlink" title="不过滤 .gitignore 的内容协作尝试"></a>不过滤 .gitignore 的内容协作尝试</h3><p>hexo clean，hexo generate 正常，hexo d 部署的时候报错</p>
-<p><img src="/2020/01/08/hexo+win+mac/Sni_2409230640.png" alt="Sni_2409230640"></p>
-<p>.deploy_git 文件夹冲突，猜想应该是 hexo d 的时候操作 .deploy_git 的时候文件无法覆盖类似的冲突。</p>
-<p>解决方法：删除 .deploy_git，重新 hexo d 生成即可。（我们可以在 .gitignore 里过滤这个文件夹）</p>
-<h2 id="常见语法"><a href="#常见语法" class="headerlink" title="常见语法"></a>常见语法</h2><ul>
-<li>tag: <ul>
-<li>-&nbsp;tag1</li>
-<li>-&nbsp;tag2</li>
-</ul>
-</li>
-<li>空格：’&amp;nbsp + ;’</li>
-<li>文章缩略显示：&lt;!–more– &gt;</li>
-</ul>
-<h2 id="样式设置"><a href="#样式设置" class="headerlink" title="样式设置"></a>样式设置</h2><p><a href="https://github.com/iissnan/hexo-theme-next/issues/928">关于footer修改问题 · Issue #928 · iissnan/hexo-theme-next (github.com)</a></p>
-<p><a href="https://blog.csdn.net/Wonz5130/article/details/84666519">Hexo 显示分类、标签问题</a></p>
-<p><a href="https://blog.csdn.net/as480133937/article/details/100138838">Hexo-Next 主题博客个性化配置</a></p>
-<ul>
-<li>目录自动展开和换行：主题配置文件搜索 toc。</li>
-</ul>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://wandouduoduo.github.io/articles/902dbefe.html">mac和windows协同写hexo博客</a></p>
-<p><a href="https://www.caoayu.xyz/post/hexo/">hexo 图片显示+typora</a></p>
-]]></content>
-      <categories>
-        <category>hexo</category>
-      </categories>
-      <tags>
-        <tag>blog</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Java 异常处理</title>
-    <url>/2020/01/13/Java-Exception/</url>
-    <content><![CDATA[<h2 id="Throwable、Error、Exception"><a href="#Throwable、Error、Exception" class="headerlink" title="Throwable、Error、Exception"></a>Throwable、Error、Exception</h2><p>Throwable 接口可以理解成是 Java 异常世界中的 Object。因为 Java 中的所有异常一定都是 Throwable 的子类。</p>
-<span id="more"></span>
-
-<p><img src="/2020/01/13/Java-Exception/image-20210925115913274.png" alt="image-20210925115913274"></p>
-<p>Error 描述的是那些系统本身出现的错误，比如 Java 虚拟机内部问题等等。这些错误一般和 Java 应用程序没什么关系，Java 程序则不应该在任何 Java 方法中使用 throws 关键字说明可能抛出 Error 及其子类相关的异常。</p>
-<p>Exception 描述的是那些 Java 应用应该合理进行捕获的的异常。所有 Exception 的子类但不是 RuntimeException 的子类都被定义为<strong>受检异常</strong>。</p>
-<p>对于<strong>运行时异常</strong>，比如数组范围越界，访问空指针，类型转换异常，这些异常都是由于 Java 代码的问题导致，最好在程序编写的时候就避免。</p>
-<blockquote>
-<p>总之，一个方法必须声明所有可能抛出的受查异常， 而非受查异常要么不可控制（ Error),<br>要么就应该避免发生（ RuntimeException)。如果方法没有声明所有可能发生的受查异常， 编译器就会发出一个错误消息。</p>
-</blockquote>
-<h2 id="try-catch-finally"><a href="#try-catch-finally" class="headerlink" title="try/catch/finally"></a>try/catch/finally</h2><p>如果方法中发生了某些异常但是没有进行捕获，程序则会在异常发生的地方终止然后输出异常信息。异常信息一般包含调用栈等信息。</p>
-<p>程序可以通过 try/catch 代码块捕获包含在 try{} 中<strong>可能发生的异常</strong>，并在 catch 到<strong>对应的异常类型</strong>时执行 catch 中的代码。</p>
-<p>try 中发生异常<strong>且</strong> catch 声明的异常类型<strong>可以匹配</strong>，try 中剩余的语句不执行，转而执行 catch 中的语句。没异常或不匹配就忽略 catch 中的内容。注意和 switch 语句不同，switch 需要在每个 case 后跟一个 break 避免执行后续的 case。</p>
-<p>catch 块中可以继续抛出异常交给上层来处理。如果直接抛出其他类型的异常，这样会丢失原始的异常信息。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">  <span class="comment">// 刚捕获到的异常对象 e 被丢弃</span></span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;待会再试&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>更推荐的方法是**在抛出其他异常前保存原始异常或者将原始异常作为新异常的 cause(内因)**。且在抛出异常时，要提供合适的消息（对应下面代码的 “待会再试”）。</p>
-<p><img src="/2020/01/13/Java-Exception/image-20210925115943257.png" alt="image-20210925115943257"></p>
-<p>如果在 catch 块中<strong>直接重新抛出刚捕获的异常</strong>，那么 printStackTrace() 方法显示的是原本的调用栈信息，而不是新的抛出点信息。想更新抛出点信息的话，可以调用 fillInStackTrace() 方法。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">  <span class="keyword">throw</span> e.fillInStackTrace();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>有时候我们需要 <strong>finally 子句</strong>来回收特定的资源，不管异常有没有发生，finally 子句的内容在最终都会执行。</p>
-<h2 id="try-with-resource"><a href="#try-with-resource" class="headerlink" title="try-with-resource"></a>try-with-resource</h2><p>但是要小心 finally 中的语句也可能发生异常，<strong>且在 finally 中抛出的异常会覆盖原始可能抛出的异常。</strong>这样就丢失了原始的异常。</p>
-<p>我们可以在 finally 中添加 try/catch 来捕获并处理异常。或者将 try 中发生的异常贴附给 finally 中的异常。</p>
-<p><img src="/2020/01/13/Java-Exception/image-20210925120011394.png" alt="image-20210925120011394"></p>
-<p><img src="/2020/01/13/Java-Exception/image-20210925120030689.png" alt="image-20210925120030689"></p>
-<p>结果：</p>
-<p><img src="/2020/01/13/Java-Exception/image-20210925120052598.png" alt="image-20210925120052598"></p>
-<p>其实对于在 finally 语句块中发生异常情况的上述处理（通过 addSuppressed() 依附异常），正是 try-with-resource 语法做的事情。对于实现了 AutoCloseable 接口的<strong>资源，</strong>可以使用 try-with-resource 语法来自动回收资源。</p>
-<p><img src="/2020/01/13/Java-Exception/image-20210925120113611.png" alt="image-20210925120113611"></p>
-<p>输出结果和上面的代码类似，说明 try-with-resource 内部的实现方式也是类似的：对 close() 方法可能抛出的异常，将其 Suppressed 到原始异常中抛出。</p>
-<p><img src="/2020/01/13/Java-Exception/image-20210925120128233.png" alt="image-20210925120128233"></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>最后，结合《Effective Java》等相关资料，总结处理 Java 异常时的一些要点。</p>
-<ul>
-<li>异常只用在异常发生的情况，不该用来进行程序流程控制。</li>
-<li>注意区分 RuntimeException 和 受检异常，以及使用条件。</li>
-<li>抛出异常时结合带 String 参数的构造方法提供更多信息。</li>
-<li>捕获异常后并重新抛出异常时，注意保留原始的异常对象。</li>
-<li>优先用 try-with-resource，而不是 try / finally。</li>
-</ul>
-]]></content>
-      <categories>
-        <category>Java</category>
-      </categories>
-      <tags>
-        <tag>java</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>MySQL 索引概要</title>
-    <url>/2020/10/25/mysql-index-3star-principle/</url>
-    <content><![CDATA[<h1 id="磁盘-I-O"><a href="#磁盘-I-O" class="headerlink" title="磁盘 I/O"></a>磁盘 I/O</h1><blockquote>
-<p>《数据库索引设计与优化》第二章</p>
-</blockquote>
-<h2 id="随机-I-O"><a href="#随机-I-O" class="headerlink" title="随机 I/O"></a>随机 I/O</h2><p>每次数据库从磁盘随机读取一个页大约会花费<strong>10 ms</strong>左右，10 ms 是根据磁盘活动等情况大致估算出来的。我们只要意识到每次随机 I/O 的成本是很高的即可。</p>
-<span id="more"></span>
-
-<h2 id><a href="#" class="headerlink" title></a><img src="/2020/10/25/mysql-index-3star-principle/image-20210925124904465.png" alt="image-20210925124904465"></h2><h2 id="顺序-I-O"><a href="#顺序-I-O" class="headerlink" title="顺序 I/O"></a>顺序 I/O</h2><p>顺序读取的速度大约在<strong>40 MB/s</strong>，对于一个 4 KB 大小的页来说，平均的页读取时间为 0.1 ms，相比随机 I/O 的 10 ms提升了两个数量级。</p>
-<p>顺序读取的优势在于，DBMS 意识到将要读取多个页，将发出多页 I/O 请求。且由于 DBMS 事先知道哪些页需要被读取，可能预先将其读取。</p>
-<h1 id="索引模型"><a href="#索引模型" class="headerlink" title="索引模型"></a>索引模型</h1><p>实现索引的方式有很多种，采用不同方式设计的索引在不同的场景的效率也不同。对应的效率可以类比到数据结构的特性。例如依赖哈希表设计的索引天然不适合范围查询。</p>
-<ul>
-<li>B-Tree</li>
-<li>哈希索引</li>
-<li>空间数据索引</li>
-<li>全文索引</li>
-</ul>
-<h1 id="InnoDB-采用的索引模型"><a href="#InnoDB-采用的索引模型" class="headerlink" title="InnoDB 采用的索引模型"></a>InnoDB 采用的索引模型</h1><p>不同的存储引擎的索引的工作方式不尽相同。本文主要分析 MySQL 中最常用的存储引擎 InnoDB 的索引。</p>
-<p>InnoDB 采用 B+Tree 实现索引，每张表通过主键以索引的形式存放（建表时没有指定主键，MySQL 会自动给一个 ROW_ID 作为主键），这种存储方式一般也称为索引组织表（index organized table，iot）。</p>
-<p>InnoDB 实现的 B+Tree 只在叶子节点存储数据，非叶子节点只用作索引定位使用。</p>
-<p>B+Tree 的特点</p>
-<p><a href="https://www.javatpoint.com/b-plus-tree?fileGuid=PD9KHHH3T6GPvkdY">https://www.javatpoint.com/b-plus-tree</a></p>
-<p>B+Tree 的树高低，在索引定位的过程中，访问不同数据快的次数和树高相当，可以很好的减少磁盘随机 I/O 的次数。而且一般根节点，一级索引很可能已经在内存中，磁盘随机 I/O 的次数更低了。</p>
-<h1 id="主键索引与普通索引"><a href="#主键索引与普通索引" class="headerlink" title="主键索引与普通索引"></a>主键索引与普通索引</h1><p>主键索引叶子节点需要存储整行的数据。主键索引一般也成为聚簇索引（clustered index）。</p>
-<p>普通索引的叶子节点存储的是主键的数据。普通索引一般称为二级索引。</p>
-<p>一个查询使用到普通索引时，有可能需要回到主键索引获取对应的数据，一般称作<strong>回表</strong>。</p>
-<h1 id="使用-MySQL-索引"><a href="#使用-MySQL-索引" class="headerlink" title="使用 MySQL 索引"></a>使用 MySQL 索引</h1><p><a href="https://www.mysqltutorial.org/mysql-index/?fileGuid=PD9KHHH3T6GPvkdY">https://www.mysqltutorial.org/mysql-index/</a></p>
-<h1 id="索引设计、优化"><a href="#索引设计、优化" class="headerlink" title="索引设计、优化"></a>索引设计、优化</h1><p>在具体索引设计前，先了解下使用到索引的查询语句的一些特性。</p>
-<ul>
-<li>索引覆盖，查询的列如果在索引中存在直接通过索引中的值返回。</li>
-<li>索引下推，判断谓词如若在索引内部存在，优先通过索引内部字段进行谓词判断，减少回表的过程。</li>
-<li>索引最左前缀原则，比如一个索引（age，name，sex）,相当于覆盖了 （age），（age，name）这两种索引。</li>
-<li>前缀索引。通过截断前缀作为索引字段。可以节省空间。但是可能会损失一些查询性能，因为数据库需要根据主键回表判断这个值。前缀索引还可以影响到索引覆盖，同理无法直接从索引树返回结果。</li>
-</ul>
-<p>假设有表 user（id，age，name）,主键 id，表上有索引（age，name）。</p>
-<p>对于查询语句 SELECT name FROM user WHERE age = 3;</p>
-<p><strong>索引覆盖</strong>：使用普通索引定位到 age = 3 的位置后，在索引中扫描返回对应的 name 字段。而<strong>不需要根据对应的主键 id 回到主索引</strong>获取 name 的值。</p>
-<p>对于查询语句SELECT id FROM user WHERE age = 3 and name = “fang”;</p>
-<p><strong>索引下推</strong>：使用普通索引定位到 age = 3 的位置后，在<strong>索引内部</strong>获取 name 继续判断是否符号谓词条件，最后直接访问 id。</p>
-<p>但是在 MySQL 5.6 之前，只能<strong>回到主索引</strong>一个个判断 name 的值。</p>
-<h1 id="理想的索引"><a href="#理想的索引" class="headerlink" title="理想的索引"></a>理想的索引</h1><blockquote>
-<p>《数据库索引设计与优化》第四章提出的三星索引的概念，即对于一个查询语句可能的最好索引。如果查询语句使用了三星索引，一次查询通常只需要一次磁盘随机读以及一次窄索引片的扫描。</p>
-</blockquote>
-<p>对特定的查询语句，三颗星的定义如下：</p>
-<ul>
-<li>第一颗：查询使用到的谓词的列作为索引的开头。（通过等值谓词最小化操作集）</li>
-<li>第二颗：ORDER BY 使用到的列添加到索引中。（避免结果排序）</li>
-<li>第三颗：查询语句需要返回的结果集的列全部被包含在索引中。（避免回表查询，对应多次的随机磁盘 I/O）</li>
-</ul>
-<p>比如有表 user（id，name，age，city，gender）</p>
-<p>查询语句 SELECT * FROM user WHERE age = 3 and name = “fang” order by city；</p>
-<ul>
-<li>第一颗：索引设计为（age，name）</li>
-<li>第二颗：在后面添加 city，（age，name，city）</li>
-<li>第三颗：SELECT *，索引中未包含 gender，（age，name，city，gender）</li>
-</ul>
-<p>书中提出说<strong>第三颗星通常是最重要的</strong>，原因是如果索引中未包含查询需要返回值时，需要回表进行多次速度较慢的<strong>磁盘随机读</strong>。</p>
-<p>但是在实际场景中，想要同时满足三颗星咩有那么简单。虽然我们总是可以向索引添加所有查询需要的字段来满足第三颗星。但是这样第一颗星和第二颗星就可能会冲突。</p>
-<p>比如查询语句 SELECT name, city FROM user WHERE age BETWEEN 4 AND 24 and city = “fujian” ORDER BY name;</p>
-<p>首先，添加索引 （city）满足第一颗星，然后可以添加 age，（city，age）满足第三颗星，同时刚好为 between 语句避免了回表判断。现在如果为了满足第二颗星以避免排序，name 这个索引的位置应该在 age 的前面才是预期的行为。</p>
-<p>联合索引会按照索引字段的顺序组织数据。对于 age BETWEEN 4 AND 24，ORDER BY name 来说，任一字段排在其他字段的前面就始终无法满足条件。（age，name) 先按照 age 的顺序排序后，name 的有序性只能在 age 相同的行之间保证。（name，age）同理。</p>
-<h1 id="索引维护"><a href="#索引维护" class="headerlink" title="索引维护"></a>索引维护</h1><p>为了保证索引有序性，插入新数据时可能触发页分裂，影响到性能。</p>
-<p>页分裂后会影响到页的利用率，影响到空间。</p>
-<p>可以重建索引来重新组织索引。</p>
-<p>alter table user drop index age; // 重建索引 age</p>
-<p>alter table user drop primary key; // 重建主键索引</p>
-<h1 id="索引分析"><a href="#索引分析" class="headerlink" title="索引分析"></a>索引分析</h1><p>通过 explain 分析语句的执行情况。</p>
-<p><a href="https://dev.mysql.com/doc/refman/5.6/en/explain-output.html#explain_rows?fileGuid=PD9KHHH3T6GPvkdY">https://dev.mysql.com/doc/refman/5.6/en/explain-output.html#explain_rows</a></p>
-<p>使用索引的一些坑</p>
-<ol>
-<li><strong>谓词条件字段</strong>通过函数操作，可能导致优化器放弃选择索引。因为通过函数计算后的索引得到的值，无法通过原本有序的索引树定位数据。</li>
-<li>隐式类型转换。可能会触发对索引字段做函数操作进行转换。放弃走索引树定位的原因同上。</li>
-<li>隐式字符编码转换。</li>
-</ol>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ul>
-<li><a href="https://draveness.me/sql-index-intro/">MySQL 索引设计概要 - 面向信仰编程</a></li>
-<li><a href="https://www.javatpoint.com/b-plus-tree?fileGuid=PD9KHHH3T6GPvkdY">https://www.javatpoint.com/b-plus-tree</a></li>
-<li><a href="https://www.mysqltutorial.org/mysql-index/?fileGuid=PD9KHHH3T6GPvkdY">https://www.mysqltutorial.org/mysql-index/</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>MySQL</category>
-      </categories>
-      <tags>
-        <tag>mysql</tag>
-        <tag>索引设计</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>数据结构与算法学习记录概览</title>
     <url>/2020/11/06/ds-algo-study-record-overview/</url>
     <content><![CDATA[<h1 id="复杂度"><a href="#复杂度" class="headerlink" title="复杂度"></a>复杂度</h1><p><strong>时间复杂度：</strong>代码执行时间随着数据规模变化的趋势</p>
@@ -976,64 +811,168 @@
       </tags>
   </entry>
   <entry>
-    <title>Spring 事务传播机制</title>
-    <url>/2019/12/12/spring-transaction-spread/</url>
-    <content><![CDATA[<h1 id="事务传播机制"><a href="#事务传播机制" class="headerlink" title="事务传播机制"></a>事务传播机制</h1><p>首先我们看 <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/TransactionDefinition.html">TransactionDefinition</a> 接口的注释。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/**Interface that defines Spring-compliant transaction properties.</span><br><span class="line">* Based on the propagation behavior definitions analogous to EJB CMT attributes.</span><br><span class="line"></span><br><span class="line">大概说这个接口定义了 Spring 兼容的事务属性。基于类似于EJB CMT属性的传播行为定义。</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
-
-<span id="more"></span>那什么是 EJB CMT 呢？参考[维基百科](https://en.wikipedia.org/wiki/Enterprise_JavaBeans)的解释，EJB 容器必须支持 Container-managed transaction（CMT）来管理 ACID 特性的事务和 Bean managed transaction（BMT）。
-
-<p>对应到 Spring 框架就是我们常说的 Spring 事务的传播机制以及隔离级别。</p>
-<p>这两个容器的目的就是不需要显式复杂的配置，事务管理可以通过简单的注解进行。</p>
-<p>Spring 通过 Spring AOP 来进行事务的管理，比如我们常用的 @Transactional 注解。</p>
-<p>那当我们在方法中互相调用开启了事务功能的方法时，方法之间定义的事务是怎么起作用的呢？</p>
-<p>比如 A 方法开启了事务，A 方法中调用了 B 方法，B 方法也开启了事务，那么这时候 A 和 B 之间的事务是独立进行的还是一起作用的？</p>
-<p>Spring 在这方面为我们提供了管理的方法，也就是今天我们讨论的 Spring 的事务传播机制。</p>
-<p>相关的定义在 Spring 的 TransactionDefinition 接口文件中。Spring 定义了 6 中传播行为。</p>
-<h2 id="REQUIRED"><a href="#REQUIRED" class="headerlink" title="REQUIRED"></a><strong>REQUIRED</strong></h2><p>支持当前的事务；如果当前没有，那么创建一个新的。这也是 Spring 默认的传播行为。</p>
-<p>比如，方法 A 调用了方法 B，A B都开启 REQUIRED 级别的事务。那么，B 方法会发现有了当前事务 A，那么 B 就会加入到 A 的事务中。</p>
-<p>如果 A 没有开启事务，B 仍旧开启自己的事务。</p>
-<h2 id="SUPPORTS"><a href="#SUPPORTS" class="headerlink" title="SUPPORTS"></a><strong>SUPPORTS</strong></h2><p>支持当前事务；如果没有当前事务以非事务的方式运行。</p>
-<p>也可以从字面上理解，supports 看起来就没有 required 那么强势。如果没有当前事务就非事务运行好了。</p>
-<h2 id="MANDATORY（强制性）"><a href="#MANDATORY（强制性）" class="headerlink" title="MANDATORY（强制性）"></a><strong>MANDATORY（强制性）</strong></h2><p>支持当前事务；如果没有会抛出异常；</p>
-<h2 id="REQUIRES-NEW"><a href="#REQUIRES-NEW" class="headerlink" title="REQUIRES_NEW"></a><strong>REQUIRES_NEW</strong></h2><p>始终创建一个新的事务；如果有当前事务，会把当前事务挂起；</p>
-<h2 id="NOT-SUPPORTED"><a href="#NOT-SUPPORTED" class="headerlink" title="NOT_SUPPORTED"></a><strong>NOT_SUPPORTED</strong></h2><p>不支持当前事务；总是以非事务方式执行。</p>
-<h2 id="NEVER"><a href="#NEVER" class="headerlink" title="NEVER"></a>NEVER</h2><p>不支持当前事务；如果有当前事务会抛出异常。</p>
-<h2 id="NESTED（嵌套）"><a href="#NESTED（嵌套）" class="headerlink" title="NESTED（嵌套）"></a>NESTED（嵌套）</h2><p>如果当前事务存在，就以嵌套的方式运行。行为和 REQUIRED 很像。</p>
-<h2 id="自调用的问题"><a href="#自调用的问题" class="headerlink" title="自调用的问题"></a>自调用的问题</h2><p>Stackover Flow 上有一个相关的<a href="https://stackoverflow.com/questions/37217075/spring-nested-transactions">问答</a>，大意是在方法中调用了同一个 service 的方法，比如方法 A （<strong>REQUIRED</strong>）调用了方法 B，即使 B 声明了 <strong>REQUIRS_NEW</strong>的传播行为（始终创建一个新事务执行），但在 A 方法抛出异常的时候，B 方法还是会回滚。</p>
-<p>这个问题需要从 Spring AOP 中动态代理的角度来分析。</p>
-<p>Spring AOP 使用 JDK / Cglib 进行动态代理，它会通过代理，织入增强代码。比如调用带 @Transactional 注解的方法，会通过调用<strong>代理对象（增强后）</strong>的该方法进行。</p>
-<p>但当进行自调用的时候，方法内部调用的方法还是使用原对象进行。也就是说，Spring AOP 的代理对象只会在不同的 bean 之间相互调用的时候使用。</p>
-<p>一般遇到自调用的问题时，一个解决办法是新建一个帮助类，然后去调用它。</p>
-<p>大家也可以看看 <a href="https://docs.spring.io/spring-framework/docs/current/spring-framework-reference/data-access.html#transaction-declarative-annotations">Spring doc</a> 中的 1.4.6 节，有关自调用方面的说明。</p>
-<p>Spring 官方还建议把 @Transactional 注解使用在具体的类上，不建议用在 接口 上。</p>
-<p>原因是，当你使用了基于 类 的代理方式时，使用在 接口 上的注解就失效了。</p>
-<h1 id="事务隔离级别"><a href="#事务隔离级别" class="headerlink" title="事务隔离级别"></a>事务隔离级别</h1><p>Spring 的事务隔离级别和数据库的没有什么区别。</p>
-<ul>
-<li>读未提交</li>
-<li>读提交</li>
-<li>可重复读</li>
-<li>串行化</li>
+    <title>GC 策略总结</title>
+    <url>/2021/03/06/GC-Algo/</url>
+    <content><![CDATA[<h1 id="GC-算法"><a href="#GC-算法" class="headerlink" title="GC 算法"></a>GC 算法</h1><ul>
+<li>标记-复制。<ul>
+<li>优点：存活的对象越少，复制需要的空间就越小；而且复制后的对象们内存空间排布紧凑，避免空间碎片的问题。</li>
+<li>缺点：有一部分空间被浪费。如果存活对象大且多的话复制成本比较高。<span id="more"></span></li>
+<li><strong>适用每次 GC 存活对象小而美的情况。年轻代</strong></li>
 </ul>
-<p>Spring 有一个 ISOLATION_DEFAULT 级别，作用是采用和 数据库 一致的隔离级别。</p>
-<h1 id="异常回滚"><a href="#异常回滚" class="headerlink" title="异常回滚"></a>异常回滚</h1><p>@Transactional 还有一个 rollbackFor() 属性。</p>
-<p>接口上的注释大意是，这个属性定义了发生什么类型的异常会触发事务的回滚。</p>
-<p>By default，事务会因为发生非受检异常回滚，受检异常发生了不会回滚。</p>
-<p>你可以这么用，来定义自己的异常回滚策略。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)</span><br></pre></td></tr></table></figure>
+</li>
+<li>标记-清除。直接清除可回收对象，不进行内存整理。，<ul>
+<li>优点：单次 STW 的时间可能要短一些。</li>
+<li>缺点：但是产生的内存碎片，可能导致内存总空间足够，但是没一块连续的空间存放对象的问题，内存利用率降低；对象放不下，可能触发额外的 GC。</li>
+<li><strong>适用对象存活率高的情况。老年代</strong></li>
+</ul>
+</li>
+<li>标记-清除-整理。STW 时间可能会稍长一些，内存碎片问题得到解决。适用对象存活率高的情况。</li>
+</ul>
+<h1 id="Serial-GC"><a href="#Serial-GC" class="headerlink" title="Serial GC"></a>Serial GC</h1><p>-XX:+UseSerialGC</p>
+<p>串行 GC 单线程执行，在 GC 期间其他业务线程均暂停，暂停的时间长。</p>
+<p>串行 GC 对年轻代采用标记复制算法。对老年代使用标记-清除-整理算法。</p>
+<p>串行 GC 简单直接，在单核 CPU 环境下比较适用。</p>
+<h2 id="XX-UseParNewGC"><a href="#XX-UseParNewGC" class="headerlink" title="-XX:+UseParNewGC"></a>-XX:+UseParNewGC</h2><p>ParNew 收集器，多线程版本的 Serial。配合 CMS 使用。</p>
+<h1 id="Parallel-GC"><a href="#Parallel-GC" class="headerlink" title="Parallel GC"></a>Parallel GC</h1><p>-XX:UseParallelGC -XX:UseParallelOldGC</p>
+<p>使用的 GC 算法和串行的一样。</p>
+<p>默认的 GC 线程数是 CPU core 数，该收集器的目标更倾向于<strong>提高系统吞吐量</strong>，有时候单次的 GC 暂停时间较长。</p>
+<h1 id="CMS-GC"><a href="#CMS-GC" class="headerlink" title="CMS GC"></a>CMS GC</h1><p>-XX:UseConcMarkSweepGC</p>
+<p>对老年代没有整理操作，使用 free-list 进行内存空间的管理。默认的核心线程数 CPU 核数 / 4。</p>
+<p>可以和业务线程并发执行，GC 暂停时间少。</p>
+<h1 id="G1-GC"><a href="#G1-GC" class="headerlink" title="G1 GC"></a>G1 GC</h1><p>打破整个分区的理论，把内存划分成多个小块进行管理。对每个小块的垃圾数量进行预估，优先回收垃圾多的 Region。可预期的垃圾停顿时间。</p>
+<h1 id="验证总结"><a href="#验证总结" class="headerlink" title="验证总结"></a>验证总结</h1><p>首先需要提到的一点是 GC 的时间和存活的对象数量有关，和堆内存的大小关系没有那么大。</p>
+<p>配置堆内存 512M，YGC 后年轻代存活对象大概 20M。</p>
+<ul>
+<li>串行 GC 利用单线程执行，GC 暂停的时间明显会比较长。在实际的测试下，在小堆内存空间的情况下，YGC 和并行 GC 的 YGC 差不多。FGC 使用的时间明显较长，<strong>大概是并行 GC 的一倍（存活对象 300M 左右）</strong>。老年代存活对象占用的空间大，整理移动的时间就长。</li>
+<li>CMS GC 的老年代清理明显的暂停时间降低。在 GC 日志中有发现 concurrent mode failure 的情况。查询资料后明白，CMS 在 cleanup 是并发执行的，这时的对象引用关系发生改变，也可能有新的对象需要分配空间。如果没有预留足够的空间内存分配就会导致并发失败。可能重新 CMS ，或者 GC 退化成 Serial。</li>
+<li>G1 GC 出现了 Humongous Allocation 因为大对象分配失败，触发了 initial-mark。也是重新标记，或者 GC 退化的问题。</li>
+</ul>
+<p>堆内存越大，内存中可容纳的对象越多，GC 的次数随之减少，单次 GC 的暂停时间可能更长（取决于存活对象的数量）。</p>
+<p>总的来说，注意不同 GC 策略采用的算法，以及设计的目的。比如 CMS 在于并发执行，提高系统响应。Parallel 更倾向于提高吞吐量；G1 GC 倾向于可配置可预估的暂停时间。</p>
+<p>CMS - 老年代 没有整理，使用 free-list 管理回收内存；真正的 STW 时间小，但是步骤多，还有浮动垃圾，GC 退化问题。G1 GC 也存在 GC 退化问题。</p>
+<p>配置堆内存的时候，注意 JVM 自身需要的内存和系统需要的内存，预留一定的空间。</p>
+<p>-Xms -Xmx 直接一步到位，扩容的时候有性能的抖动。</p>
+<p>年轻代和老年代的比例默认 1:2，新生代:from:to = 8：1：1，根据情况来调整。</p>
+<p>根据对象晋升回收速率的计算，进行空间，晋升年龄的配置。</p>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>jvm</tag>
+        <tag>gc</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>MySQL 索引概要</title>
+    <url>/2020/10/25/mysql-index-3star-principle/</url>
+    <content><![CDATA[<h1 id="磁盘-I-O"><a href="#磁盘-I-O" class="headerlink" title="磁盘 I/O"></a>磁盘 I/O</h1><blockquote>
+<p>《数据库索引设计与优化》第二章</p>
+</blockquote>
+<h2 id="随机-I-O"><a href="#随机-I-O" class="headerlink" title="随机 I/O"></a>随机 I/O</h2><p>每次数据库从磁盘随机读取一个页大约会花费<strong>10 ms</strong>左右，10 ms 是根据磁盘活动等情况大致估算出来的。我们只要意识到每次随机 I/O 的成本是很高的即可。</p>
+<span id="more"></span>
 
-<p>最后做一个总结，Spring 利用 Spring AOP 提供了方便的事务管理功能。在此基础上，通过配置事务的传播机制，进一步解决实际上使用事务时可能存在的问题。</p>
-<p>因为 Spring AOP 动态代理的特性，在自调用的时候会出现事务失效的问题。除了刚才提到的使用帮助类来调用，还有一种方法是使用 AspectJ ，这是另一种 AOP 方案，其原理是通过在编译期在字节码层面织入代码实现增强功能。</p>
-<p>最后就是事务的隔离级别。隔离级别这方面需要了解比如脏读，幻读等问题。</p>
-<p>笔者也是一位初学者，如若文章有错误和疑惑的地方，也希望您可以指出，我们共同讨论和进步.</p>
-<p>‍(=・ω・=)</p>
+<h2 id><a href="#" class="headerlink" title></a><img src="/2020/10/25/mysql-index-3star-principle/image-20210925124904465.png" alt="image-20210925124904465"></h2><h2 id="顺序-I-O"><a href="#顺序-I-O" class="headerlink" title="顺序 I/O"></a>顺序 I/O</h2><p>顺序读取的速度大约在<strong>40 MB/s</strong>，对于一个 4 KB 大小的页来说，平均的页读取时间为 0.1 ms，相比随机 I/O 的 10 ms提升了两个数量级。</p>
+<p>顺序读取的优势在于，DBMS 意识到将要读取多个页，将发出多页 I/O 请求。且由于 DBMS 事先知道哪些页需要被读取，可能预先将其读取。</p>
+<h1 id="索引模型"><a href="#索引模型" class="headerlink" title="索引模型"></a>索引模型</h1><p>实现索引的方式有很多种，采用不同方式设计的索引在不同的场景的效率也不同。对应的效率可以类比到数据结构的特性。例如依赖哈希表设计的索引天然不适合范围查询。</p>
+<ul>
+<li>B-Tree</li>
+<li>哈希索引</li>
+<li>空间数据索引</li>
+<li>全文索引</li>
+</ul>
+<h1 id="InnoDB-采用的索引模型"><a href="#InnoDB-采用的索引模型" class="headerlink" title="InnoDB 采用的索引模型"></a>InnoDB 采用的索引模型</h1><p>不同的存储引擎的索引的工作方式不尽相同。本文主要分析 MySQL 中最常用的存储引擎 InnoDB 的索引。</p>
+<p>InnoDB 采用 B+Tree 实现索引，每张表通过主键以索引的形式存放（建表时没有指定主键，MySQL 会自动给一个 ROW_ID 作为主键），这种存储方式一般也称为索引组织表（index organized table，iot）。</p>
+<p>InnoDB 实现的 B+Tree 只在叶子节点存储数据，非叶子节点只用作索引定位使用。</p>
+<p>B+Tree 的特点</p>
+<p><a href="https://www.javatpoint.com/b-plus-tree?fileGuid=PD9KHHH3T6GPvkdY">https://www.javatpoint.com/b-plus-tree</a></p>
+<p>B+Tree 的树高低，在索引定位的过程中，访问不同数据快的次数和树高相当，可以很好的减少磁盘随机 I/O 的次数。而且一般根节点，一级索引很可能已经在内存中，磁盘随机 I/O 的次数更低了。</p>
+<h1 id="主键索引与普通索引"><a href="#主键索引与普通索引" class="headerlink" title="主键索引与普通索引"></a>主键索引与普通索引</h1><p>主键索引叶子节点需要存储整行的数据。主键索引一般也成为聚簇索引（clustered index）。</p>
+<p>普通索引的叶子节点存储的是主键的数据。普通索引一般称为二级索引。</p>
+<p>一个查询使用到普通索引时，有可能需要回到主键索引获取对应的数据，一般称作<strong>回表</strong>。</p>
+<h1 id="使用-MySQL-索引"><a href="#使用-MySQL-索引" class="headerlink" title="使用 MySQL 索引"></a>使用 MySQL 索引</h1><p><a href="https://www.mysqltutorial.org/mysql-index/?fileGuid=PD9KHHH3T6GPvkdY">https://www.mysqltutorial.org/mysql-index/</a></p>
+<h1 id="索引设计、优化"><a href="#索引设计、优化" class="headerlink" title="索引设计、优化"></a>索引设计、优化</h1><p>在具体索引设计前，先了解下使用到索引的查询语句的一些特性。</p>
+<ul>
+<li>索引覆盖，查询的列如果在索引中存在直接通过索引中的值返回。</li>
+<li>索引下推，判断谓词如若在索引内部存在，优先通过索引内部字段进行谓词判断，减少回表的过程。</li>
+<li>索引最左前缀原则，比如一个索引（age，name，sex）,相当于覆盖了 （age），（age，name）这两种索引。</li>
+<li>前缀索引。通过截断前缀作为索引字段。可以节省空间。但是可能会损失一些查询性能，因为数据库需要根据主键回表判断这个值。前缀索引还可以影响到索引覆盖，同理无法直接从索引树返回结果。</li>
+</ul>
+<p>假设有表 user（id，age，name）,主键 id，表上有索引（age，name）。</p>
+<p>对于查询语句 SELECT name FROM user WHERE age = 3;</p>
+<p><strong>索引覆盖</strong>：使用普通索引定位到 age = 3 的位置后，在索引中扫描返回对应的 name 字段。而<strong>不需要根据对应的主键 id 回到主索引</strong>获取 name 的值。</p>
+<p>对于查询语句SELECT id FROM user WHERE age = 3 and name = “fang”;</p>
+<p><strong>索引下推</strong>：使用普通索引定位到 age = 3 的位置后，在<strong>索引内部</strong>获取 name 继续判断是否符号谓词条件，最后直接访问 id。</p>
+<p>但是在 MySQL 5.6 之前，只能<strong>回到主索引</strong>一个个判断 name 的值。</p>
+<h1 id="理想的索引"><a href="#理想的索引" class="headerlink" title="理想的索引"></a>理想的索引</h1><blockquote>
+<p>《数据库索引设计与优化》第四章提出的三星索引的概念，即对于一个查询语句可能的最好索引。如果查询语句使用了三星索引，一次查询通常只需要一次磁盘随机读以及一次窄索引片的扫描。</p>
+</blockquote>
+<p>对特定的查询语句，三颗星的定义如下：</p>
+<ul>
+<li>第一颗：查询使用到的谓词的列作为索引的开头。（通过等值谓词最小化操作集）</li>
+<li>第二颗：ORDER BY 使用到的列添加到索引中。（避免结果排序）</li>
+<li>第三颗：查询语句需要返回的结果集的列全部被包含在索引中。（避免回表查询，对应多次的随机磁盘 I/O）</li>
+</ul>
+<p>比如有表 user（id，name，age，city，gender）</p>
+<p>查询语句 SELECT * FROM user WHERE age = 3 and name = “fang” order by city；</p>
+<ul>
+<li>第一颗：索引设计为（age，name）</li>
+<li>第二颗：在后面添加 city，（age，name，city）</li>
+<li>第三颗：SELECT *，索引中未包含 gender，（age，name，city，gender）</li>
+</ul>
+<p>书中提出说<strong>第三颗星通常是最重要的</strong>，原因是如果索引中未包含查询需要返回值时，需要回表进行多次速度较慢的<strong>磁盘随机读</strong>。</p>
+<p>但是在实际场景中，想要同时满足三颗星咩有那么简单。虽然我们总是可以向索引添加所有查询需要的字段来满足第三颗星。但是这样第一颗星和第二颗星就可能会冲突。</p>
+<p>比如查询语句 SELECT name, city FROM user WHERE age BETWEEN 4 AND 24 and city = “fujian” ORDER BY name;</p>
+<p>首先，添加索引 （city）满足第一颗星，然后可以添加 age，（city，age）满足第三颗星，同时刚好为 between 语句避免了回表判断。现在如果为了满足第二颗星以避免排序，name 这个索引的位置应该在 age 的前面才是预期的行为。</p>
+<p>联合索引会按照索引字段的顺序组织数据。对于 age BETWEEN 4 AND 24，ORDER BY name 来说，任一字段排在其他字段的前面就始终无法满足条件。（age，name) 先按照 age 的顺序排序后，name 的有序性只能在 age 相同的行之间保证。（name，age）同理。</p>
+<h1 id="索引维护"><a href="#索引维护" class="headerlink" title="索引维护"></a>索引维护</h1><p>为了保证索引有序性，插入新数据时可能触发页分裂，影响到性能。</p>
+<p>页分裂后会影响到页的利用率，影响到空间。</p>
+<p>可以重建索引来重新组织索引。</p>
+<p>alter table user drop index age; // 重建索引 age</p>
+<p>alter table user drop primary key; // 重建主键索引</p>
+<h1 id="索引分析"><a href="#索引分析" class="headerlink" title="索引分析"></a>索引分析</h1><p>通过 explain 分析语句的执行情况。</p>
+<p><a href="https://dev.mysql.com/doc/refman/5.6/en/explain-output.html#explain_rows?fileGuid=PD9KHHH3T6GPvkdY">https://dev.mysql.com/doc/refman/5.6/en/explain-output.html#explain_rows</a></p>
+<p>使用索引的一些坑</p>
+<ol>
+<li><strong>谓词条件字段</strong>通过函数操作，可能导致优化器放弃选择索引。因为通过函数计算后的索引得到的值，无法通过原本有序的索引树定位数据。</li>
+<li>隐式类型转换。可能会触发对索引字段做函数操作进行转换。放弃走索引树定位的原因同上。</li>
+<li>隐式字符编码转换。</li>
+</ol>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ul>
+<li><a href="https://draveness.me/sql-index-intro/">MySQL 索引设计概要 - 面向信仰编程</a></li>
+<li><a href="https://www.javatpoint.com/b-plus-tree?fileGuid=PD9KHHH3T6GPvkdY">https://www.javatpoint.com/b-plus-tree</a></li>
+<li><a href="https://www.mysqltutorial.org/mysql-index/?fileGuid=PD9KHHH3T6GPvkdY">https://www.mysqltutorial.org/mysql-index/</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>MySQL</category>
+      </categories>
+      <tags>
+        <tag>mysql</tag>
+        <tag>索引设计</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SpringBoot 起步依赖和自动配置</title>
+    <url>/2019/12/28/SpringBoot-autoconfiguration-starter/</url>
+    <content><![CDATA[<h1 id="起步依赖"><a href="#起步依赖" class="headerlink" title="起步依赖"></a>起步依赖</h1><p>不用定义版本，起步依赖中包含的依赖版本都交由 SpringBoot 的版本进行管理。<span id="more"></span></p>
+<p>如果你想要排除某个起步依赖中包含的不需要的依赖，在起步依赖中加 <exclusions><exclusion><groupId>即可</groupId></exclusion></exclusions></p>
+<p>如果需要制定某个依赖的版本，额外正常定义指定即可，Maven 会使用最近定义的依赖，覆盖传递依赖引入的另一个依赖。如果用 Gradle，<strong>因为 Gradle 倾向于引入较新版本<strong><strong>的</strong></strong>依赖</strong>，如果你需要<strong>指定较低<strong><strong>版本</strong></strong>的依赖</strong>，需要先排除起步依赖中的相关依赖，再引入特需版本依赖。</p>
+<h1 id="自动配置"><a href="#自动配置" class="headerlink" title="自动配置"></a>自动配置</h1><p>每当程序启动的时候，SpringBoot 的自动配置都需要根据 ClassPath 里是否有某个类来做合适的 Bean 配置。根据各种内置的自动配置类的条件是否匹配进行一些配置方便用户直接使用。</p>
+<h2 id="条件化配置"><a href="#条件化配置" class="headerlink" title="条件化配置"></a>条件化配置</h2><p>自动配置的类都在 spring-boot-autoconfigure 这个jar 包中。里面的自动配置类使用到了 Spring 提供的<strong>条件化配置</strong>（Spring 4.0开始引入）。Condition 类与 @Conditional 注解。</p>
+<p><img src="/2019/12/28/SpringBoot-autoconfiguration-starter/image-20210925164916991.png" alt="image-20210925164916991"></p>
+<p>SpringBoot 提供的丰富的条件化注解</p>
+<p><img src="/2019/12/28/SpringBoot-autoconfiguration-starter/image-20210925164929129.png" alt="image-20210925164929129"></p>
+<h2 id="覆盖自动配置"><a href="#覆盖自动配置" class="headerlink" title="覆盖自动配置"></a>覆盖自动配置</h2><p>自动配置的 @ConditionalOnMissingBean 注解，是覆盖自动配置的关键。</p>
+<h2 id="自动配置的各种属性配置微调"><a href="#自动配置的各种属性配置微调" class="headerlink" title="自动配置的各种属性配置微调"></a>自动配置的各种属性配置微调</h2><p><img src="/2019/12/28/SpringBoot-autoconfiguration-starter/image-20210925164941741.png" alt="image-20210925164941741"></p>
+<h1 id="相关书籍"><a href="#相关书籍" class="headerlink" title="相关书籍"></a>相关书籍</h1><p>《SpringBoot 实战》</p>
 ]]></content>
       <categories>
         <category>Spring Framework</category>
       </categories>
       <tags>
+        <tag>spring boot</tag>
         <tag>spring</tag>
-        <tag>事务</tag>
       </tags>
   </entry>
   <entry>
@@ -1113,6 +1052,67 @@
       </categories>
       <tags>
         <tag>tcp</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Spring 事务传播机制</title>
+    <url>/2019/12/12/spring-transaction-spread/</url>
+    <content><![CDATA[<h1 id="事务传播机制"><a href="#事务传播机制" class="headerlink" title="事务传播机制"></a>事务传播机制</h1><p>首先我们看 <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/TransactionDefinition.html">TransactionDefinition</a> 接口的注释。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/**Interface that defines Spring-compliant transaction properties.</span><br><span class="line">* Based on the propagation behavior definitions analogous to EJB CMT attributes.</span><br><span class="line"></span><br><span class="line">大概说这个接口定义了 Spring 兼容的事务属性。基于类似于EJB CMT属性的传播行为定义。</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>那什么是 EJB CMT 呢？参考[维基百科](https://en.wikipedia.org/wiki/Enterprise_JavaBeans)的解释，EJB 容器必须支持 Container-managed transaction（CMT）来管理 ACID 特性的事务和 Bean managed transaction（BMT）。
+
+<p>对应到 Spring 框架就是我们常说的 Spring 事务的传播机制以及隔离级别。</p>
+<p>这两个容器的目的就是不需要显式复杂的配置，事务管理可以通过简单的注解进行。</p>
+<p>Spring 通过 Spring AOP 来进行事务的管理，比如我们常用的 @Transactional 注解。</p>
+<p>那当我们在方法中互相调用开启了事务功能的方法时，方法之间定义的事务是怎么起作用的呢？</p>
+<p>比如 A 方法开启了事务，A 方法中调用了 B 方法，B 方法也开启了事务，那么这时候 A 和 B 之间的事务是独立进行的还是一起作用的？</p>
+<p>Spring 在这方面为我们提供了管理的方法，也就是今天我们讨论的 Spring 的事务传播机制。</p>
+<p>相关的定义在 Spring 的 TransactionDefinition 接口文件中。Spring 定义了 6 中传播行为。</p>
+<h2 id="REQUIRED"><a href="#REQUIRED" class="headerlink" title="REQUIRED"></a><strong>REQUIRED</strong></h2><p>支持当前的事务；如果当前没有，那么创建一个新的。这也是 Spring 默认的传播行为。</p>
+<p>比如，方法 A 调用了方法 B，A B都开启 REQUIRED 级别的事务。那么，B 方法会发现有了当前事务 A，那么 B 就会加入到 A 的事务中。</p>
+<p>如果 A 没有开启事务，B 仍旧开启自己的事务。</p>
+<h2 id="SUPPORTS"><a href="#SUPPORTS" class="headerlink" title="SUPPORTS"></a><strong>SUPPORTS</strong></h2><p>支持当前事务；如果没有当前事务以非事务的方式运行。</p>
+<p>也可以从字面上理解，supports 看起来就没有 required 那么强势。如果没有当前事务就非事务运行好了。</p>
+<h2 id="MANDATORY（强制性）"><a href="#MANDATORY（强制性）" class="headerlink" title="MANDATORY（强制性）"></a><strong>MANDATORY（强制性）</strong></h2><p>支持当前事务；如果没有会抛出异常；</p>
+<h2 id="REQUIRES-NEW"><a href="#REQUIRES-NEW" class="headerlink" title="REQUIRES_NEW"></a><strong>REQUIRES_NEW</strong></h2><p>始终创建一个新的事务；如果有当前事务，会把当前事务挂起；</p>
+<h2 id="NOT-SUPPORTED"><a href="#NOT-SUPPORTED" class="headerlink" title="NOT_SUPPORTED"></a><strong>NOT_SUPPORTED</strong></h2><p>不支持当前事务；总是以非事务方式执行。</p>
+<h2 id="NEVER"><a href="#NEVER" class="headerlink" title="NEVER"></a>NEVER</h2><p>不支持当前事务；如果有当前事务会抛出异常。</p>
+<h2 id="NESTED（嵌套）"><a href="#NESTED（嵌套）" class="headerlink" title="NESTED（嵌套）"></a>NESTED（嵌套）</h2><p>如果当前事务存在，就以嵌套的方式运行。行为和 REQUIRED 很像。</p>
+<h2 id="自调用的问题"><a href="#自调用的问题" class="headerlink" title="自调用的问题"></a>自调用的问题</h2><p>Stackover Flow 上有一个相关的<a href="https://stackoverflow.com/questions/37217075/spring-nested-transactions">问答</a>，大意是在方法中调用了同一个 service 的方法，比如方法 A （<strong>REQUIRED</strong>）调用了方法 B，即使 B 声明了 <strong>REQUIRS_NEW</strong>的传播行为（始终创建一个新事务执行），但在 A 方法抛出异常的时候，B 方法还是会回滚。</p>
+<p>这个问题需要从 Spring AOP 中动态代理的角度来分析。</p>
+<p>Spring AOP 使用 JDK / Cglib 进行动态代理，它会通过代理，织入增强代码。比如调用带 @Transactional 注解的方法，会通过调用<strong>代理对象（增强后）</strong>的该方法进行。</p>
+<p>但当进行自调用的时候，方法内部调用的方法还是使用原对象进行。也就是说，Spring AOP 的代理对象只会在不同的 bean 之间相互调用的时候使用。</p>
+<p>一般遇到自调用的问题时，一个解决办法是新建一个帮助类，然后去调用它。</p>
+<p>大家也可以看看 <a href="https://docs.spring.io/spring-framework/docs/current/spring-framework-reference/data-access.html#transaction-declarative-annotations">Spring doc</a> 中的 1.4.6 节，有关自调用方面的说明。</p>
+<p>Spring 官方还建议把 @Transactional 注解使用在具体的类上，不建议用在 接口 上。</p>
+<p>原因是，当你使用了基于 类 的代理方式时，使用在 接口 上的注解就失效了。</p>
+<h1 id="事务隔离级别"><a href="#事务隔离级别" class="headerlink" title="事务隔离级别"></a>事务隔离级别</h1><p>Spring 的事务隔离级别和数据库的没有什么区别。</p>
+<ul>
+<li>读未提交</li>
+<li>读提交</li>
+<li>可重复读</li>
+<li>串行化</li>
+</ul>
+<p>Spring 有一个 ISOLATION_DEFAULT 级别，作用是采用和 数据库 一致的隔离级别。</p>
+<h1 id="异常回滚"><a href="#异常回滚" class="headerlink" title="异常回滚"></a>异常回滚</h1><p>@Transactional 还有一个 rollbackFor() 属性。</p>
+<p>接口上的注释大意是，这个属性定义了发生什么类型的异常会触发事务的回滚。</p>
+<p>By default，事务会因为发生非受检异常回滚，受检异常发生了不会回滚。</p>
+<p>你可以这么用，来定义自己的异常回滚策略。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)</span><br></pre></td></tr></table></figure>
+
+<p>最后做一个总结，Spring 利用 Spring AOP 提供了方便的事务管理功能。在此基础上，通过配置事务的传播机制，进一步解决实际上使用事务时可能存在的问题。</p>
+<p>因为 Spring AOP 动态代理的特性，在自调用的时候会出现事务失效的问题。除了刚才提到的使用帮助类来调用，还有一种方法是使用 AspectJ ，这是另一种 AOP 方案，其原理是通过在编译期在字节码层面织入代码实现增强功能。</p>
+<p>最后就是事务的隔离级别。隔离级别这方面需要了解比如脏读，幻读等问题。</p>
+<p>笔者也是一位初学者，如若文章有错误和疑惑的地方，也希望您可以指出，我们共同讨论和进步.</p>
+<p>‍(=・ω・=)</p>
+]]></content>
+      <categories>
+        <category>Spring Framework</category>
+      </categories>
+      <tags>
+        <tag>spring</tag>
+        <tag>事务</tag>
       </tags>
   </entry>
   <entry>
