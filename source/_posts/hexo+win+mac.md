@@ -1,7 +1,7 @@
 ---
 title: Hexo+GithubPages+Mac+Win 部署问题记录
-date: 2020-01-08 21:54:14
-updated: 2020-01-08 21:54:14
+date: 2021-04-01 21:54:14
+updated: 2021-04-01 21:54:14
 categories: hexo
 tags: 
   - blog

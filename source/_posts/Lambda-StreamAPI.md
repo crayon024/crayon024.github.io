@@ -1,11 +1,12 @@
 ---
 title: Lambda 和 StreamAPI
-date: 2020-04-16 21:54:14
-updated: 2020-04-16 21:54:14
+date: 2021-06-22 21:54:14
+updated: 2021-06-22 21:54:14
 categories: Java
 tags: 
   - java 8
   - stream api
+  - java
 ---
 
 # Lambda 表达式

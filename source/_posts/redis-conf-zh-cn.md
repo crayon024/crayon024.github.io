@@ -1,7 +1,7 @@
 ---
 title: redis.conf-zh_cn 中文翻译
-date: 2020-09-25 20:33:20
-updated: 2020-12-01 22:54:14
+date: 2021-06-02 20:33:20
+updated: 2021-06-02 20:33:20
 categories: Redis
 tags: 
   - 翻译

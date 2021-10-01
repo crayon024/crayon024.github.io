@@ -1,7 +1,7 @@
 ---
 title: SpringBoot 起步依赖和自动配置
-date: 2019-12-28 18:54:14
-updated: 2019-12-28 18:54:14
+date: 2021-05-02 18:54:14
+updated: 2021-05-02 18:54:14
 categories: Spring Framework
 tags: 
   - spring boot

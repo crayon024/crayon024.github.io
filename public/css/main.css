@@ -2013,6 +2013,15 @@ pre code {
   top: 0;
   width: 100%;
 }
+.post-body a:not(.btn) {
+  color: #63a1db;
+  border-bottom: none;
+}
+.post-body a:not(.btn):hover {
+  color: #7ca5cc;
+  font-weight: bold;
+  text-decoration: underline;
+}
 .post-gallery {
   display: flex;
   min-height: 200px;

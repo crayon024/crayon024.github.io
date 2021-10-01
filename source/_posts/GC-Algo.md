@@ -1,8 +1,9 @@
 ---
 title: GC 策略总结
-date: 2021-03-06 18:54:14
-updated: 2021-03-06 18:54:14
-categories: Java
+date: 2021-08-20 18:54:14
+updated: 2021-08-20 18:54:14
+categories: 
+  - JVM
 tags: 
   - jvm
   - gc

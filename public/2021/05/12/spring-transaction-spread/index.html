@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico">
+  <link rel="mask-icon" href="/images/favicon.ico" color="#222">
+  <link rel="manifest" href="/manifest.json">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-bounce.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<meta name="description" content="事务传播机制首先我们看 TransactionDefinition 接口的注释。 12345&#x2F;**Interface that defines Spring-compliant transaction properties.* Based on the propagation behavior definitions analogous to EJB CMT attributes.大概说这个接口定">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring 事务传播机制">
+<meta property="og:url" content="http://example.com/2021/05/12/spring-transaction-spread/index.html">
+<meta property="og:site_name" content="Crayon">
+<meta property="og:description" content="事务传播机制首先我们看 TransactionDefinition 接口的注释。 12345&#x2F;**Interface that defines Spring-compliant transaction properties.* Based on the propagation behavior definitions analogous to EJB CMT attributes.大概说这个接口定">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-05-12T10:54:14.000Z">
+<meta property="article:modified_time" content="2021-05-12T10:54:14.000Z">
+<meta property="article:author" content="Hexin Fang">
+<meta property="article:tag" content="spring">
+<meta property="article:tag" content="事务">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/05/12/spring-transaction-spread/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2021/05/12/spring-transaction-spread/","path":"2021/05/12/spring-transaction-spread/","title":"Spring 事务传播机制"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Spring 事务传播机制 | Crayon</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Crayon</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">Keep going</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E4%BC%A0%E6%92%AD%E6%9C%BA%E5%88%B6"><span class="nav-number">1.</span> <span class="nav-text">事务传播机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#REQUIRED"><span class="nav-number">1.1.</span> <span class="nav-text">REQUIRED</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SUPPORTS"><span class="nav-number">1.2.</span> <span class="nav-text">SUPPORTS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MANDATORY%EF%BC%88%E5%BC%BA%E5%88%B6%E6%80%A7%EF%BC%89"><span class="nav-number">1.3.</span> <span class="nav-text">MANDATORY（强制性）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#REQUIRES-NEW"><span class="nav-number">1.4.</span> <span class="nav-text">REQUIRES_NEW</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NOT-SUPPORTED"><span class="nav-number">1.5.</span> <span class="nav-text">NOT_SUPPORTED</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NEVER"><span class="nav-number">1.6.</span> <span class="nav-text">NEVER</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NESTED%EF%BC%88%E5%B5%8C%E5%A5%97%EF%BC%89"><span class="nav-number">1.7.</span> <span class="nav-text">NESTED（嵌套）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E8%B0%83%E7%94%A8%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">1.8.</span> <span class="nav-text">自调用的问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB"><span class="nav-number">2.</span> <span class="nav-text">事务隔离级别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E5%9B%9E%E6%BB%9A"><span class="nav-number">3.</span> <span class="nav-text">异常回滚</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Hexin Fang"
+      src="/images/avatar_2.JPG">
+  <p class="site-author-name" itemprop="name">Hexin Fang</p>
+  <div class="site-description" itemprop="description">Keep going.</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">21</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/05/12/spring-transaction-spread/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar_2.JPG">
+      <meta itemprop="name" content="Hexin Fang">
+      <meta itemprop="description" content="Keep going.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Crayon">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring 事务传播机制
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-05-12 18:54:14" itemprop="dateCreated datePublished" datetime="2021-05-12T18:54:14+08:00">2021-05-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Spring-Framework/" itemprop="url" rel="index"><span itemprop="name">Spring Framework</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="事务传播机制"><a href="#事务传播机制" class="headerlink" title="事务传播机制"></a>事务传播机制</h1><p>首先我们看 <a target="_blank" rel="noopener" href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/TransactionDefinition.html">TransactionDefinition</a> 接口的注释。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">/**Interface that defines Spring-compliant transaction properties.</span><br><span class="line">* Based on the propagation behavior definitions analogous to EJB CMT attributes.</span><br><span class="line"></span><br><span class="line">大概说这个接口定义了 Spring 兼容的事务属性。基于类似于EJB CMT属性的传播行为定义。</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>那什么是 EJB CMT 呢？参考[维基百科](https://en.wikipedia.org/wiki/Enterprise_JavaBeans)的解释，EJB 容器必须支持 Container-managed transaction（CMT）来管理 ACID 特性的事务和 Bean managed transaction（BMT）。
+
+<p>对应到 Spring 框架就是我们常说的 Spring 事务的传播机制以及隔离级别。</p>
+<p>这两个容器的目的就是不需要显式复杂的配置，事务管理可以通过简单的注解进行。</p>
+<p>Spring 通过 Spring AOP 来进行事务的管理，比如我们常用的 @Transactional 注解。</p>
+<p>那当我们在方法中互相调用开启了事务功能的方法时，方法之间定义的事务是怎么起作用的呢？</p>
+<p>比如 A 方法开启了事务，A 方法中调用了 B 方法，B 方法也开启了事务，那么这时候 A 和 B 之间的事务是独立进行的还是一起作用的？</p>
+<p>Spring 在这方面为我们提供了管理的方法，也就是今天我们讨论的 Spring 的事务传播机制。</p>
+<p>相关的定义在 Spring 的 TransactionDefinition 接口文件中。Spring 定义了 6 中传播行为。</p>
+<h2 id="REQUIRED"><a href="#REQUIRED" class="headerlink" title="REQUIRED"></a><strong>REQUIRED</strong></h2><p>支持当前的事务；如果当前没有，那么创建一个新的。这也是 Spring 默认的传播行为。</p>
+<p>比如，方法 A 调用了方法 B，A B都开启 REQUIRED 级别的事务。那么，B 方法会发现有了当前事务 A，那么 B 就会加入到 A 的事务中。</p>
+<p>如果 A 没有开启事务，B 仍旧开启自己的事务。</p>
+<h2 id="SUPPORTS"><a href="#SUPPORTS" class="headerlink" title="SUPPORTS"></a><strong>SUPPORTS</strong></h2><p>支持当前事务；如果没有当前事务以非事务的方式运行。</p>
+<p>也可以从字面上理解，supports 看起来就没有 required 那么强势。如果没有当前事务就非事务运行好了。</p>
+<h2 id="MANDATORY（强制性）"><a href="#MANDATORY（强制性）" class="headerlink" title="MANDATORY（强制性）"></a><strong>MANDATORY（强制性）</strong></h2><p>支持当前事务；如果没有会抛出异常；</p>
+<h2 id="REQUIRES-NEW"><a href="#REQUIRES-NEW" class="headerlink" title="REQUIRES_NEW"></a><strong>REQUIRES_NEW</strong></h2><p>始终创建一个新的事务；如果有当前事务，会把当前事务挂起；</p>
+<h2 id="NOT-SUPPORTED"><a href="#NOT-SUPPORTED" class="headerlink" title="NOT_SUPPORTED"></a><strong>NOT_SUPPORTED</strong></h2><p>不支持当前事务；总是以非事务方式执行。</p>
+<h2 id="NEVER"><a href="#NEVER" class="headerlink" title="NEVER"></a>NEVER</h2><p>不支持当前事务；如果有当前事务会抛出异常。</p>
+<h2 id="NESTED（嵌套）"><a href="#NESTED（嵌套）" class="headerlink" title="NESTED（嵌套）"></a>NESTED（嵌套）</h2><p>如果当前事务存在，就以嵌套的方式运行。行为和 REQUIRED 很像。</p>
+<h2 id="自调用的问题"><a href="#自调用的问题" class="headerlink" title="自调用的问题"></a>自调用的问题</h2><p>Stackover Flow 上有一个相关的<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/37217075/spring-nested-transactions">问答</a>，大意是在方法中调用了同一个 service 的方法，比如方法 A （<strong>REQUIRED</strong>）调用了方法 B，即使 B 声明了 <strong>REQUIRS_NEW</strong>的传播行为（始终创建一个新事务执行），但在 A 方法抛出异常的时候，B 方法还是会回滚。</p>
+<p>这个问题需要从 Spring AOP 中动态代理的角度来分析。</p>
+<p>Spring AOP 使用 JDK / Cglib 进行动态代理，它会通过代理，织入增强代码。比如调用带 @Transactional 注解的方法，会通过调用<strong>代理对象（增强后）</strong>的该方法进行。</p>
+<p>但当进行自调用的时候，方法内部调用的方法还是使用原对象进行。也就是说，Spring AOP 的代理对象只会在不同的 bean 之间相互调用的时候使用。</p>
+<p>一般遇到自调用的问题时，一个解决办法是新建一个帮助类，然后去调用它。</p>
+<p>大家也可以看看 <a target="_blank" rel="noopener" href="https://docs.spring.io/spring-framework/docs/current/spring-framework-reference/data-access.html#transaction-declarative-annotations">Spring doc</a> 中的 1.4.6 节，有关自调用方面的说明。</p>
+<p>Spring 官方还建议把 @Transactional 注解使用在具体的类上，不建议用在 接口 上。</p>
+<p>原因是，当你使用了基于 类 的代理方式时，使用在 接口 上的注解就失效了。</p>
+<h1 id="事务隔离级别"><a href="#事务隔离级别" class="headerlink" title="事务隔离级别"></a>事务隔离级别</h1><p>Spring 的事务隔离级别和数据库的没有什么区别。</p>
+<ul>
+<li>读未提交</li>
+<li>读提交</li>
+<li>可重复读</li>
+<li>串行化</li>
+</ul>
+<p>Spring 有一个 ISOLATION_DEFAULT 级别，作用是采用和 数据库 一致的隔离级别。</p>
+<h1 id="异常回滚"><a href="#异常回滚" class="headerlink" title="异常回滚"></a>异常回滚</h1><p>@Transactional 还有一个 rollbackFor() 属性。</p>
+<p>接口上的注释大意是，这个属性定义了发生什么类型的异常会触发事务的回滚。</p>
+<p>By default，事务会因为发生非受检异常回滚，受检异常发生了不会回滚。</p>
+<p>你可以这么用，来定义自己的异常回滚策略。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">@Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)</span><br></pre></td></tr></table></figure>
+
+<p>最后做一个总结，Spring 利用 Spring AOP 提供了方便的事务管理功能。在此基础上，通过配置事务的传播机制，进一步解决实际上使用事务时可能存在的问题。</p>
+<p>因为 Spring AOP 动态代理的特性，在自调用的时候会出现事务失效的问题。除了刚才提到的使用帮助类来调用，还有一种方法是使用 AspectJ ，这是另一种 AOP 方案，其原理是通过在编译期在字节码层面织入代码实现增强功能。</p>
+<p>最后就是事务的隔离级别。隔离级别这方面需要了解比如脏读，幻读等问题。</p>
+<p>笔者也是一位初学者，如若文章有错误和疑惑的地方，也希望您可以指出，我们共同讨论和进步.</p>
+<p>‍(=・ω・=)</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/spring/" rel="tag"># spring</a>
+              <a href="/tags/%E4%BA%8B%E5%8A%A1/" rel="tag"># 事务</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/05/02/SpringBoot-autoconfiguration-starter/" rel="prev" title="SpringBoot 起步依赖和自动配置">
+                  <i class="fa fa-chevron-left"></i> SpringBoot 起步依赖和自动配置
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/05/22/niao-ge-linux-dishes-study-record/" rel="next" title="《鸟哥的Linux私房菜》学习记录">
+                  《鸟哥的Linux私房菜》学习记录 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hexin Fang</span>
+</div><script color="0,0,255" opacity="1.0" zIndex="-1" count="111" src="https://cdn.jsdelivr.net/npm/canvas-nest.js@1/dist/canvas-nest.js"></script>
+
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+
+
+
+
+
+</body>
+</html>
