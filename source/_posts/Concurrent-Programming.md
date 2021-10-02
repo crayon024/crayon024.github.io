@@ -223,12 +223,48 @@ interrupt() 方法会通知线程（**根据被中断线程的状态有不同的
   *  java.nio.channels.InterruptibleChannel，**线程 A 会触发 java.nio.channels.ClosedByInterruptException 这个异常。**
   *  java.nio.channels.Selector ，**线程 A 的 java.nio.channels.Selector 会立即返回。**
 
-
 需要注意抛出异常后，中断标识会自己清除。通过 Thread#isInterrupted() 重置成 false。
 
+
+# 线程池
+
+## 基础概念
+
+创建线程池的 7 个核心参数。
+
+```java
+ThreadPoolExecutor(
+  int corePoolSize,
+  int maximumPoolSize,
+  long keepAliveTime,
+  TimeUnit unit,
+  BlockingQueue<Runnable> workQueue,
+  ThreadFactory threadFactory, // 定义新线程的属性，比如指定线程名等等
+  RejectedExecutionHandler handler) 
+```
+
+
+
+![Sni_0210201216](Concurrent-Programming/Sni_0210201216.png)
+
+第 3 个步骤创建新线程的步骤需要获取全局锁。有可能导致性能问题，应该尽量避免。
+
+## 合理配置线程池
+
+- 使用有界队列
+- 合理配置线程数（core num：Runtime.getRuntime().availableProcessors())
+  - io 密集型，2 * core num
+  - cpu 密集型，core num + 1
+
+## 使用
+
+通过 execute() 或者 submit(); 注意 execute() 没有返回值，可能无法知晓任务执行情况（吞异常）;
+
+## 关闭
+
+shutdown() 和 shutdownNow()
+
 # 相关链接 
-
-
 
 1. [https://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html](https://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html)，JSR-133 FAQ
 2. [Java内存模型FAQ | 并发编程网 – ifeve.com](http://ifeve.com/jmm-faq/)
