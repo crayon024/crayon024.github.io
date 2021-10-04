@@ -46,13 +46,13 @@ Java 对于异步编程也提供了支持，我们可以为方法传入一个 **
 
 ### 回调写法
 
-![image (11)](reactor-project/image (11).png)
+![image(11)](reactor-project/image(11).png)
 
 可以看到每个服务调用都需要 onSuccess，onError 处理来处理服务调用的问题，调用正确时，调用其他服务时又需要 Callback 代码。
 
 ### 使用 Reactor 
 
-![image (12)](reactor-project/image (12).png)
+![image(12)](reactor-project/image(12).png)
 
 1. 根据 userId 获取 Favorites 列表
 2. 从 Favorites 列表获取对应的 Detail 信息
@@ -85,15 +85,15 @@ Reactor 中，Flux 和 Mono 就是标准的 Publiser<T> 。Flux 的含义是可�
 
 ### 核心概念的简单示例
 
-![image (13)](reactor-project/image (13).png)
+![image(13)](reactor-project/image(13).png)
 
 * Flux.range 生成数据流
 
 * ### R2DBC、WebFlux
 
-![image (14)](reactor-project/image (14).png)
+![image(14)](reactor-project/image(14).png)
 
-![image (15)](reactor-project/image (15).png)
+![image(15)](reactor-project/image(15).png)
 
 # debug
 

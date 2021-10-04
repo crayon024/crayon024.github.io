@@ -30,11 +30,20 @@
 <meta property="og:site_name" content="Crayon">
 <meta property="og:description" content="硬件 - 内核 - 系统调用 - 应用程序。操作系统（Linux 系统）就在 内核 - 系统调用那两层。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2021/05/22/niao-ge-linux-dishes-study-record/image(1).png">
+<meta property="og:image" content="http://example.com/2021/05/22/niao-ge-linux-dishes-study-record/image(2).png">
+<meta property="og:image" content="http://example.com/2021/05/22/niao-ge-linux-dishes-study-record/image(3)-2561646.png">
+<meta property="og:image" content="http://example.com/2021/05/22/niao-ge-linux-dishes-study-record/image(4).png">
+<meta property="og:image" content="http://example.com/2021/05/22/niao-ge-linux-dishes-study-record/image(5).png">
+<meta property="og:image" content="http://example.com/2021/05/22/niao-ge-linux-dishes-study-record/image(6).png">
+<meta property="og:image" content="http://example.com/2021/05/22/niao-ge-linux-dishes-study-record/image(7).png">
+<meta property="og:image" content="http://example.com/2021/05/22/niao-ge-linux-dishes-study-record/image(8).png">
 <meta property="article:published_time" content="2021-05-22T10:54:14.000Z">
 <meta property="article:modified_time" content="2021-05-22T10:54:14.000Z">
 <meta property="article:author" content="Hexin Fang">
 <meta property="article:tag" content="linux">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/05/22/niao-ge-linux-dishes-study-record/image(1).png">
 
 
 <link rel="canonical" href="http://example.com/2021/05/22/niao-ge-linux-dishes-study-record/">
@@ -281,7 +290,7 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ man command，命令的详细操作手册。</span><br></pre></td></tr></table></figure>
 
 <p>执行 man 后，会进入一个类似 Vim 的界面，可用通过 PageUP 或 PageDown（或者空格键 ）进行翻页。/String，或者 ？String，向下 向上查找出现了 String 的内容。并通过 n/N 查找匹配的下一个/上一个。<br>巨简单的一种文本编辑器：nano。图片底部的 ^ + 字母表示，Ctrl + 字母就会执行对应的操作。</p>
-<p>![image (1)](niao-ge-linux-dishes-study-record/image (1).png)</p>
+<p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(1).png" alt="image(1)"></p>
 <h2 id="文件属性管理"><a href="#文件属性管理" class="headerlink" title="文件属性管理"></a>文件属性管理</h2><h3 id="chgrp，chown，chmod"><a href="#chgrp，chown，chmod" class="headerlink" title="chgrp，chown，chmod"></a>chgrp，chown，chmod</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">修改文件所属用户组， -R 递归操作所有子目录</span><br><span class="line">$ chgrp [-R] groupName filename/dirname</span><br><span class="line"></span><br><span class="line">修改文件拥有者，-R 递归操作所有子目录</span><br><span class="line">$ chown [-R] useName filename/dirname</span><br><span class="line"></span><br><span class="line">修改文件权限</span><br><span class="line">1）数字形式： read = 4 = 2^2，write = 2 = 2^1，x = 1 = 2^0</span><br><span class="line">$ chmod [-R] 761 filename/dirname</span><br><span class="line">2）符号形式：a - 全部用户，o - ohters，u - user，g - group</span><br><span class="line">$ chmod [-R] u+rwx,g=rx,o-rwx,a+rwx filename/dirname</span><br></pre></td></tr></table></figure>
 
 <p><strong>权限对于文件和目录的不同作用意义</strong>：</p>
@@ -315,7 +324,7 @@
 </ul>
 </li>
 </ul>
-<h3 id="文件和目录的默认权限：umask-S，umask-新的-umask-值"><a href="#文件和目录的默认权限：umask-S，umask-新的-umask-值" class="headerlink" title="文件和目录的默认权限：umask -S，umask 新的 umask 值"></a>文件和目录的默认权限：umask -S，umask 新的 umask 值</h3><p>![image (2)](niao-ge-linux-dishes-study-record/image (2).png)</p>
+<h3 id="文件和目录的默认权限：umask-S，umask-新的-umask-值"><a href="#文件和目录的默认权限：umask-S，umask-新的-umask-值" class="headerlink" title="文件和目录的默认权限：umask -S，umask 新的 umask 值"></a>文件和目录的默认权限：umask -S，umask 新的 umask 值</h3><p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(2).png" alt="image(2)"></p>
 <p>0022 的数字指的是该默认权限需要减掉的权限。第一位的 0 个人猜测是 root 用户的，似乎没办法改变。后三位 022 的 0 代表 u = rwx，2 代表 group-w（即 g = rx）,同理最后一位的 2 一样，只是作用的用户是 others。</p>
 <h3 id="查找文件"><a href="#查找文件" class="headerlink" title="查找文件"></a>查找文件</h3><ul>
 <li>locate regexWord，从已建的数据库中查询，所以不用到处查磁盘。但是数据库更新频率不高，CentOS 7 是一天一更。可以使用 updatedb 命令更新，这个命令会花一些时间。<ul>
@@ -414,9 +423,9 @@
 </ul>
 <h3 id="其他常见的压缩和备份工具：dd，cpio"><a href="#其他常见的压缩和备份工具：dd，cpio" class="headerlink" title="其他常见的压缩和备份工具：dd，cpio"></a>其他常见的压缩和备份工具：dd，cpio</h3><h2 id="vim-和-Shell"><a href="#vim-和-Shell" class="headerlink" title="vim 和 Shell"></a>vim 和 Shell</h2><h3 id="vim-的缓存，恢复和重新打开时的警告信息"><a href="#vim-的缓存，恢复和重新打开时的警告信息" class="headerlink" title="vim 的缓存，恢复和重新打开时的警告信息"></a>vim 的缓存，恢复和重新打开时的警告信息</h3><p>使用 vim 编辑文件时，vim 会在编辑文件的同个目录下建立一个 .<strong>原文件名.swp</strong>的文件保存你对原文件的操作记录。这样可以在意外的情况下恢复你上次可能未保存编辑的操作。</p>
 <p>因为 vim 被异常结束，导致交换文件没有按照正常流程结束，所以交换文件会保留下来。</p>
-<p>![image (3)](niao-ge-linux-dishes-study-record/image (3)-2561646.png)</p>
+<p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(3)-2561646.png" alt="image(3)"></p>
 <p>当你重新打开文件的时候，会提示你存在交换文件，你可以选择最后一行提供的 6 种操作。</p>
-<p>![image (4)](niao-ge-linux-dishes-study-record/image (4).png)</p>
+<p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(4).png" alt="image(4)"></p>
 <ul>
 <li>E，不加载交换文件的内容直接编辑。</li>
 <li>R，从交换文件恢复操作，但是交换文件还是存在目录中，可以手动删除避免每次打开出现类似提示。</li>
@@ -427,7 +436,7 @@
 <li>2，表示标准错误输出。</li>
 <li>0，默认表示标准输入。</li>
 </ul>
-<p>![image (5)](niao-ge-linux-dishes-study-record/image (5).png)</p>
+<p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(5).png" alt="image(5)"></p>
 <p>有了对应的代码后，我们可以通过对应的信息将本应该<strong>输出</strong>到屏幕中的内容重定向（&gt;,&gt;&gt;）到文件中。</p>
 <p>实战：将正确和错误结果分别重定向到不同文件中</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ find /ect/test -name fhx.txt &gt; writePut 2&gt; wrongPut</span><br></pre></td></tr></table></figure>
@@ -453,7 +462,7 @@
 </ul>
 </li>
 </ul>
-<p>![image (6)](niao-ge-linux-dishes-study-record/image (6).png)</p>
+<p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(6).png" alt="image(6)"></p>
 <ul>
 <li>fg，（foreground），将后台任务取出到前台运行，不加参数默认取 + 号的那个任务。<ul>
 <li>fg  jobNumber，取出对应编号的任务到前台执行。</li>
@@ -466,7 +475,7 @@
 <ul>
 <li>你可以使用 <strong>ps -l</strong> 查看只和自己的 bash 有关的进程。</li>
 </ul>
-<p>![image (7)](niao-ge-linux-dishes-study-record/image (7).png)</p>
+<p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(7).png" alt="image(7)"></p>
 <pre><code>* F：process flags，进程标识。用来说明进程的权限。
 * S：STAT。
     * R，Running
@@ -480,7 +489,7 @@
 <li><p>使用 <strong>ps aux</strong> 查看整个系统的进程。</p>
 </li>
 <li><p><strong>top。top</strong>执行后，会处于动态查看系统状态的界面，如下图。</p>
-<p>![image (8)](niao-ge-linux-dishes-study-record/image (8).png)</p>
+<p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(8).png" alt="image(8)"></p>
 <ul>
 <li>第 3 行中的 wa 指的是系统 I/O 的 wait，平时可以多注意这一项。</li>
 <li>最后一行的交换区（虚拟内存）用量也需要注意，用的越多说明系统内存可能告急。<ul>

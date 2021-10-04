@@ -226,7 +226,7 @@ public int binarySearch(int[] nums, int value) {
         3. 双重散列
     2. 链表法。后面不一定
 
-![image (1)](ds-algo-study-record-overview/image (1).png)
+![image(1)](ds-algo-study-record-overview/image(1).png)
 
 # 哈希算法
 
@@ -294,7 +294,7 @@ public void midorderTraversal(ListNode p) {
 
 ## 邻接矩阵
 
-![image (2)](ds-algo-study-record-overview/image (2)-2562505.png)
+![image(2)](ds-algo-study-record-overview/image(2)-2562505.png)
 
 好处是 计算简单，获取顶点之间的关系快速。
 
@@ -302,7 +302,7 @@ public void midorderTraversal(ListNode p) {
 
 ## 邻接表、逆邻接表
 
-![image (3)](ds-algo-study-record-overview/image (3).png)
+![image(3)](ds-algo-study-record-overview/image(3).png)
 
 好处是，比较节省空间，拉出的结构可以是链表，也可以是其他更高效的结构，比如红黑树，跳表等。
 

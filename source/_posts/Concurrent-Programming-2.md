@@ -95,7 +95,49 @@ ReentrantLock 提供了公平锁和非公平锁，公平的指的是排队等待
 
 ## ReentrantReadWriteLock
 
+Java 中 ReadWriteLock 接口，也就是读写锁。与直接的互斥锁不同，读写锁中的读锁允许多个线程一起读临界资源。这种锁在读多写少的场景下性能比互斥锁好很多。读写锁有这 3 个特点：
 
+1. 读共享
+2. 写互斥
+3. 写的时候，无法获取到读锁（也就是不可读）
+
+Java 中 ReadWriteLock 有两个实现： ReadWriteView in StampLock 和 ReentrantReadWriteLock。这部分我们主要分析常用的第二个实现 可重入读写锁。
+
+### 使用
+
+```java
+public class Example {
+    // 实例化 ReentrantReadWriteLock() rwl
+    final ReadWriteLock rwl = new ReentrantReadWriteLock();
+    // 通过 rwl 获取对应的锁
+    final Lock r = rwl.readLock();
+    final Lock w = rwl.writeLock();
+}
+```
+
+### 利用读写锁实现简易缓存方案的 demo
+
+![carbon (1)](Concurrent-Programming-2/carbon.png)
+
+### 非公平锁 读写锁排队问题
+
+![Sni_0410190800](Concurrent-Programming-2/Sni_0410190800.png)
+
+写锁始终不排队。非公平实现下，被阻塞的线程等待锁，如果此时阻塞在读锁，那么新来的读锁可能可以一起去共享锁，这样的话申请写锁的线程一直被插队，无法执行。
+
+实现中的 readerShouldBlock() 调用的方法 apparentlyFirstQueuedIsExclusive()，等待队列头线程是写，读请求阻塞，排在写的后面来避免写请求一直被阻塞的问题。
+
+### 注意的问题
+
+1. 不支持锁的升级。**获取读锁后，获取写锁**，会导致写锁永远阻塞，进而读锁无法释放，相关的线程也被阻塞。
+2. 支持锁的降级。锁的降级用在的场景在于虽然拥有写锁包含了读锁的功能，但及时释放写锁可能让其他等待读的线程拿到锁。
+   1. 获取写锁
+   2. 业务处理
+   3. **获取读锁**
+   4. 释放写锁
+   5. 业务处理
+   6. 最后释放读锁。
+3. 写锁支持 Condition 条件变量，读锁不支持。
 
 # 并发工具
 
@@ -178,3 +220,17 @@ CyclicBarrier 可以重复使用。且可提供一个回调方法，由最后一
 
 # 并发容器
 
+![Sni_0410105523](Concurrent-Programming-2/Sni_0410105523.png)
+
+- 阻塞队列的 ArrayBlockingQueue 和 LinkedBlockingQueue 支持有界队列。
+
+# 相关链接 
+
+1. [https://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html](https://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html)，JSR-133 FAQ
+2. [Java内存模型FAQ | 并发编程网 – ifeve.com](http://ifeve.com/jmm-faq/)
+3. [Java并发编程实战 (geekbang.org)](https://time.geekbang.org/column/intro/100023901?utm_source=u_nav_web&utm_medium=u_nav_web&utm_term=u_nav_web&tab=catalog)
+4. [https://docs.oracle.com/javase/specs/jls/se7/html/jls-17.html#jls-17.4](https://docs.oracle.com/javase/specs/jls/se7/html/jls-17.html#jls-17.4)
+
+5. [http://gee.cs.oswego.edu/dl/cpj/jmm.html](http://gee.cs.oswego.edu/dl/cpj/jmm.html)，Conucrrent Programming in Java，Doug Lea
+
+6. 《Java 并发编程的艺术》

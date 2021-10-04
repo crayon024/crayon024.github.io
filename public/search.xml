@@ -63,7 +63,33 @@
 </ul>
 </li>
 </ol>
-<h2 id="ReentrantReadWriteLock"><a href="#ReentrantReadWriteLock" class="headerlink" title="ReentrantReadWriteLock"></a>ReentrantReadWriteLock</h2><h1 id="并发工具"><a href="#并发工具" class="headerlink" title="并发工具"></a>并发工具</h1><h2 id="Condition-接口"><a href="#Condition-接口" class="headerlink" title="Condition 接口"></a>Condition 接口</h2><p>通过 Lock.newCondition() ，相当于进一步的通信协作。可以 new 多个 Conditions 出来。</p>
+<h2 id="ReentrantReadWriteLock"><a href="#ReentrantReadWriteLock" class="headerlink" title="ReentrantReadWriteLock"></a>ReentrantReadWriteLock</h2><p>Java 中 ReadWriteLock 接口，也就是读写锁。与直接的互斥锁不同，读写锁中的读锁允许多个线程一起读临界资源。这种锁在读多写少的场景下性能比互斥锁好很多。读写锁有这 3 个特点：</p>
+<ol>
+<li>读共享</li>
+<li>写互斥</li>
+<li>写的时候，无法获取到读锁（也就是不可读）</li>
+</ol>
+<p>Java 中 ReadWriteLock 有两个实现： ReadWriteView in StampLock 和 ReentrantReadWriteLock。这部分我们主要分析常用的第二个实现 可重入读写锁。</p>
+<h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Example</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 实例化 ReentrantReadWriteLock() rwl</span></span><br><span class="line">    <span class="keyword">final</span> ReadWriteLock rwl = <span class="keyword">new</span> ReentrantReadWriteLock();</span><br><span class="line">    <span class="comment">// 通过 rwl 获取对应的锁</span></span><br><span class="line">    <span class="keyword">final</span> Lock r = rwl.readLock();</span><br><span class="line">    <span class="keyword">final</span> Lock w = rwl.writeLock();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="利用读写锁实现简易缓存方案的-demo"><a href="#利用读写锁实现简易缓存方案的-demo" class="headerlink" title="利用读写锁实现简易缓存方案的 demo"></a>利用读写锁实现简易缓存方案的 demo</h3><p><img src="/2021/09/19/Concurrent-Programming-2/carbon.png" alt="carbon (1)"></p>
+<h3 id="非公平锁-读写锁排队问题"><a href="#非公平锁-读写锁排队问题" class="headerlink" title="非公平锁 读写锁排队问题"></a>非公平锁 读写锁排队问题</h3><p><img src="/2021/09/19/Concurrent-Programming-2/Sni_0410190800.png" alt="Sni_0410190800"></p>
+<p>写锁始终不排队。非公平实现下，被阻塞的线程等待锁，如果此时阻塞在读锁，那么新来的读锁可能可以一起去共享锁，这样的话申请写锁的线程一直被插队，无法执行。</p>
+<p>实现中的 readerShouldBlock() 调用的方法 apparentlyFirstQueuedIsExclusive()，等待队列头线程是写，读请求阻塞，排在写的后面来避免写请求一直被阻塞的问题。</p>
+<h3 id="注意的问题"><a href="#注意的问题" class="headerlink" title="注意的问题"></a>注意的问题</h3><ol>
+<li>不支持锁的升级。<strong>获取读锁后，获取写锁</strong>，会导致写锁永远阻塞，进而读锁无法释放，相关的线程也被阻塞。</li>
+<li>支持锁的降级。锁的降级用在的场景在于虽然拥有写锁包含了读锁的功能，但及时释放写锁可能让其他等待读的线程拿到锁。<ol>
+<li>获取写锁</li>
+<li>业务处理</li>
+<li><strong>获取读锁</strong></li>
+<li>释放写锁</li>
+<li>业务处理</li>
+<li>最后释放读锁。</li>
+</ol>
+</li>
+<li>写锁支持 Condition 条件变量，读锁不支持。</li>
+</ol>
+<h1 id="并发工具"><a href="#并发工具" class="headerlink" title="并发工具"></a>并发工具</h1><h2 id="Condition-接口"><a href="#Condition-接口" class="headerlink" title="Condition 接口"></a>Condition 接口</h2><p>通过 Lock.newCondition() ，相当于进一步的通信协作。可以 new 多个 Conditions 出来。</p>
 <p><img src="/2021/09/19/Concurrent-Programming-2/Sni_0210200355.png" alt="Sni_0210200355"></p>
 <h2 id="LockSupport"><a href="#LockSupport" class="headerlink" title="LockSupport"></a>LockSupport</h2><p><img src="/2021/09/19/Concurrent-Programming-2/Sni_0210175044.png" alt="Sni_0210175044"></p>
 <p>Java 6 加入 part/parkNanos/parkUntil(Ojbeck blocker,long nanos,long dendlin)。</p>
@@ -91,7 +117,25 @@
 <li>压力一般，无锁一次写入成功的概率高，性能高些。</li>
 <li>压力大，自旋导致 cpu 消耗大，性能差些。</li>
 </ol>
-<h1 id="并发容器"><a href="#并发容器" class="headerlink" title="并发容器"></a>并发容器</h1>]]></content>
+<h1 id="并发容器"><a href="#并发容器" class="headerlink" title="并发容器"></a>并发容器</h1><p><img src="/2021/09/19/Concurrent-Programming-2/Sni_0410105523.png" alt="Sni_0410105523"></p>
+<ul>
+<li>阻塞队列的 ArrayBlockingQueue 和 LinkedBlockingQueue 支持有界队列。</li>
+</ul>
+<h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ol>
+<li><p><a href="https://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html">https://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html</a>，JSR-133 FAQ</p>
+</li>
+<li><p><a href="http://ifeve.com/jmm-faq/">Java内存模型FAQ | 并发编程网 – ifeve.com</a></p>
+</li>
+<li><p><a href="https://time.geekbang.org/column/intro/100023901?utm_source=u_nav_web&utm_medium=u_nav_web&utm_term=u_nav_web&tab=catalog">Java并发编程实战 (geekbang.org)</a></p>
+</li>
+<li><p><a href="https://docs.oracle.com/javase/specs/jls/se7/html/jls-17.html#jls-17.4">https://docs.oracle.com/javase/specs/jls/se7/html/jls-17.html#jls-17.4</a></p>
+</li>
+<li><p><a href="http://gee.cs.oswego.edu/dl/cpj/jmm.html">http://gee.cs.oswego.edu/dl/cpj/jmm.html</a>，Conucrrent Programming in Java，Doug Lea</p>
+</li>
+<li><p>《Java 并发编程的艺术》</p>
+</li>
+</ol>
+]]></content>
       <categories>
         <category>Java</category>
       </categories>
@@ -172,6 +216,179 @@
         <tag>java</tag>
         <tag>java 集合</tag>
         <tag>源码分析</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>HashMap 源码分析</title>
+    <url>/2021/07/16/HashMap-SourceCode-Anaylise/</url>
+    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><h2 id="哈希算法"><a href="#哈希算法" class="headerlink" title="哈希算法"></a>哈希算法</h2><p>哈希算法的作用是：对于输入的数据，输出<strong>固定长度</strong>的数据摘要。</p>
+<p>哈希算法的特点：<span id="more"></span></p>
+<ol>
+<li>同一个输入，输出的哈希值一定是一致的。</li>
+<li>不同输入，哪怕是一个 Bit 的差别，得到的哈希值有明显的差别。</li>
+<li>对于不同的输入，是有可能得到相同的哈希值的。这种情况一般也称作哈希碰撞。原因很简单，因为计算得到的哈希值是固定长度的，总量有限制。而输入的值可能是无限的。</li>
+</ol>
+<p>一个优秀的哈希算法至少得满足两点：</p>
+<ol>
+<li>计算哈希值的速度很快。</li>
+<li>出现哈希碰撞的概率很低。</li>
+</ol>
+<p>哈希算法的实际应用场景很多，常见的有这几种：</p>
+<ol>
+<li>数据加密。符合的点有两个：很难根据哈希值反推出原始数据；哈希冲突的概率低；</li>
+<li>数据校验。校验文件的完整性。</li>
+<li>哈希表。</li>
+</ol>
+<p>对于业务上保存用户的密码，有一些思路顺便记录一下。</p>
+<ul>
+<li>hash + 随机 salt。</li>
+<li>采用计算时间慢的算法来降低硬件计算的速度。</li>
+<li>不规律的计算时间，避免得到与密码有关的联系的信息，比如字符串的长度信息。</li>
+<li>时序攻击：<a href="https://www.zhihu.com/question/20156213?fileGuid=9CXxDy6PxXx6yDVH">https://www.zhihu.com/question/20156213</a>。</li>
+</ul>
+<h2 id="HashMap"><a href="#HashMap" class="headerlink" title="HashMap"></a>HashMap</h2><p>HashMap 根据 key 的 hashCode 值，寻找对应的位置保存数据。在没有哈希冲突的前提下，可以通过 O(1) 的时间复杂度定位到的 key。</p>
+<p>Java 的 HashMap 通过额外链表法来解决哈希冲突的问题。在 Java 1.8 之后，如果某个哈希槽上的链表元素个数超过了 TREEIFY_THRESHOLD ，会将链表树化为红黑树，进一步提高性能。</p>
+<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><h2 id="存储结构"><a href="#存储结构" class="headerlink" title="存储结构"></a>存储结构</h2><p>HashMap 类中的字段 Node&lt;K,V&gt;[] table，即使用 Node&lt;K,V&gt; 数组来存储数据。</p>
+<p><img src="/2021/07/16/HashMap-SourceCode-Anaylise/image-20210925122839366.png" alt="image-20210925122839366">Node&lt;K,V&gt; 中有一个 Node&lt;K,V&gt; next 字段，当某个哈希槽上已经存储了数据，next 就用来在该哈希槽上拉出链表来解决哈希冲突。</p>
+<p>HashMap 的默认字段定义</p>
+<h2 id><a href="#" class="headerlink" title></a><img src="/2021/07/16/HashMap-SourceCode-Anaylise/image-20210925122854595.png" alt="image-20210925122854595"></h2><h2 id="hash-Object-key-方法"><a href="#hash-Object-key-方法" class="headerlink" title="hash(Object key) 方法"></a>hash(Object key) 方法</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public V put(K key, V value) &#123;</span><br><span class="line">return putVal(hash(key), key, value, false, true);</span><br><span class="line">&#125;</span><br><span class="line">static final int hash(Object key) &#123;</span><br><span class="line">    int h;</span><br><span class="line">    return (key == null) ? 0 : (h = key.hashCode()) ^ (h &gt;&gt;&gt; 16);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不管是在 put 或者 get，都会先通过 hash(key) ，根据 key 的 hashCode 重新计算一个 hash 值用于索引定位。<br>事先通过 hash(key) 将 key 的 hashCode 重新散列，将 hashCode 的高位向右移 16 位，异或计算后得到的 hash 值进行索引定位（否则这些高位可能由于 (table.length -1) &amp; hash 的取模方式永远参与不到取模的运算中，取模运算的结果其实就是 hash 中对应的后几位的值）。</p>
+<h2 id="索引定位方式"><a href="#索引定位方式" class="headerlink" title="索引定位方式"></a>索引定位方式</h2><p>HashMap 的源码定位哈希槽的位置的方式是通过位运算计算哈希槽的位置，具体的计算方式是：**(table.length - 1) &amp; hash**。</p>
+<p>由于 table.length 在初始化或者扩容后总是<strong>取 2 的某个幂次方数</strong>，在将其减去 1 之后，二进制的低位上数据都是 1，再于 hash 进行 &amp; 运算，将计算后的值限制在 table.length 内。相当于高效率的 % 运算。</p>
+<h2 id="插入方法"><a href="#插入方法" class="headerlink" title="插入方法"></a>插入方法</h2><p><img src="/2021/07/16/HashMap-SourceCode-Anaylise/image-20210925122935800.png" alt="image-20210925122935800"></p>
+<p>(图来自美团技术团队博客)</p>
+<h2 id="扩容机制"><a href="#扩容机制" class="headerlink" title="扩容机制"></a>扩容机制</h2><p>HashMap 扩容默认是原始容量的两倍。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">final</span> Node&lt;K,V&gt;[] resize() &#123;</span><br><span class="line">    Node&lt;K,V&gt;[] oldTab = table;</span><br><span class="line">    <span class="keyword">int</span> oldCap = (oldTab == <span class="keyword">null</span>) ? <span class="number">0</span> : oldTab.length;</span><br><span class="line">    <span class="keyword">int</span> oldThr = threshold;</span><br><span class="line">    <span class="keyword">int</span> newCap, newThr = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (oldCap &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 超过最大容量，随你碰撞好了</span></span><br><span class="line">        <span class="keyword">if</span> (oldCap &gt;= MAXIMUM_CAPACITY) &#123;</span><br><span class="line">            threshold = Integer.MAX_VALUE;</span><br><span class="line">            <span class="keyword">return</span> oldTab;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// oldCap 向左移动一位，newCap = 2 *oldCap </span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> ((newCap = oldCap &lt;&lt; <span class="number">1</span>) &lt; MAXIMUM_CAPACITY &amp;&amp;</span><br><span class="line">                 oldCap &gt;= DEFAULT_INITIAL_CAPACITY)</span><br><span class="line">            newThr = oldThr &lt;&lt; <span class="number">1</span>; <span class="comment">// double threshold</span></span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@SuppressWarnings(&#123;&quot;rawtypes&quot;,&quot;unchecked&quot;&#125;)</span></span><br><span class="line">    Node&lt;K,V&gt;[] newTab = (Node&lt;K,V&gt;[])<span class="keyword">new</span> Node[newCap];</span><br><span class="line">    table = newTab;</span><br><span class="line">    <span class="comment">//数据重新进行索引定位</span></span><br><span class="line">    <span class="keyword">if</span> (oldTab != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; oldCap; ++j) &#123;</span><br><span class="line">            Node&lt;K,V&gt; e;</span><br><span class="line">            <span class="keyword">if</span> ((e = oldTab[j]) != <span class="keyword">null</span>) &#123;</span><br><span class="line">                oldTab[j] = <span class="keyword">null</span>;</span><br><span class="line">                <span class="comment">// 该哈希槽上没有哈希冲突，重新索引定位位置存储</span></span><br><span class="line">                <span class="keyword">if</span> (e.next == <span class="keyword">null</span>) </span><br><span class="line">                    newTab[e.hash &amp; (newCap - <span class="number">1</span>)] = e;</span><br><span class="line">                <span class="comment">// 该哈希槽上的节点是 TreeNode，</span></span><br><span class="line">                <span class="keyword">else</span> <span class="keyword">if</span> (e <span class="keyword">instanceof</span> TreeNode)</span><br><span class="line">                    ((TreeNode&lt;K,V&gt;)e).split(<span class="keyword">this</span>, newTab, j, oldCap);</span><br><span class="line">                <span class="comment">// 该哈希槽上的节点存在哈希冲突保存的其他元素</span></span><br><span class="line">                <span class="keyword">else</span> &#123; <span class="comment">// 链表数据重新定位</span></span><br><span class="line">                    <span class="comment">// loHead,loTail 的含义是重新进行索引定位后仍在原哈希槽位置上的节点和链表节点元素。比如 e = oldTab[j]，重新索引定位后，newTab[j] = e;</span></span><br><span class="line">                    Node&lt;K,V&gt; loHead = <span class="keyword">null</span>, loTail = <span class="keyword">null</span>;</span><br><span class="line">                    <span class="comment">// hiHead,hiTail 的含义是重新进行索引定位后的节点和链表节点元素在 j + oldCap 上。比如 e = oldTab[j]，重新索引定位后，newTab[j + oldCap] = e;</span></span><br><span class="line">                    Node&lt;K,V&gt; hiHead = <span class="keyword">null</span>, hiTail = <span class="keyword">null</span>;</span><br><span class="line">                    Node&lt;K,V&gt; next;</span><br><span class="line">                    <span class="keyword">do</span> &#123;</span><br><span class="line">                        next = e.next;</span><br><span class="line">                        <span class="comment">//计算哈希值的高一位是 0 还是 1</span></span><br><span class="line">                        <span class="keyword">if</span> ((e.hash &amp; oldCap) == <span class="number">0</span>) &#123; <span class="comment">// 为 0</span></span><br><span class="line">                            <span class="keyword">if</span> (loTail == <span class="keyword">null</span>)</span><br><span class="line">                                loHead = e;</span><br><span class="line">                            <span class="keyword">else</span></span><br><span class="line">                                loTail.next = e;</span><br><span class="line">                            loTail = e;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">else</span> &#123; <span class="comment">// 高一位为 1</span></span><br><span class="line">                            <span class="keyword">if</span> (hiTail == <span class="keyword">null</span>)</span><br><span class="line">                                hiHead = e;</span><br><span class="line">                            <span class="keyword">else</span></span><br><span class="line">                                hiTail.next = e;</span><br><span class="line">                            hiTail = e;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; <span class="keyword">while</span> ((e = next) != <span class="keyword">null</span>);</span><br><span class="line">                    <span class="keyword">if</span> (loTail != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        loTail.next = <span class="keyword">null</span>;</span><br><span class="line">                        <span class="comment">// 高一位为 0 时，元素的存储位置数组下标没有变化</span></span><br><span class="line">                        newTab[j] = loHead;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (hiTail != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        hiTail.next = <span class="keyword">null</span>;</span><br><span class="line">                        <span class="comment">// 为 1，元素存储位置为 旧数组下标 + 原容量 。</span></span><br><span class="line">                        newTab[j + oldCap] = hiHead;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> newTab;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>重点看一下 43 行对链表的 rehash 操作。代码为什么通过 (e.hash &amp; oldCap) == 0 || != 0 就可以判断元素经过 rehash 后在新哈希桶中的位置。<br>因为 HashMap 的索引定位方式是 (table.length - 1) &amp; hash ，且扩容之后的容量是原容量的 2 倍。索引定位方式舍弃了 table.length 的那个高位 1，经过扩容后，rehash 的索引定位方式相比于原来的只需要计算之前舍弃的那个高位 1 就可以确实位置。<strong>这样在扩容时重新定位元素时巧妙的避免了重新计算 hash(key) 值。</strong></p>
+<p>举个例子，HashMap 的大小是 8 , 插入元素的时候触发了扩容，扩容后的大小是 16。</p>
+<p>有一个 key A 经过 hash(key) 后的 hash 值是 0100 0110。</p>
+<p><img src="/2021/07/16/HashMap-SourceCode-Anaylise/image-20210925123011727.png" alt="image-20210925123011727">11-14 行计算的是 k.hash &amp; oldCap，即如果结果是 0，说明 key A 的存储位置还是在 [6] 中。如果不为 0，说明第四位是 1，那么第 9 行的结果应该是 0000 1110 = 14 , 就是 j + oldCap 的位置。</p>
+<h2 id="hashCode-与-equals-方法"><a href="#hashCode-与-equals-方法" class="headerlink" title="hashCode() 与 equals() 方法"></a>hashCode() 与 equals() 方法</h2><p>重写了 equals() 方法，没有重写 hashCode() 方法。当我们用该对象作为 key 时，且业务上有 “逻辑相等” 的概念时，可能会导致预期外的行为。没有重写 hashCode() 方法的话，会使用 Object#hashCode() 方法，该方法生成的哈希值无法提供 “逻辑相同” 的概念。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
+<li>使用 HashMap 存储时，如果有 “逻辑相等” 的概念，需要同时重写 hashCode() 方法。</li>
+<li>在初始化的时候根据需求给定一个合适的大小，避免频繁扩容。</li>
+<li>HashMap 不是线程安全的容器，JDK 1.7 之前的实现并发使用在扩容搬移时可能出现 “无限循环” bug。</li>
+<li>线程安全的类似 HashMap 有 Hashtable 和 ConcurrentHashMap 可以使用。</li>
+</ol>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a href="https://tech.meituan.com/2016/06/24/java-hashmap.html?fileGuid=9CXxDy6PxXx6yDVH">https://tech.meituan.com/2016/06/24/java-hashmap.html</a>，美团技术团队博客</li>
+<li><a href="https://en.wikipedia.org/wiki/Timing_attack?fileGuid=9CXxDy6PxXx6yDVH">https://en.wikipedia.org/wiki/Timing_attack</a>，时序攻击</li>
+<li><a href="https://en.wikipedia.org/wiki/Hash_function?fileGuid=9CXxDy6PxXx6yDVH">https://en.wikipedia.org/wiki/Hash_function</a>，哈希函数</li>
+</ol>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
+        <tag>java 集合</tag>
+        <tag>源码分析</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>GC 策略总结</title>
+    <url>/2021/08/20/GC-Algo/</url>
+    <content><![CDATA[<h1 id="GC-算法"><a href="#GC-算法" class="headerlink" title="GC 算法"></a>GC 算法</h1><ul>
+<li>标记-复制。<ul>
+<li>优点：存活的对象越少，复制需要的空间就越小；而且复制后的对象们内存空间排布紧凑，避免空间碎片的问题。</li>
+<li>缺点：有一部分空间被浪费。如果存活对象大且多的话复制成本比较高。<span id="more"></span></li>
+<li><strong>适用每次 GC 存活对象小而美的情况。年轻代</strong></li>
+</ul>
+</li>
+<li>标记-清除。直接清除可回收对象，不进行内存整理。，<ul>
+<li>优点：单次 STW 的时间可能要短一些。</li>
+<li>缺点：但是产生的内存碎片，可能导致内存总空间足够，但是没一块连续的空间存放对象的问题，内存利用率降低；对象放不下，可能触发额外的 GC。</li>
+<li><strong>适用对象存活率高的情况。老年代</strong></li>
+</ul>
+</li>
+<li>标记-清除-整理。STW 时间可能会稍长一些，内存碎片问题得到解决。适用对象存活率高的情况。</li>
+</ul>
+<h1 id="Serial-GC"><a href="#Serial-GC" class="headerlink" title="Serial GC"></a>Serial GC</h1><p>-XX:+UseSerialGC</p>
+<p>串行 GC 单线程执行，在 GC 期间其他业务线程均暂停，暂停的时间长。</p>
+<p>串行 GC 对年轻代采用标记复制算法。对老年代使用标记-清除-整理算法。</p>
+<p>串行 GC 简单直接，在单核 CPU 环境下比较适用。</p>
+<h2 id="XX-UseParNewGC"><a href="#XX-UseParNewGC" class="headerlink" title="-XX:+UseParNewGC"></a>-XX:+UseParNewGC</h2><p>ParNew 收集器，多线程版本的 Serial。配合 CMS 使用。</p>
+<h1 id="Parallel-GC"><a href="#Parallel-GC" class="headerlink" title="Parallel GC"></a>Parallel GC</h1><p>-XX:UseParallelGC -XX:UseParallelOldGC</p>
+<p>使用的 GC 算法和串行的一样。</p>
+<p>默认的 GC 线程数是 CPU core 数，该收集器的目标更倾向于<strong>提高系统吞吐量</strong>，有时候单次的 GC 暂停时间较长。</p>
+<h1 id="CMS-GC"><a href="#CMS-GC" class="headerlink" title="CMS GC"></a>CMS GC</h1><p>-XX:UseConcMarkSweepGC</p>
+<p>对老年代没有整理操作，使用 free-list 进行内存空间的管理。默认的核心线程数 CPU 核数 / 4。</p>
+<p>可以和业务线程并发执行，GC 暂停时间少。</p>
+<h1 id="G1-GC"><a href="#G1-GC" class="headerlink" title="G1 GC"></a>G1 GC</h1><p>打破整个分区的理论，把内存划分成多个小块进行管理。对每个小块的垃圾数量进行预估，优先回收垃圾多的 Region。可预期的垃圾停顿时间。</p>
+<h1 id="验证总结"><a href="#验证总结" class="headerlink" title="验证总结"></a>验证总结</h1><p>首先需要提到的一点是 GC 的时间和存活的对象数量有关，和堆内存的大小关系没有那么大。</p>
+<p>配置堆内存 512M，YGC 后年轻代存活对象大概 20M。</p>
+<ul>
+<li>串行 GC 利用单线程执行，GC 暂停的时间明显会比较长。在实际的测试下，在小堆内存空间的情况下，YGC 和并行 GC 的 YGC 差不多。FGC 使用的时间明显较长，<strong>大概是并行 GC 的一倍（存活对象 300M 左右）</strong>。老年代存活对象占用的空间大，整理移动的时间就长。</li>
+<li>CMS GC 的老年代清理明显的暂停时间降低。在 GC 日志中有发现 concurrent mode failure 的情况。查询资料后明白，CMS 在 cleanup 是并发执行的，这时的对象引用关系发生改变，也可能有新的对象需要分配空间。如果没有预留足够的空间内存分配就会导致并发失败。可能重新 CMS ，或者 GC 退化成 Serial。</li>
+<li>G1 GC 出现了 Humongous Allocation 因为大对象分配失败，触发了 initial-mark。也是重新标记，或者 GC 退化的问题。</li>
+</ul>
+<p>堆内存越大，内存中可容纳的对象越多，GC 的次数随之减少，单次 GC 的暂停时间可能更长（取决于存活对象的数量）。</p>
+<p>总的来说，注意不同 GC 策略采用的算法，以及设计的目的。比如 CMS 在于并发执行，提高系统响应。Parallel 更倾向于提高吞吐量；G1 GC 倾向于可配置可预估的暂停时间。</p>
+<p>CMS - 老年代 没有整理，使用 free-list 管理回收内存；真正的 STW 时间小，但是步骤多，还有浮动垃圾，GC 退化问题。G1 GC 也存在 GC 退化问题。</p>
+<p>配置堆内存的时候，注意 JVM 自身需要的内存和系统需要的内存，预留一定的空间。</p>
+<p>-Xms -Xmx 直接一步到位，扩容的时候有性能的抖动。</p>
+<p>年轻代和老年代的比例默认 1:2，新生代:from:to = 8：1：1，根据情况来调整。</p>
+<p>根据对象晋升回收速率的计算，进行空间，晋升年龄的配置。</p>
+]]></content>
+      <categories>
+        <category>JVM</category>
+      </categories>
+      <tags>
+        <tag>jvm</tag>
+        <tag>gc</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Java 异常处理</title>
+    <url>/2021/04/05/Java-Exception/</url>
+    <content><![CDATA[<h2 id="Throwable、Error、Exception"><a href="#Throwable、Error、Exception" class="headerlink" title="Throwable、Error、Exception"></a>Throwable、Error、Exception</h2><p>Throwable 接口可以理解成是 Java 异常世界中的 Object。因为 Java 中的所有异常一定都是 Throwable 的子类。</p>
+<span id="more"></span>
+
+<p><img src="/2021/04/05/Java-Exception/image-20210925115913274.png" alt="image-20210925115913274"></p>
+<p>Error 描述的是那些系统本身出现的错误，比如 Java 虚拟机内部问题等等。这些错误一般和 Java 应用程序没什么关系，Java 程序则不应该在任何 Java 方法中使用 throws 关键字说明可能抛出 Error 及其子类相关的异常。</p>
+<p>Exception 描述的是那些 Java 应用应该合理进行捕获的的异常。所有 Exception 的子类但不是 RuntimeException 的子类都被定义为<strong>受检异常</strong>。</p>
+<p>对于<strong>运行时异常</strong>，比如数组范围越界，访问空指针，类型转换异常，这些异常都是由于 Java 代码的问题导致，最好在程序编写的时候就避免。</p>
+<blockquote>
+<p>总之，一个方法必须声明所有可能抛出的受查异常， 而非受查异常要么不可控制（ Error),<br>要么就应该避免发生（ RuntimeException)。如果方法没有声明所有可能发生的受查异常， 编译器就会发出一个错误消息。</p>
+</blockquote>
+<h2 id="try-catch-finally"><a href="#try-catch-finally" class="headerlink" title="try/catch/finally"></a>try/catch/finally</h2><p>如果方法中发生了某些异常但是没有进行捕获，程序则会在异常发生的地方终止然后输出异常信息。异常信息一般包含调用栈等信息。</p>
+<p>程序可以通过 try/catch 代码块捕获包含在 try{} 中<strong>可能发生的异常</strong>，并在 catch 到<strong>对应的异常类型</strong>时执行 catch 中的代码。</p>
+<p>try 中发生异常<strong>且</strong> catch 声明的异常类型<strong>可以匹配</strong>，try 中剩余的语句不执行，转而执行 catch 中的语句。没异常或不匹配就忽略 catch 中的内容。注意和 switch 语句不同，switch 需要在每个 case 后跟一个 break 避免执行后续的 case。</p>
+<p>catch 块中可以继续抛出异常交给上层来处理。如果直接抛出其他类型的异常，这样会丢失原始的异常信息。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">  <span class="comment">// 刚捕获到的异常对象 e 被丢弃</span></span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;待会再试&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>更推荐的方法是**在抛出其他异常前保存原始异常或者将原始异常作为新异常的 cause(内因)**。且在抛出异常时，要提供合适的消息（对应下面代码的 “待会再试”）。</p>
+<p><img src="/2021/04/05/Java-Exception/image-20210925115943257.png" alt="image-20210925115943257"></p>
+<p>如果在 catch 块中<strong>直接重新抛出刚捕获的异常</strong>，那么 printStackTrace() 方法显示的是原本的调用栈信息，而不是新的抛出点信息。想更新抛出点信息的话，可以调用 fillInStackTrace() 方法。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">  <span class="keyword">throw</span> e.fillInStackTrace();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有时候我们需要 <strong>finally 子句</strong>来回收特定的资源，不管异常有没有发生，finally 子句的内容在最终都会执行。</p>
+<h2 id="try-with-resource"><a href="#try-with-resource" class="headerlink" title="try-with-resource"></a>try-with-resource</h2><p>但是要小心 finally 中的语句也可能发生异常，<strong>且在 finally 中抛出的异常会覆盖原始可能抛出的异常。</strong>这样就丢失了原始的异常。</p>
+<p>我们可以在 finally 中添加 try/catch 来捕获并处理异常。或者将 try 中发生的异常贴附给 finally 中的异常。</p>
+<p><img src="/2021/04/05/Java-Exception/image-20210925120011394.png" alt="image-20210925120011394"></p>
+<p><img src="/2021/04/05/Java-Exception/image-20210925120030689.png" alt="image-20210925120030689"></p>
+<p>结果：</p>
+<p><img src="/2021/04/05/Java-Exception/image-20210925120052598.png" alt="image-20210925120052598"></p>
+<p>其实对于在 finally 语句块中发生异常情况的上述处理（通过 addSuppressed() 依附异常），正是 try-with-resource 语法做的事情。对于实现了 AutoCloseable 接口的<strong>资源，</strong>可以使用 try-with-resource 语法来自动回收资源。</p>
+<p><img src="/2021/04/05/Java-Exception/image-20210925120113611.png" alt="image-20210925120113611"></p>
+<p>输出结果和上面的代码类似，说明 try-with-resource 内部的实现方式也是类似的：对 close() 方法可能抛出的异常，将其 Suppressed 到原始异常中抛出。</p>
+<p><img src="/2021/04/05/Java-Exception/image-20210925120128233.png" alt="image-20210925120128233"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>最后，结合《Effective Java》等相关资料，总结处理 Java 异常时的一些要点。</p>
+<ul>
+<li>异常只用在异常发生的情况，不该用来进行程序流程控制。</li>
+<li>注意区分 RuntimeException 和 受检异常，以及使用条件。</li>
+<li>抛出异常时结合带 String 参数的构造方法提供更多信息。</li>
+<li>捕获异常后并重新抛出异常时，注意保留原始的异常对象。</li>
+<li>优先用 try-with-resource，而不是 try / finally。</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
       </tags>
   </entry>
   <entry>
@@ -316,126 +533,6 @@
       </tags>
   </entry>
   <entry>
-    <title>HashMap 源码分析</title>
-    <url>/2021/07/16/HashMap-SourceCode-Anaylise/</url>
-    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><h2 id="哈希算法"><a href="#哈希算法" class="headerlink" title="哈希算法"></a>哈希算法</h2><p>哈希算法的作用是：对于输入的数据，输出<strong>固定长度</strong>的数据摘要。</p>
-<p>哈希算法的特点：<span id="more"></span></p>
-<ol>
-<li>同一个输入，输出的哈希值一定是一致的。</li>
-<li>不同输入，哪怕是一个 Bit 的差别，得到的哈希值有明显的差别。</li>
-<li>对于不同的输入，是有可能得到相同的哈希值的。这种情况一般也称作哈希碰撞。原因很简单，因为计算得到的哈希值是固定长度的，总量有限制。而输入的值可能是无限的。</li>
-</ol>
-<p>一个优秀的哈希算法至少得满足两点：</p>
-<ol>
-<li>计算哈希值的速度很快。</li>
-<li>出现哈希碰撞的概率很低。</li>
-</ol>
-<p>哈希算法的实际应用场景很多，常见的有这几种：</p>
-<ol>
-<li>数据加密。符合的点有两个：很难根据哈希值反推出原始数据；哈希冲突的概率低；</li>
-<li>数据校验。校验文件的完整性。</li>
-<li>哈希表。</li>
-</ol>
-<p>对于业务上保存用户的密码，有一些思路顺便记录一下。</p>
-<ul>
-<li>hash + 随机 salt。</li>
-<li>采用计算时间慢的算法来降低硬件计算的速度。</li>
-<li>不规律的计算时间，避免得到与密码有关的联系的信息，比如字符串的长度信息。</li>
-<li>时序攻击：<a href="https://www.zhihu.com/question/20156213?fileGuid=9CXxDy6PxXx6yDVH">https://www.zhihu.com/question/20156213</a>。</li>
-</ul>
-<h2 id="HashMap"><a href="#HashMap" class="headerlink" title="HashMap"></a>HashMap</h2><p>HashMap 根据 key 的 hashCode 值，寻找对应的位置保存数据。在没有哈希冲突的前提下，可以通过 O(1) 的时间复杂度定位到的 key。</p>
-<p>Java 的 HashMap 通过额外链表法来解决哈希冲突的问题。在 Java 1.8 之后，如果某个哈希槽上的链表元素个数超过了 TREEIFY_THRESHOLD ，会将链表树化为红黑树，进一步提高性能。</p>
-<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><h2 id="存储结构"><a href="#存储结构" class="headerlink" title="存储结构"></a>存储结构</h2><p>HashMap 类中的字段 Node&lt;K,V&gt;[] table，即使用 Node&lt;K,V&gt; 数组来存储数据。</p>
-<p><img src="/2021/07/16/HashMap-SourceCode-Anaylise/image-20210925122839366.png" alt="image-20210925122839366">Node&lt;K,V&gt; 中有一个 Node&lt;K,V&gt; next 字段，当某个哈希槽上已经存储了数据，next 就用来在该哈希槽上拉出链表来解决哈希冲突。</p>
-<p>HashMap 的默认字段定义</p>
-<h2 id><a href="#" class="headerlink" title></a><img src="/2021/07/16/HashMap-SourceCode-Anaylise/image-20210925122854595.png" alt="image-20210925122854595"></h2><h2 id="hash-Object-key-方法"><a href="#hash-Object-key-方法" class="headerlink" title="hash(Object key) 方法"></a>hash(Object key) 方法</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public V put(K key, V value) &#123;</span><br><span class="line">return putVal(hash(key), key, value, false, true);</span><br><span class="line">&#125;</span><br><span class="line">static final int hash(Object key) &#123;</span><br><span class="line">    int h;</span><br><span class="line">    return (key == null) ? 0 : (h = key.hashCode()) ^ (h &gt;&gt;&gt; 16);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>不管是在 put 或者 get，都会先通过 hash(key) ，根据 key 的 hashCode 重新计算一个 hash 值用于索引定位。<br>事先通过 hash(key) 将 key 的 hashCode 重新散列，将 hashCode 的高位向右移 16 位，异或计算后得到的 hash 值进行索引定位（否则这些高位可能由于 (table.length -1) &amp; hash 的取模方式永远参与不到取模的运算中，取模运算的结果其实就是 hash 中对应的后几位的值）。</p>
-<h2 id="索引定位方式"><a href="#索引定位方式" class="headerlink" title="索引定位方式"></a>索引定位方式</h2><p>HashMap 的源码定位哈希槽的位置的方式是通过位运算计算哈希槽的位置，具体的计算方式是：**(table.length - 1) &amp; hash**。</p>
-<p>由于 table.length 在初始化或者扩容后总是<strong>取 2 的某个幂次方数</strong>，在将其减去 1 之后，二进制的低位上数据都是 1，再于 hash 进行 &amp; 运算，将计算后的值限制在 table.length 内。相当于高效率的 % 运算。</p>
-<h2 id="插入方法"><a href="#插入方法" class="headerlink" title="插入方法"></a>插入方法</h2><p><img src="/2021/07/16/HashMap-SourceCode-Anaylise/image-20210925122935800.png" alt="image-20210925122935800"></p>
-<p>(图来自美团技术团队博客)</p>
-<h2 id="扩容机制"><a href="#扩容机制" class="headerlink" title="扩容机制"></a>扩容机制</h2><p>HashMap 扩容默认是原始容量的两倍。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">final</span> Node&lt;K,V&gt;[] resize() &#123;</span><br><span class="line">    Node&lt;K,V&gt;[] oldTab = table;</span><br><span class="line">    <span class="keyword">int</span> oldCap = (oldTab == <span class="keyword">null</span>) ? <span class="number">0</span> : oldTab.length;</span><br><span class="line">    <span class="keyword">int</span> oldThr = threshold;</span><br><span class="line">    <span class="keyword">int</span> newCap, newThr = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (oldCap &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 超过最大容量，随你碰撞好了</span></span><br><span class="line">        <span class="keyword">if</span> (oldCap &gt;= MAXIMUM_CAPACITY) &#123;</span><br><span class="line">            threshold = Integer.MAX_VALUE;</span><br><span class="line">            <span class="keyword">return</span> oldTab;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// oldCap 向左移动一位，newCap = 2 *oldCap </span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> ((newCap = oldCap &lt;&lt; <span class="number">1</span>) &lt; MAXIMUM_CAPACITY &amp;&amp;</span><br><span class="line">                 oldCap &gt;= DEFAULT_INITIAL_CAPACITY)</span><br><span class="line">            newThr = oldThr &lt;&lt; <span class="number">1</span>; <span class="comment">// double threshold</span></span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@SuppressWarnings(&#123;&quot;rawtypes&quot;,&quot;unchecked&quot;&#125;)</span></span><br><span class="line">    Node&lt;K,V&gt;[] newTab = (Node&lt;K,V&gt;[])<span class="keyword">new</span> Node[newCap];</span><br><span class="line">    table = newTab;</span><br><span class="line">    <span class="comment">//数据重新进行索引定位</span></span><br><span class="line">    <span class="keyword">if</span> (oldTab != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; oldCap; ++j) &#123;</span><br><span class="line">            Node&lt;K,V&gt; e;</span><br><span class="line">            <span class="keyword">if</span> ((e = oldTab[j]) != <span class="keyword">null</span>) &#123;</span><br><span class="line">                oldTab[j] = <span class="keyword">null</span>;</span><br><span class="line">                <span class="comment">// 该哈希槽上没有哈希冲突，重新索引定位位置存储</span></span><br><span class="line">                <span class="keyword">if</span> (e.next == <span class="keyword">null</span>) </span><br><span class="line">                    newTab[e.hash &amp; (newCap - <span class="number">1</span>)] = e;</span><br><span class="line">                <span class="comment">// 该哈希槽上的节点是 TreeNode，</span></span><br><span class="line">                <span class="keyword">else</span> <span class="keyword">if</span> (e <span class="keyword">instanceof</span> TreeNode)</span><br><span class="line">                    ((TreeNode&lt;K,V&gt;)e).split(<span class="keyword">this</span>, newTab, j, oldCap);</span><br><span class="line">                <span class="comment">// 该哈希槽上的节点存在哈希冲突保存的其他元素</span></span><br><span class="line">                <span class="keyword">else</span> &#123; <span class="comment">// 链表数据重新定位</span></span><br><span class="line">                    <span class="comment">// loHead,loTail 的含义是重新进行索引定位后仍在原哈希槽位置上的节点和链表节点元素。比如 e = oldTab[j]，重新索引定位后，newTab[j] = e;</span></span><br><span class="line">                    Node&lt;K,V&gt; loHead = <span class="keyword">null</span>, loTail = <span class="keyword">null</span>;</span><br><span class="line">                    <span class="comment">// hiHead,hiTail 的含义是重新进行索引定位后的节点和链表节点元素在 j + oldCap 上。比如 e = oldTab[j]，重新索引定位后，newTab[j + oldCap] = e;</span></span><br><span class="line">                    Node&lt;K,V&gt; hiHead = <span class="keyword">null</span>, hiTail = <span class="keyword">null</span>;</span><br><span class="line">                    Node&lt;K,V&gt; next;</span><br><span class="line">                    <span class="keyword">do</span> &#123;</span><br><span class="line">                        next = e.next;</span><br><span class="line">                        <span class="comment">//计算哈希值的高一位是 0 还是 1</span></span><br><span class="line">                        <span class="keyword">if</span> ((e.hash &amp; oldCap) == <span class="number">0</span>) &#123; <span class="comment">// 为 0</span></span><br><span class="line">                            <span class="keyword">if</span> (loTail == <span class="keyword">null</span>)</span><br><span class="line">                                loHead = e;</span><br><span class="line">                            <span class="keyword">else</span></span><br><span class="line">                                loTail.next = e;</span><br><span class="line">                            loTail = e;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">else</span> &#123; <span class="comment">// 高一位为 1</span></span><br><span class="line">                            <span class="keyword">if</span> (hiTail == <span class="keyword">null</span>)</span><br><span class="line">                                hiHead = e;</span><br><span class="line">                            <span class="keyword">else</span></span><br><span class="line">                                hiTail.next = e;</span><br><span class="line">                            hiTail = e;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; <span class="keyword">while</span> ((e = next) != <span class="keyword">null</span>);</span><br><span class="line">                    <span class="keyword">if</span> (loTail != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        loTail.next = <span class="keyword">null</span>;</span><br><span class="line">                        <span class="comment">// 高一位为 0 时，元素的存储位置数组下标没有变化</span></span><br><span class="line">                        newTab[j] = loHead;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (hiTail != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        hiTail.next = <span class="keyword">null</span>;</span><br><span class="line">                        <span class="comment">// 为 1，元素存储位置为 旧数组下标 + 原容量 。</span></span><br><span class="line">                        newTab[j + oldCap] = hiHead;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> newTab;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>重点看一下 43 行对链表的 rehash 操作。代码为什么通过 (e.hash &amp; oldCap) == 0 || != 0 就可以判断元素经过 rehash 后在新哈希桶中的位置。<br>因为 HashMap 的索引定位方式是 (table.length - 1) &amp; hash ，且扩容之后的容量是原容量的 2 倍。索引定位方式舍弃了 table.length 的那个高位 1，经过扩容后，rehash 的索引定位方式相比于原来的只需要计算之前舍弃的那个高位 1 就可以确实位置。<strong>这样在扩容时重新定位元素时巧妙的避免了重新计算 hash(key) 值。</strong></p>
-<p>举个例子，HashMap 的大小是 8 , 插入元素的时候触发了扩容，扩容后的大小是 16。</p>
-<p>有一个 key A 经过 hash(key) 后的 hash 值是 0100 0110。</p>
-<p><img src="/2021/07/16/HashMap-SourceCode-Anaylise/image-20210925123011727.png" alt="image-20210925123011727">11-14 行计算的是 k.hash &amp; oldCap，即如果结果是 0，说明 key A 的存储位置还是在 [6] 中。如果不为 0，说明第四位是 1，那么第 9 行的结果应该是 0000 1110 = 14 , 就是 j + oldCap 的位置。</p>
-<h2 id="hashCode-与-equals-方法"><a href="#hashCode-与-equals-方法" class="headerlink" title="hashCode() 与 equals() 方法"></a>hashCode() 与 equals() 方法</h2><p>重写了 equals() 方法，没有重写 hashCode() 方法。当我们用该对象作为 key 时，且业务上有 “逻辑相等” 的概念时，可能会导致预期外的行为。没有重写 hashCode() 方法的话，会使用 Object#hashCode() 方法，该方法生成的哈希值无法提供 “逻辑相同” 的概念。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
-<li>使用 HashMap 存储时，如果有 “逻辑相等” 的概念，需要同时重写 hashCode() 方法。</li>
-<li>在初始化的时候根据需求给定一个合适的大小，避免频繁扩容。</li>
-<li>HashMap 不是线程安全的容器，JDK 1.7 之前的实现并发使用在扩容搬移时可能出现 “无限循环” bug。</li>
-<li>线程安全的类似 HashMap 有 Hashtable 和 ConcurrentHashMap 可以使用。</li>
-</ol>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
-<li><a href="https://tech.meituan.com/2016/06/24/java-hashmap.html?fileGuid=9CXxDy6PxXx6yDVH">https://tech.meituan.com/2016/06/24/java-hashmap.html</a>，美团技术团队博客</li>
-<li><a href="https://en.wikipedia.org/wiki/Timing_attack?fileGuid=9CXxDy6PxXx6yDVH">https://en.wikipedia.org/wiki/Timing_attack</a>，时序攻击</li>
-<li><a href="https://en.wikipedia.org/wiki/Hash_function?fileGuid=9CXxDy6PxXx6yDVH">https://en.wikipedia.org/wiki/Hash_function</a>，哈希函数</li>
-</ol>
-]]></content>
-      <categories>
-        <category>Java</category>
-      </categories>
-      <tags>
-        <tag>java</tag>
-        <tag>java 集合</tag>
-        <tag>源码分析</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Java 异常处理</title>
-    <url>/2021/04/05/Java-Exception/</url>
-    <content><![CDATA[<h2 id="Throwable、Error、Exception"><a href="#Throwable、Error、Exception" class="headerlink" title="Throwable、Error、Exception"></a>Throwable、Error、Exception</h2><p>Throwable 接口可以理解成是 Java 异常世界中的 Object。因为 Java 中的所有异常一定都是 Throwable 的子类。</p>
-<span id="more"></span>
-
-<p><img src="/2021/04/05/Java-Exception/image-20210925115913274.png" alt="image-20210925115913274"></p>
-<p>Error 描述的是那些系统本身出现的错误，比如 Java 虚拟机内部问题等等。这些错误一般和 Java 应用程序没什么关系，Java 程序则不应该在任何 Java 方法中使用 throws 关键字说明可能抛出 Error 及其子类相关的异常。</p>
-<p>Exception 描述的是那些 Java 应用应该合理进行捕获的的异常。所有 Exception 的子类但不是 RuntimeException 的子类都被定义为<strong>受检异常</strong>。</p>
-<p>对于<strong>运行时异常</strong>，比如数组范围越界，访问空指针，类型转换异常，这些异常都是由于 Java 代码的问题导致，最好在程序编写的时候就避免。</p>
-<blockquote>
-<p>总之，一个方法必须声明所有可能抛出的受查异常， 而非受查异常要么不可控制（ Error),<br>要么就应该避免发生（ RuntimeException)。如果方法没有声明所有可能发生的受查异常， 编译器就会发出一个错误消息。</p>
-</blockquote>
-<h2 id="try-catch-finally"><a href="#try-catch-finally" class="headerlink" title="try/catch/finally"></a>try/catch/finally</h2><p>如果方法中发生了某些异常但是没有进行捕获，程序则会在异常发生的地方终止然后输出异常信息。异常信息一般包含调用栈等信息。</p>
-<p>程序可以通过 try/catch 代码块捕获包含在 try{} 中<strong>可能发生的异常</strong>，并在 catch 到<strong>对应的异常类型</strong>时执行 catch 中的代码。</p>
-<p>try 中发生异常<strong>且</strong> catch 声明的异常类型<strong>可以匹配</strong>，try 中剩余的语句不执行，转而执行 catch 中的语句。没异常或不匹配就忽略 catch 中的内容。注意和 switch 语句不同，switch 需要在每个 case 后跟一个 break 避免执行后续的 case。</p>
-<p>catch 块中可以继续抛出异常交给上层来处理。如果直接抛出其他类型的异常，这样会丢失原始的异常信息。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">  <span class="comment">// 刚捕获到的异常对象 e 被丢弃</span></span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;待会再试&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>更推荐的方法是**在抛出其他异常前保存原始异常或者将原始异常作为新异常的 cause(内因)**。且在抛出异常时，要提供合适的消息（对应下面代码的 “待会再试”）。</p>
-<p><img src="/2021/04/05/Java-Exception/image-20210925115943257.png" alt="image-20210925115943257"></p>
-<p>如果在 catch 块中<strong>直接重新抛出刚捕获的异常</strong>，那么 printStackTrace() 方法显示的是原本的调用栈信息，而不是新的抛出点信息。想更新抛出点信息的话，可以调用 fillInStackTrace() 方法。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">  <span class="keyword">throw</span> e.fillInStackTrace();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>有时候我们需要 <strong>finally 子句</strong>来回收特定的资源，不管异常有没有发生，finally 子句的内容在最终都会执行。</p>
-<h2 id="try-with-resource"><a href="#try-with-resource" class="headerlink" title="try-with-resource"></a>try-with-resource</h2><p>但是要小心 finally 中的语句也可能发生异常，<strong>且在 finally 中抛出的异常会覆盖原始可能抛出的异常。</strong>这样就丢失了原始的异常。</p>
-<p>我们可以在 finally 中添加 try/catch 来捕获并处理异常。或者将 try 中发生的异常贴附给 finally 中的异常。</p>
-<p><img src="/2021/04/05/Java-Exception/image-20210925120011394.png" alt="image-20210925120011394"></p>
-<p><img src="/2021/04/05/Java-Exception/image-20210925120030689.png" alt="image-20210925120030689"></p>
-<p>结果：</p>
-<p><img src="/2021/04/05/Java-Exception/image-20210925120052598.png" alt="image-20210925120052598"></p>
-<p>其实对于在 finally 语句块中发生异常情况的上述处理（通过 addSuppressed() 依附异常），正是 try-with-resource 语法做的事情。对于实现了 AutoCloseable 接口的<strong>资源，</strong>可以使用 try-with-resource 语法来自动回收资源。</p>
-<p><img src="/2021/04/05/Java-Exception/image-20210925120113611.png" alt="image-20210925120113611"></p>
-<p>输出结果和上面的代码类似，说明 try-with-resource 内部的实现方式也是类似的：对 close() 方法可能抛出的异常，将其 Suppressed 到原始异常中抛出。</p>
-<p><img src="/2021/04/05/Java-Exception/image-20210925120128233.png" alt="image-20210925120128233"></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>最后，结合《Effective Java》等相关资料，总结处理 Java 异常时的一些要点。</p>
-<ul>
-<li>异常只用在异常发生的情况，不该用来进行程序流程控制。</li>
-<li>注意区分 RuntimeException 和 受检异常，以及使用条件。</li>
-<li>抛出异常时结合带 String 参数的构造方法提供更多信息。</li>
-<li>捕获异常后并重新抛出异常时，注意保留原始的异常对象。</li>
-<li>优先用 try-with-resource，而不是 try / finally。</li>
-</ul>
-]]></content>
-      <categories>
-        <category>Java</category>
-      </categories>
-      <tags>
-        <tag>java</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Lambda 和 StreamAPI</title>
     <url>/2021/06/22/Lambda-StreamAPI/</url>
     <content><![CDATA[<h1 id="Lambda-表达式"><a href="#Lambda-表达式" class="headerlink" title="Lambda 表达式"></a>Lambda 表达式</h1><p><strong>Java 8 开始，可以用 Lambda 表示只有一个抽象方法的接口</strong>（<strong>函数式接口，该类型的接口一般标有 @FuntionalInterface 注解</strong>）。此前我们只能通过繁琐的匿名实现类表示。</p>
@@ -571,59 +668,6 @@
         <tag>java</tag>
         <tag>java 8</tag>
         <tag>stream api</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>GC 策略总结</title>
-    <url>/2021/08/20/GC-Algo/</url>
-    <content><![CDATA[<h1 id="GC-算法"><a href="#GC-算法" class="headerlink" title="GC 算法"></a>GC 算法</h1><ul>
-<li>标记-复制。<ul>
-<li>优点：存活的对象越少，复制需要的空间就越小；而且复制后的对象们内存空间排布紧凑，避免空间碎片的问题。</li>
-<li>缺点：有一部分空间被浪费。如果存活对象大且多的话复制成本比较高。<span id="more"></span></li>
-<li><strong>适用每次 GC 存活对象小而美的情况。年轻代</strong></li>
-</ul>
-</li>
-<li>标记-清除。直接清除可回收对象，不进行内存整理。，<ul>
-<li>优点：单次 STW 的时间可能要短一些。</li>
-<li>缺点：但是产生的内存碎片，可能导致内存总空间足够，但是没一块连续的空间存放对象的问题，内存利用率降低；对象放不下，可能触发额外的 GC。</li>
-<li><strong>适用对象存活率高的情况。老年代</strong></li>
-</ul>
-</li>
-<li>标记-清除-整理。STW 时间可能会稍长一些，内存碎片问题得到解决。适用对象存活率高的情况。</li>
-</ul>
-<h1 id="Serial-GC"><a href="#Serial-GC" class="headerlink" title="Serial GC"></a>Serial GC</h1><p>-XX:+UseSerialGC</p>
-<p>串行 GC 单线程执行，在 GC 期间其他业务线程均暂停，暂停的时间长。</p>
-<p>串行 GC 对年轻代采用标记复制算法。对老年代使用标记-清除-整理算法。</p>
-<p>串行 GC 简单直接，在单核 CPU 环境下比较适用。</p>
-<h2 id="XX-UseParNewGC"><a href="#XX-UseParNewGC" class="headerlink" title="-XX:+UseParNewGC"></a>-XX:+UseParNewGC</h2><p>ParNew 收集器，多线程版本的 Serial。配合 CMS 使用。</p>
-<h1 id="Parallel-GC"><a href="#Parallel-GC" class="headerlink" title="Parallel GC"></a>Parallel GC</h1><p>-XX:UseParallelGC -XX:UseParallelOldGC</p>
-<p>使用的 GC 算法和串行的一样。</p>
-<p>默认的 GC 线程数是 CPU core 数，该收集器的目标更倾向于<strong>提高系统吞吐量</strong>，有时候单次的 GC 暂停时间较长。</p>
-<h1 id="CMS-GC"><a href="#CMS-GC" class="headerlink" title="CMS GC"></a>CMS GC</h1><p>-XX:UseConcMarkSweepGC</p>
-<p>对老年代没有整理操作，使用 free-list 进行内存空间的管理。默认的核心线程数 CPU 核数 / 4。</p>
-<p>可以和业务线程并发执行，GC 暂停时间少。</p>
-<h1 id="G1-GC"><a href="#G1-GC" class="headerlink" title="G1 GC"></a>G1 GC</h1><p>打破整个分区的理论，把内存划分成多个小块进行管理。对每个小块的垃圾数量进行预估，优先回收垃圾多的 Region。可预期的垃圾停顿时间。</p>
-<h1 id="验证总结"><a href="#验证总结" class="headerlink" title="验证总结"></a>验证总结</h1><p>首先需要提到的一点是 GC 的时间和存活的对象数量有关，和堆内存的大小关系没有那么大。</p>
-<p>配置堆内存 512M，YGC 后年轻代存活对象大概 20M。</p>
-<ul>
-<li>串行 GC 利用单线程执行，GC 暂停的时间明显会比较长。在实际的测试下，在小堆内存空间的情况下，YGC 和并行 GC 的 YGC 差不多。FGC 使用的时间明显较长，<strong>大概是并行 GC 的一倍（存活对象 300M 左右）</strong>。老年代存活对象占用的空间大，整理移动的时间就长。</li>
-<li>CMS GC 的老年代清理明显的暂停时间降低。在 GC 日志中有发现 concurrent mode failure 的情况。查询资料后明白，CMS 在 cleanup 是并发执行的，这时的对象引用关系发生改变，也可能有新的对象需要分配空间。如果没有预留足够的空间内存分配就会导致并发失败。可能重新 CMS ，或者 GC 退化成 Serial。</li>
-<li>G1 GC 出现了 Humongous Allocation 因为大对象分配失败，触发了 initial-mark。也是重新标记，或者 GC 退化的问题。</li>
-</ul>
-<p>堆内存越大，内存中可容纳的对象越多，GC 的次数随之减少，单次 GC 的暂停时间可能更长（取决于存活对象的数量）。</p>
-<p>总的来说，注意不同 GC 策略采用的算法，以及设计的目的。比如 CMS 在于并发执行，提高系统响应。Parallel 更倾向于提高吞吐量；G1 GC 倾向于可配置可预估的暂停时间。</p>
-<p>CMS - 老年代 没有整理，使用 free-list 管理回收内存；真正的 STW 时间小，但是步骤多，还有浮动垃圾，GC 退化问题。G1 GC 也存在 GC 退化问题。</p>
-<p>配置堆内存的时候，注意 JVM 自身需要的内存和系统需要的内存，预留一定的空间。</p>
-<p>-Xms -Xmx 直接一步到位，扩容的时候有性能的抖动。</p>
-<p>年轻代和老年代的比例默认 1:2，新生代:from:to = 8：1：1，根据情况来调整。</p>
-<p>根据对象晋升回收速率的计算，进行空间，晋升年龄的配置。</p>
-]]></content>
-      <categories>
-        <category>JVM</category>
-      </categories>
-      <tags>
-        <tag>jvm</tag>
-        <tag>gc</tag>
       </tags>
   </entry>
   <entry>
@@ -771,13 +815,13 @@
 <p><strong>Session B</strong>：对表进行 DML 操作，需要 MDL 写锁，但 A 中的 MDL 读锁没有释放，被阻塞。</p>
 <p><img src="/2021/07/10/Mysql-geektime-study-record/image-20210925163328495.png" alt="image-20210925163328495"></p>
 <p><strong>Session C</strong>：对表进行查询，发现被阻塞</p>
-<p>![image (11)](Mysql-geektime-study-record/image (11)-2558947.png)</p>
+<p><img src="/2021/07/10/Mysql-geektime-study-record/image(11)-2558947.png" alt="image(11)"></p>
 <p>之后，在 <strong>Session A</strong>进行事务提交操作</p>
-<p>![image (12)](Mysql-geektime-study-record/image (12).png)</p>
+<p><img src="/2021/07/10/Mysql-geektime-study-record/image(12).png" alt="image(12)"></p>
 <p><strong>Session B</strong>：</p>
-<p>![image (13)](Mysql-geektime-study-record/image (13).png)</p>
+<p><img src="/2021/07/10/Mysql-geektime-study-record/image(13).png" alt="image(13)"></p>
 <p><strong>Session C</strong>：</p>
-<p>![image (14)](Mysql-geektime-study-record/image (14).png)</p>
+<p><img src="/2021/07/10/Mysql-geektime-study-record/image(14).png" alt="image(14)"></p>
 <p>事务中的 MDL 锁，在语句开始是申请，在事务结束时才释放。但是这也不太好解释为什么 C 中的查询语句会被阻塞，因为 B 申请 MDL 写锁失败了。（从设计初衷来说为了防止 C 被饿死，因为后续可能一直来 MDL 读锁，导致 C 一直不能被执行）。</p>
 <h2 id="行锁"><a href="#行锁" class="headerlink" title="行锁"></a><strong>行锁</strong></h2><p>MySQL 的行锁是在引擎层实现的。但不是所有的引擎都支持行锁。</p>
 <p>行锁的两阶段锁协议：在 InnboDB 的事务中，行锁在需要时才加上，等到事务结束时才释放。</p>
@@ -803,13 +847,13 @@
 </ul>
 </li>
 </ul>
-<p>![image (15)](Mysql-geektime-study-record/image (15).png)</p>
-<p>![image (16)](Mysql-geektime-study-record/image (16).png)</p>
+<p><img src="/2021/07/10/Mysql-geektime-study-record/image(15).png" alt="image(15)"></p>
+<p><img src="/2021/07/10/Mysql-geektime-study-record/image(16).png" alt="image(16)"></p>
 <h2 id="当前读"><a href="#当前读" class="headerlink" title="当前读"></a>当前读</h2><p>库中有数据（id，k）- (1，1)，事务 A get 到的 k 是 1，这个好理解。</p>
 <p>但是事务 B get 到的 k 是 3，这就让人很疑惑了。</p>
 <p><strong>当前读</strong>说的是：在<strong>更新</strong>的时候，总是先读再写，读的值必须的<strong>当前的值。</strong></p>
 <p>事务 C 改成下面这样呢？</p>
-<p>![image (17)](Mysql-geektime-study-record/image (17).png)</p>
+<p><img src="/2021/07/10/Mysql-geektime-study-record/image(17).png" alt="image(17)"></p>
 <p>事务 C’ 没有马上提交，而 B 要更新 k 值，需要进行当前读。因为 C’ 没有提交，该行的写锁还没释放，B 就会被阻塞。</p>
 <h1 id="第二部分"><a href="#第二部分" class="headerlink" title="第二部分"></a>第二部分</h1><h1 id="普通索引和唯一索引应该怎么选择？"><a href="#普通索引和唯一索引应该怎么选择？" class="headerlink" title="普通索引和唯一索引应该怎么选择？"></a>普通索引和唯一索引应该怎么选择？</h1><p>老样子，看业务场景。</p>
 <p>唯一索引的缺点是 <strong>在插入的时候</strong>一定要在内存中进行唯一判断才能插入。</p>
@@ -845,7 +889,7 @@
 <p>通过 explain 来判断一个语句的执行情况</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">explain select * from t where (a between 1 and 1000)  and (b between 50000 and 100000) order by b limit 1;</span><br></pre></td></tr></table></figure>
 
-<p>![image (18)](Mysql-geektime-study-record/image (18)-2559058.png)</p>
+<p><img src="/2021/07/10/Mysql-geektime-study-record/image(18)-2559058.png" alt="image(18)"></p>
 <ul>
 <li>rows 代表可能扫描的行数</li>
 <li>Extra 中说明使用了索引</li>
@@ -853,7 +897,7 @@
 </ul>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">explain select * from t where (a between 1 and 1000)  and (b between 50000 and 100000) order by b,a limit 1;</span><br></pre></td></tr></table></figure>
 
-<p>![image (19)](Mysql-geektime-study-record/image (19).png)</p>
+<p><img src="/2021/07/10/Mysql-geektime-study-record/image(19).png" alt="image(19)"></p>
 <h2 id="直接最佳实践"><a href="#直接最佳实践" class="headerlink" title="直接最佳实践"></a>直接最佳实践</h2><ul>
 <li>人为强制选择索引，使用 force index()</li>
 </ul>
@@ -954,75 +998,6 @@
       </tags>
   </entry>
   <entry>
-    <title>SpringBoot 起步依赖和自动配置</title>
-    <url>/2021/05/02/SpringBoot-autoconfiguration-starter/</url>
-    <content><![CDATA[<h1 id="起步依赖"><a href="#起步依赖" class="headerlink" title="起步依赖"></a>起步依赖</h1><p>不用定义版本，起步依赖中包含的依赖版本都交由 SpringBoot 的版本进行管理。<span id="more"></span></p>
-<p>如果你想要排除某个起步依赖中包含的不需要的依赖，在起步依赖中加 <exclusions><exclusion><groupId>即可</groupId></exclusion></exclusions></p>
-<p>如果需要制定某个依赖的版本，额外正常定义指定即可，Maven 会使用最近定义的依赖，覆盖传递依赖引入的另一个依赖。如果用 Gradle，<strong>因为 Gradle 倾向于引入较新版本<strong><strong>的</strong></strong>依赖</strong>，如果你需要<strong>指定较低<strong><strong>版本</strong></strong>的依赖</strong>，需要先排除起步依赖中的相关依赖，再引入特需版本依赖。</p>
-<h1 id="自动配置"><a href="#自动配置" class="headerlink" title="自动配置"></a>自动配置</h1><p>每当程序启动的时候，SpringBoot 的自动配置都需要根据 ClassPath 里是否有某个类来做合适的 Bean 配置。根据各种内置的自动配置类的条件是否匹配进行一些配置方便用户直接使用。</p>
-<h2 id="条件化配置"><a href="#条件化配置" class="headerlink" title="条件化配置"></a>条件化配置</h2><p>自动配置的类都在 spring-boot-autoconfigure 这个jar 包中。里面的自动配置类使用到了 Spring 提供的<strong>条件化配置</strong>（Spring 4.0开始引入）。Condition 类与 @Conditional 注解。</p>
-<p><img src="/2021/05/02/SpringBoot-autoconfiguration-starter/image-20210925164916991.png" alt="image-20210925164916991"></p>
-<p>SpringBoot 提供的丰富的条件化注解</p>
-<p><img src="/2021/05/02/SpringBoot-autoconfiguration-starter/image-20210925164929129.png" alt="image-20210925164929129"></p>
-<h2 id="覆盖自动配置"><a href="#覆盖自动配置" class="headerlink" title="覆盖自动配置"></a>覆盖自动配置</h2><p>自动配置的 @ConditionalOnMissingBean 注解，是覆盖自动配置的关键。</p>
-<h2 id="自动配置的各种属性配置微调"><a href="#自动配置的各种属性配置微调" class="headerlink" title="自动配置的各种属性配置微调"></a>自动配置的各种属性配置微调</h2><p><img src="/2021/05/02/SpringBoot-autoconfiguration-starter/image-20210925164941741.png" alt="image-20210925164941741"></p>
-<h1 id="相关书籍"><a href="#相关书籍" class="headerlink" title="相关书籍"></a>相关书籍</h1><p>《SpringBoot 实战》</p>
-]]></content>
-      <categories>
-        <category>Spring Framework</category>
-      </categories>
-      <tags>
-        <tag>spring boot</tag>
-        <tag>spring</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>FastDFS Clinet Java 源码分析</title>
-    <url>/2021/09/10/fastdfs-record/</url>
-    <content><![CDATA[<h2 id="什么是-FastDFS"><a href="#什么是-FastDFS" class="headerlink" title="什么是 FastDFS"></a>什么是 FastDFS</h2><blockquote>
-<p><a href="https://github.com/happyfish100/fastdfs">FastDFS</a></p>
-</blockquote>
-<p>根据项目的描述，FastDFS 是一个开源的高性能分布式文件系统。 它的主要功能包括：文件存储，文件同步和文件访问，以及高容量和负载平衡。<span id="more"></span></p>
-<h2 id="FastDFS-框架设计思路"><a href="#FastDFS-框架设计思路" class="headerlink" title="FastDFS 框架设计思路"></a>FastDFS 框架设计思路</h2><p>![image (4)](fastdfs-record/image (4)-2663185.png)</p>
-<p>FastDFS 文件系统总体上划分为三个部分，Client，Tracker Server 和 Storage Server。</p>
-<ol>
-<li>Storage Server ，存储服务器，负责存储数据。Storage Server 以组 （group）为单位组织，一个 group 可以有多台 Storage，数据互为冗余备份。</li>
-<li>Tracker Server，负责管理 Storage Server。客户端在操作时统一通过 Tracker Server 来访问服务。</li>
-<li>Client 选择 Tracker Server 进行操作。</li>
-</ol>
-<p>客户端上传文件，Tracker Server 选择存储的 group，在 group 中选择一个 Storage。当文件存储后，会为该文件生成一个特定的文件名，后续客户端需要通过该文件名来访问文件。</p>
-<h2 id="FastDFS-Client-Java"><a href="#FastDFS-Client-Java" class="headerlink" title="FastDFS-Client-Java"></a>FastDFS-Client-Java</h2><blockquote>
-<p><a href="https://github.com/happyfish100/fastdfs-client-java">FastDFS-Client-Java</a></p>
-</blockquote>
-<p>引入依赖，中心仓库没有的话可以手动下载源码 install。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">      &lt;dependency&gt;</span><br><span class="line">          &lt;groupId&gt;org.csource&lt;/groupId&gt;</span><br><span class="line">          &lt;artifactId&gt;fastdfs-client-java&lt;/artifactId&gt;</span><br><span class="line">          &lt;version&gt;1.29-SNAPSHOT&lt;/version&gt;</span><br><span class="line">      &lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
-
-<p>ClientGlobal 加载配置，有多种方式，.conf，.properties ，Properties 对象注入均可，具体看官方链接说明（上面链接）</p>
-<p>ClientGlobal 中的 TrackerGroup g_tracker_group; 字段用来保存配置的地址等信息。</p>
-<p>初始化客户端，通过 StorageClient  提供的 API 操作文件。</p>
-<p>![image (5)](fastdfs-record/image (5).png)</p>
-<p>以文件上传为例：</p>
-<p>客户端调用 StorageClient 提供的<strong>upload_file</strong>(… args)  方法。</p>
-<p>![image (6)](fastdfs-record/image (6).png)</p>
-<p>所有暴露出来的接口，最终都由 <strong>do_upload_file()</strong> 执行。</p>
-<p><strong>do_upload_file(）</strong>先保证当前 Client 有可用的 storageServer 连接，通过 <strong>newxxxxStorageConnection()</strong> 保证。</p>
-<p>![image (7)](fastdfs-record/image (7).png)</p>
-<p>后通过 storageServer 获取 Connection。</p>
-<p>![image (8)](fastdfs-record/image (8).png)</p>
-<p>上传成功后，返回 group 和根据内部规则生成的 remote_file_name（后续访问文件则需要根据这个信息进行访问）。</p>
-<p>![image (9)](fastdfs-record/image (9).png)</p>
-<p>最后根据是否开启了连接池配置，返回连接或者关闭连接。</p>
-<p>![image (10)](fastdfs-record/image (10).png)</p>
-]]></content>
-      <categories>
-        <category>FastDFS</category>
-      </categories>
-      <tags>
-        <tag>源码分析</tag>
-        <tag>fastdfs</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>数据结构与算法学习记录概览</title>
     <url>/2021/04/23/ds-algo-study-record-overview/</url>
     <content><![CDATA[<h1 id="复杂度"><a href="#复杂度" class="headerlink" title="复杂度"></a>复杂度</h1><p><strong>时间复杂度：</strong>代码执行时间随着数据规模变化的趋势</p>
@@ -1101,7 +1076,7 @@
     3. 双重散列
 2. 链表法。后面不一定
 </code></pre>
-<p>![image (1)](ds-algo-study-record-overview/image (1).png)</p>
+<p><img src="/2021/04/23/ds-algo-study-record-overview/image(1).png" alt="image(1)"></p>
 <h1 id="哈希算法"><a href="#哈希算法" class="headerlink" title="哈希算法"></a>哈希算法</h1><p>将任意长度的二进制串映射成 <strong>固定长度</strong> 的二进制串。</p>
 <h1 id="树，二叉树"><a href="#树，二叉树" class="headerlink" title="树，二叉树"></a>树，二叉树</h1><ul>
 <li>叶子节点</li>
@@ -1117,10 +1092,10 @@
 
 <h1 id="二叉查找树"><a href="#二叉查找树" class="headerlink" title="二叉查找树"></a>二叉查找树</h1><p><strong>二叉查找树 中的<strong><strong>每个节点</strong></strong>，其左子树中的<strong><strong>每个节点都小于这个节点</strong></strong>，右子树中的都大于这个节点。（相对于 散列表，二叉查找树数据的组织方式相对有序，且中序遍历出的数据有序）也称为 二叉排序树。</strong></p>
 <h1 id="红黑树"><a href="#红黑树" class="headerlink" title="红黑树"></a><strong>红黑树</strong></h1><h1 id="堆排序"><a href="#堆排序" class="headerlink" title="堆排序"></a><strong>堆排序</strong></h1><p><strong>堆，是一颗完全二叉树，且树中的每个节点都必须大于等于（或小等于）其所有子树中的每个节点的值。</strong></p>
-<h2 id="操作堆"><a href="#操作堆" class="headerlink" title="操作堆"></a>操作堆</h2><h2 id="堆排序-1"><a href="#堆排序-1" class="headerlink" title="堆排序"></a>堆排序</h2><h2 id="堆应用"><a href="#堆应用" class="headerlink" title="堆应用"></a>堆应用</h2><h1 id="Trie-字典树"><a href="#Trie-字典树" class="headerlink" title="Trie 字典树"></a>Trie 字典树</h1><h1 id="图的表示"><a href="#图的表示" class="headerlink" title="图的表示"></a>图的表示</h1><h2 id="邻接矩阵"><a href="#邻接矩阵" class="headerlink" title="邻接矩阵"></a>邻接矩阵</h2><p>![image (2)](ds-algo-study-record-overview/image (2)-2562505.png)</p>
+<h2 id="操作堆"><a href="#操作堆" class="headerlink" title="操作堆"></a>操作堆</h2><h2 id="堆排序-1"><a href="#堆排序-1" class="headerlink" title="堆排序"></a>堆排序</h2><h2 id="堆应用"><a href="#堆应用" class="headerlink" title="堆应用"></a>堆应用</h2><h1 id="Trie-字典树"><a href="#Trie-字典树" class="headerlink" title="Trie 字典树"></a>Trie 字典树</h1><h1 id="图的表示"><a href="#图的表示" class="headerlink" title="图的表示"></a>图的表示</h1><h2 id="邻接矩阵"><a href="#邻接矩阵" class="headerlink" title="邻接矩阵"></a>邻接矩阵</h2><p><img src="/2021/04/23/ds-algo-study-record-overview/image(2)-2562505.png" alt="image(2)"></p>
 <p>好处是 计算简单，获取顶点之间的关系快速。</p>
 <p>比较费空间。对于无向图来说，A[i][j] 和 A[j][i] 的值相同，矩阵一半的空间都被浪费掉了。</p>
-<h2 id="邻接表、逆邻接表"><a href="#邻接表、逆邻接表" class="headerlink" title="邻接表、逆邻接表"></a>邻接表、逆邻接表</h2><p>![image (3)](ds-algo-study-record-overview/image (3).png)</p>
+<h2 id="邻接表、逆邻接表"><a href="#邻接表、逆邻接表" class="headerlink" title="邻接表、逆邻接表"></a>邻接表、逆邻接表</h2><p><img src="/2021/04/23/ds-algo-study-record-overview/image(3).png" alt="image(3)"></p>
 <p>好处是，比较节省空间，拉出的结构可以是链表，也可以是其他更高效的结构，比如红黑树，跳表等。</p>
 <p>链表的存储方式对缓存不友好。</p>
 ]]></content>
@@ -1130,6 +1105,119 @@
       <tags>
         <tag>数据结构</tag>
         <tag>算法</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SpringBoot 起步依赖和自动配置</title>
+    <url>/2021/05/02/SpringBoot-autoconfiguration-starter/</url>
+    <content><![CDATA[<h1 id="起步依赖"><a href="#起步依赖" class="headerlink" title="起步依赖"></a>起步依赖</h1><p>不用定义版本，起步依赖中包含的依赖版本都交由 SpringBoot 的版本进行管理。<span id="more"></span></p>
+<p>如果你想要排除某个起步依赖中包含的不需要的依赖，在起步依赖中加 <exclusions><exclusion><groupId>即可</groupId></exclusion></exclusions></p>
+<p>如果需要制定某个依赖的版本，额外正常定义指定即可，Maven 会使用最近定义的依赖，覆盖传递依赖引入的另一个依赖。如果用 Gradle，<strong>因为 Gradle 倾向于引入较新版本<strong><strong>的</strong></strong>依赖</strong>，如果你需要<strong>指定较低<strong><strong>版本</strong></strong>的依赖</strong>，需要先排除起步依赖中的相关依赖，再引入特需版本依赖。</p>
+<h1 id="自动配置"><a href="#自动配置" class="headerlink" title="自动配置"></a>自动配置</h1><p>每当程序启动的时候，SpringBoot 的自动配置都需要根据 ClassPath 里是否有某个类来做合适的 Bean 配置。根据各种内置的自动配置类的条件是否匹配进行一些配置方便用户直接使用。</p>
+<h2 id="条件化配置"><a href="#条件化配置" class="headerlink" title="条件化配置"></a>条件化配置</h2><p>自动配置的类都在 spring-boot-autoconfigure 这个jar 包中。里面的自动配置类使用到了 Spring 提供的<strong>条件化配置</strong>（Spring 4.0开始引入）。Condition 类与 @Conditional 注解。</p>
+<p><img src="/2021/05/02/SpringBoot-autoconfiguration-starter/image-20210925164916991.png" alt="image-20210925164916991"></p>
+<p>SpringBoot 提供的丰富的条件化注解</p>
+<p><img src="/2021/05/02/SpringBoot-autoconfiguration-starter/image-20210925164929129.png" alt="image-20210925164929129"></p>
+<h2 id="覆盖自动配置"><a href="#覆盖自动配置" class="headerlink" title="覆盖自动配置"></a>覆盖自动配置</h2><p>自动配置的 @ConditionalOnMissingBean 注解，是覆盖自动配置的关键。</p>
+<h2 id="自动配置的各种属性配置微调"><a href="#自动配置的各种属性配置微调" class="headerlink" title="自动配置的各种属性配置微调"></a>自动配置的各种属性配置微调</h2><p><img src="/2021/05/02/SpringBoot-autoconfiguration-starter/image-20210925164941741.png" alt="image-20210925164941741"></p>
+<h1 id="相关书籍"><a href="#相关书籍" class="headerlink" title="相关书籍"></a>相关书籍</h1><p>《SpringBoot 实战》</p>
+]]></content>
+      <categories>
+        <category>Spring Framework</category>
+      </categories>
+      <tags>
+        <tag>spring boot</tag>
+        <tag>spring</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>FastDFS Clinet Java 源码分析</title>
+    <url>/2021/09/10/fastdfs-record/</url>
+    <content><![CDATA[<h2 id="什么是-FastDFS"><a href="#什么是-FastDFS" class="headerlink" title="什么是 FastDFS"></a>什么是 FastDFS</h2><blockquote>
+<p><a href="https://github.com/happyfish100/fastdfs">FastDFS</a></p>
+</blockquote>
+<p>根据项目的描述，FastDFS 是一个开源的高性能分布式文件系统。 它的主要功能包括：文件存储，文件同步和文件访问，以及高容量和负载平衡。<span id="more"></span></p>
+<h2 id="FastDFS-框架设计思路"><a href="#FastDFS-框架设计思路" class="headerlink" title="FastDFS 框架设计思路"></a>FastDFS 框架设计思路</h2><p><img src="/2021/09/10/fastdfs-record/image(4)-2663185.png" alt="image(4)"></p>
+<p>FastDFS 文件系统总体上划分为三个部分，Client，Tracker Server 和 Storage Server。</p>
+<ol>
+<li>Storage Server ，存储服务器，负责存储数据。Storage Server 以组 （group）为单位组织，一个 group 可以有多台 Storage，数据互为冗余备份。</li>
+<li>Tracker Server，负责管理 Storage Server。客户端在操作时统一通过 Tracker Server 来访问服务。</li>
+<li>Client 选择 Tracker Server 进行操作。</li>
+</ol>
+<p>客户端上传文件，Tracker Server 选择存储的 group，在 group 中选择一个 Storage。当文件存储后，会为该文件生成一个特定的文件名，后续客户端需要通过该文件名来访问文件。</p>
+<h2 id="FastDFS-Client-Java"><a href="#FastDFS-Client-Java" class="headerlink" title="FastDFS-Client-Java"></a>FastDFS-Client-Java</h2><blockquote>
+<p><a href="https://github.com/happyfish100/fastdfs-client-java">FastDFS-Client-Java</a></p>
+</blockquote>
+<p>引入依赖，中心仓库没有的话可以手动下载源码 install。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">      &lt;dependency&gt;</span><br><span class="line">          &lt;groupId&gt;org.csource&lt;/groupId&gt;</span><br><span class="line">          &lt;artifactId&gt;fastdfs-client-java&lt;/artifactId&gt;</span><br><span class="line">          &lt;version&gt;1.29-SNAPSHOT&lt;/version&gt;</span><br><span class="line">      &lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+
+<p>ClientGlobal 加载配置，有多种方式，.conf，.properties ，Properties 对象注入均可，具体看官方链接说明（上面链接）</p>
+<p>ClientGlobal 中的 TrackerGroup g_tracker_group; 字段用来保存配置的地址等信息。</p>
+<p>初始化客户端，通过 StorageClient  提供的 API 操作文件。</p>
+<p><img src="/2021/09/10/fastdfs-record/image(5).png" alt="image(5)"></p>
+<p>以文件上传为例：</p>
+<p>客户端调用 StorageClient 提供的<strong>upload_file</strong>(… args)  方法。</p>
+<p><img src="/2021/09/10/fastdfs-record/image(6).png" alt="image(6)"></p>
+<p>所有暴露出来的接口，最终都由 <strong>do_upload_file()</strong> 执行。</p>
+<p><strong>do_upload_file(）</strong>先保证当前 Client 有可用的 storageServer 连接，通过 <strong>newxxxxStorageConnection()</strong> 保证。</p>
+<p><img src="/2021/09/10/fastdfs-record/image(7).png" alt="image(7)"></p>
+<p>后通过 storageServer 获取 Connection。</p>
+<p><img src="/2021/09/10/fastdfs-record/image(8).png" alt="image(8)"></p>
+<p>上传成功后，返回 group 和根据内部规则生成的 remote_file_name（后续访问文件则需要根据这个信息进行访问）。</p>
+<p><img src="/2021/09/10/fastdfs-record/image(9).png" alt="image(9)"></p>
+<p>最后根据是否开启了连接池配置，返回连接或者关闭连接。</p>
+<p><img src="/2021/09/10/fastdfs-record/image(10).png" alt="image(10)"></p>
+]]></content>
+      <categories>
+        <category>FastDFS</category>
+      </categories>
+      <tags>
+        <tag>源码分析</tag>
+        <tag>fastdfs</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Hexo+GithubPages+Mac+Win 部署问题记录</title>
+    <url>/2021/04/01/hexo+win+mac/</url>
+    <content><![CDATA[<h2 id="本地初始化一个Hexo项目"><a href="#本地初始化一个Hexo项目" class="headerlink" title="本地初始化一个Hexo项目"></a>本地初始化一个Hexo项目</h2><p><strong>注意：本地的目录不要动</strong>，<strong>可以重命名</strong>。</p>
+<p>重新新建一个空目录，作为你的博客目录。进入该目录，初始化一个Hexo项目：<span id="more"></span></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo init</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git *--save</span><br></pre></td></tr></table></figure>
+
+<p>然后用自己原来博客里的文件替换掉这里的<code>source\</code>, <code>scaffolds\</code>, <code>themes\</code>,<code>_config.yml</code>替换成自己原来博客里的。<strong>注意，一定要把themes/next中的.git/目录删除</strong></p>
+<p>然后上传到代码仓库，同时初始化了 main 分支。</p>
+<p>最后切换 git checkout -b hexo, 之后基于这个分支做修改，hexo d 部署在配置的分支上，这边就是设置的 main 分支（和 github page 里设置的分支一致可直接在 page 中访问到）。</p>
+<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><p>使用到的插件列表：</p>
+<p><img src="/2021/04/01/hexo+win+mac/Sni_2409222314.png" alt="Sni_2409222314"></p>
+<p><code>.gitignore</code>文件中过滤了<code>node_modules\</code>，所以 clone 来的目录里没有<code>node_modules\</code>，这是hexo所需要的组件，所以要在该目录中重新安装hexo，<strong>但不需要hexo init</strong>。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install hexo</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
+
+<h3 id="不过滤-gitignore-的内容协作尝试"><a href="#不过滤-gitignore-的内容协作尝试" class="headerlink" title="不过滤 .gitignore 的内容协作尝试"></a>不过滤 .gitignore 的内容协作尝试</h3><p>hexo clean，hexo generate 正常，hexo d 部署的时候报错</p>
+<p><img src="/2021/04/01/hexo+win+mac/Sni_2409230640.png" alt="Sni_2409230640"></p>
+<p>.deploy_git 文件夹冲突，猜想应该是 hexo d 的时候操作 .deploy_git 的时候文件无法覆盖类似的冲突。</p>
+<p>解决方法：删除 .deploy_git，重新 hexo d 生成即可。（我们可以在 .gitignore 里过滤这个文件夹）</p>
+<h2 id="常见语法"><a href="#常见语法" class="headerlink" title="常见语法"></a>常见语法</h2><ul>
+<li>tag: <ul>
+<li>-&nbsp;tag1</li>
+<li>-&nbsp;tag2</li>
+</ul>
+</li>
+<li>空格：’&amp;nbsp + ;’</li>
+<li>文章缩略显示：&lt;!–more– &gt;</li>
+</ul>
+<h2 id="样式设置"><a href="#样式设置" class="headerlink" title="样式设置"></a>样式设置</h2><p><a href="https://github.com/iissnan/hexo-theme-next/issues/928">关于footer修改问题 · Issue #928 · iissnan/hexo-theme-next (github.com)</a></p>
+<p><a href="https://blog.csdn.net/Wonz5130/article/details/84666519">Hexo 显示分类、标签问题</a></p>
+<p><a href="https://blog.csdn.net/as480133937/article/details/100138838">Hexo-Next 主题博客个性化配置</a></p>
+<ul>
+<li>目录自动展开和换行：主题配置文件搜索 toc。</li>
+</ul>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://wandouduoduo.github.io/articles/902dbefe.html">mac和windows协同写hexo博客</a></p>
+<p><a href="https://www.caoayu.xyz/post/hexo/">hexo 图片显示+typora</a></p>
+]]></content>
+      <categories>
+        <category>hexo</category>
+      </categories>
+      <tags>
+        <tag>blog</tag>
       </tags>
   </entry>
   <entry>
@@ -1212,6 +1300,67 @@
         <tag>java</tag>
         <tag>jvm</tag>
         <tag>gc</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Project Reactor 响应式编程分享</title>
+    <url>/2021/08/27/reactor-project/</url>
+    <content><![CDATA[<h1 id="Reactive-Programming"><a href="#Reactive-Programming" class="headerlink" title="Reactive Programming"></a>Reactive Programming</h1><p>在计算机领域中，响应式编程是一种面向<strong>数据流和变化</strong>传播的编程范式。这意味着可以在编程语言中很方便地表达静态或动态的数据流，而相关的计算模型会自动将变化的值通过数据流进行传播。<span id="more"></span></p>
+<p>举个例子来说，对于表达式 a = b + c，a 的计算结果由 b 和 c 的值确定下来后，之后 b 或 c 的值改变不会影响到 a 的值。如果是套用响应式的概念，对于 a = b + c，a 的值会随着数据流的变化实时发生变化，也就是说 b 和 c 的值改变，会影响表达式的结果 a。</p>
+<p>之后，从微软在 .NET 上实现 Rreactive Extensions（Rx）库，随之 JVM 也出现了 RxJava 实现了响应式的编程范式那一套东西。</p>
+<p>如今，Java 已经将响应式相关的内容纳入规范（<strong>Reactive Streams</strong>），定义了响应式库的接口的交互规则。</p>
+<blockquote>
+<p>The specification developed with the intent of future inclusion in the official Java standard library, if proven successful and adopted by enough libraries and vendors.<br>Reactive Streams were proposed to become part of <a href="https://en.wikipedia.org/wiki/Java_(software_platform)">Java</a> 9 by <a href="https://en.wikipedia.org/wiki/Doug_Lea">Doug Lea</a>, leader of <a href="https://en.wikipedia.org/wiki/JSR_166">JSR 166</a><a href="https://en.wikipedia.org/wiki/Reactive_Streams#cite_note-7">[7]</a> as a new Flow class<a href="https://en.wikipedia.org/wiki/Reactive_Streams#cite_note-8">[8]</a> that would include the interfaces currently provided by Reactive Streams.<a href="https://en.wikipedia.org/wiki/Reactive_Streams#cite_note-infoq-4">[4]</a><a href="https://en.wikipedia.org/wiki/Reactive_Streams#cite_note-jep266-9">[9]</a> After a successful 1.0 release of Reactive Streams and growing adoption, the proposal was accepted and Reactive Streams was included in <a href="https://en.wikipedia.org/wiki/Java_(software_platform)">JDK9</a> via the <a href="https://en.wikipedia.org/wiki/JDK_Enhancement_Proposal">JEP</a>-266.<a href="https://en.wikipedia.org/wiki/Reactive_Streams#cite_note-jep266-9">[9]</a></p>
+<blockquote>
+<p>– <a href="https://en.wikipedia.org/wiki/Reactive_Streams">https://en.wikipedia.org/wiki/Reactive_Streams</a></p>
+</blockquote>
+</blockquote>
+<h2 id="响应式编程的优势"><a href="#响应式编程的优势" class="headerlink" title="响应式编程的优势"></a>响应式编程的优势</h2><p>比如常见的 Web 服务，在传统的阻塞编程模型里，每个请求都需要一个线程去处理，请求过程可能需要调用数据库 I/O，远程调用服务等等，都需要线程阻塞等待结果返回。如果是非阻塞的编程模型，请求调用某些服务后，可以保存相关的信息后直接返回，线程继续处理其他新的请求。线程无需一直阻塞在那些耗时的操作上，而是等那些耗时的操作有结果后主动通知线程就绪。这样做的好处是线程不必频繁阻塞，可以利用少量的线程处理大量的请求。</p>
+<h2 id="响应式编程为何不够普及？"><a href="#响应式编程为何不够普及？" class="headerlink" title="响应式编程为何不够普及？"></a>响应式编程为何不够普及？</h2><ul>
+<li>基础服务不够普及。前面提到的响应式编程的优势在于调用某些 API 后可以直接返回，但是就目前来说，响应式的 API 普及度远远不够。比如 JDBC，没有提供非阻塞 API ，线程调用后需要等待响应，响应式的优势难以体现（目前也出现了一些响应式的数据库客户端 API，比如 R2DBC，但都不普及）。</li>
+<li>应用学习的成本问题。</li>
+</ul>
+<h1 id="Project-Reactor"><a href="#Project-Reactor" class="headerlink" title="Project Reactor"></a>Project Reactor</h1><p>Project Reactor 基于 Reactive Stream 规范，提供了可以构造非阻塞（异步）应用的响应库。</p>
+<h2 id="非阻塞（异步）"><a href="#非阻塞（异步）" class="headerlink" title="非阻塞（异步）"></a>非阻塞（异步）</h2><p>Java 对于异步编程也提供了支持，我们可以为方法传入一个 <strong>Callable</strong>参数或者立即返回一个 <strong>Future<T></T></strong> ，当前线程则不用一直等待直到有结果返回，而是当有结果可以返回的时候再获取。相比于同步的阻塞调用，线程不用阻塞等待结果返回，可以先服务其他请求，在结果返回后再去获取。</p>
+<h2 id="Reactor-与-Callback、Future"><a href="#Reactor-与-Callback、Future" class="headerlink" title="Reactor 与 Callback、Future"></a>Reactor 与 Callback、Future<T></T></h2><p>假设我们要异步实现这样一个服务：通过 userService 获取用户前五个点赞列表（如果有的话通过 favoriteService 获取详细的点赞信息），如果没有点赞列表则调用 suggestionService 获取推荐列表。</p>
+<h3 id="回调写法"><a href="#回调写法" class="headerlink" title="回调写法"></a>回调写法</h3><p><img src="/2021/08/27/reactor-project/image(11).png" alt="image(11)"></p>
+<p>可以看到每个服务调用都需要 onSuccess，onError 处理来处理服务调用的问题，调用正确时，调用其他服务时又需要 Callback 代码。</p>
+<h3 id="使用-Reactor"><a href="#使用-Reactor" class="headerlink" title="使用 Reactor"></a>使用 Reactor</h3><p><img src="/2021/08/27/reactor-project/image(12).png" alt="image(12)"></p>
+<ol>
+<li>根据 userId 获取 Favorites 列表</li>
+<li>从 Favorites 列表获取对应的 Detail 信息</li>
+<li>如果 Favorites 是 empty 的话，改成获取推荐列表</li>
+<li>只需要 5 个信息</li>
+<li>通过 UI thread 处理数据</li>
+<li>最后，通过 subscribe 触发数据流，然后通过 show 方法展示数据。</li>
+</ol>
+<p>Reactor 提供了需许多易用的操作，可以应对复杂的业务。</p>
+<h2 id="Reactor-一些核心的概念"><a href="#Reactor-一些核心的概念" class="headerlink" title="Reactor 一些核心的概念"></a>Reactor 一些核心的概念</h2><h3 id="Publisher-Subscriber"><a href="#Publisher-Subscriber" class="headerlink" title="Publisher-Subscriber"></a>Publisher-Subscriber</h3><p>Publisher 负责生产数据；但是默认情况下 Publisher 不会做任何事情，直到有 Subscriber 订阅了它，Publisher 被订阅后，就会主动向 Subscriber <strong>push</strong> 数据。</p>
+<h3 id="Nothing-Happens-Until-You-subscribe"><a href="#Nothing-Happens-Until-You-subscribe" class="headerlink" title="Nothing Happens Until You subscribe()"></a>Nothing Happens Until You subscribe()</h3><p>定义了 Publisher，以及一系列对数据流的操作后，默认地数据还没有被进行任何操作。只有调用了 subscribe 后，才会触发数据流开始操作。</p>
+<h3 id="Flux-0…N-，Mono-0…1"><a href="#Flux-0…N-，Mono-0…1" class="headerlink" title="Flux - [0…N]，Mono - [0…1]"></a>Flux - [0…N]，Mono - [0…1]</h3><p>Reactor 中，Flux 和 Mono 就是标准的 Publiser<T> 。Flux 的含义是可能有 0 到 N 个数据的流。Mono 则表示至多只有一个。</T></p>
+<h3 id="Backpressure"><a href="#Backpressure" class="headerlink" title="Backpressure"></a>Backpressure</h3><p>当 Publisher 生产的数据 Subscriber 来不及消费的时候，数据过多得积压可能发生错误，比如内存占用变大等等。Reactor 可以通过订阅者的 onRequest,onCancle 来指定需要处理的数据量避免 Backpressure 问题。</p>
+<h2 id="运用-Reactor"><a href="#运用-Reactor" class="headerlink" title="运用 Reactor"></a>运用 Reactor</h2><h3 id="核心概念的简单示例"><a href="#核心概念的简单示例" class="headerlink" title="核心概念的简单示例"></a>核心概念的简单示例</h3><p><img src="/2021/08/27/reactor-project/image(13).png" alt="image(13)"></p>
+<ul>
+<li><p>Flux.range 生成数据流</p>
+</li>
+<li><h3 id="R2DBC、WebFlux"><a href="#R2DBC、WebFlux" class="headerlink" title="R2DBC、WebFlux"></a>R2DBC、WebFlux</h3></li>
+</ul>
+<p><img src="/2021/08/27/reactor-project/image(14).png" alt="image(14)"></p>
+<p><img src="/2021/08/27/reactor-project/image(15).png" alt="image(15)"></p>
+<h1 id="debug"><a href="#debug" class="headerlink" title="debug"></a>debug</h1><h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ul>
+<li><a href="https://projectreactor.io/docs/core/3.2.2.RELEASE/reference/index.html#about-doc">https://projectreactor.io/docs/core/3.2.2.RELEASE/reference/index.html#about-doc</a></li>
+<li><a href="https://projectreactor.io/">https://projectreactor.io/</a></li>
+<li><a href="https://wiki.jikexueyuan.com/project/android-weekly/issue-145/introduction-to-RP.html">https://wiki.jikexueyuan.com/project/android-weekly/issue-145/introduction-to-RP.html</a></li>
+<li><a href="https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#spring-webflux">https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#spring-webflux</a></li>
+<li><a href="https://r2dbc.io/">https://r2dbc.io/</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
+        <tag>reactive programming</tag>
       </tags>
   </entry>
   <entry>
@@ -1304,190 +1453,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Project Reactor 响应式编程分享</title>
-    <url>/2021/08/27/reactor-project/</url>
-    <content><![CDATA[<h1 id="Reactive-Programming"><a href="#Reactive-Programming" class="headerlink" title="Reactive Programming"></a>Reactive Programming</h1><p>在计算机领域中，响应式编程是一种面向<strong>数据流和变化</strong>传播的编程范式。这意味着可以在编程语言中很方便地表达静态或动态的数据流，而相关的计算模型会自动将变化的值通过数据流进行传播。<span id="more"></span></p>
-<p>举个例子来说，对于表达式 a = b + c，a 的计算结果由 b 和 c 的值确定下来后，之后 b 或 c 的值改变不会影响到 a 的值。如果是套用响应式的概念，对于 a = b + c，a 的值会随着数据流的变化实时发生变化，也就是说 b 和 c 的值改变，会影响表达式的结果 a。</p>
-<p>之后，从微软在 .NET 上实现 Rreactive Extensions（Rx）库，随之 JVM 也出现了 RxJava 实现了响应式的编程范式那一套东西。</p>
-<p>如今，Java 已经将响应式相关的内容纳入规范（<strong>Reactive Streams</strong>），定义了响应式库的接口的交互规则。</p>
-<blockquote>
-<p>The specification developed with the intent of future inclusion in the official Java standard library, if proven successful and adopted by enough libraries and vendors.<br>Reactive Streams were proposed to become part of <a href="https://en.wikipedia.org/wiki/Java_(software_platform)">Java</a> 9 by <a href="https://en.wikipedia.org/wiki/Doug_Lea">Doug Lea</a>, leader of <a href="https://en.wikipedia.org/wiki/JSR_166">JSR 166</a><a href="https://en.wikipedia.org/wiki/Reactive_Streams#cite_note-7">[7]</a> as a new Flow class<a href="https://en.wikipedia.org/wiki/Reactive_Streams#cite_note-8">[8]</a> that would include the interfaces currently provided by Reactive Streams.<a href="https://en.wikipedia.org/wiki/Reactive_Streams#cite_note-infoq-4">[4]</a><a href="https://en.wikipedia.org/wiki/Reactive_Streams#cite_note-jep266-9">[9]</a> After a successful 1.0 release of Reactive Streams and growing adoption, the proposal was accepted and Reactive Streams was included in <a href="https://en.wikipedia.org/wiki/Java_(software_platform)">JDK9</a> via the <a href="https://en.wikipedia.org/wiki/JDK_Enhancement_Proposal">JEP</a>-266.<a href="https://en.wikipedia.org/wiki/Reactive_Streams#cite_note-jep266-9">[9]</a></p>
-<blockquote>
-<p>– <a href="https://en.wikipedia.org/wiki/Reactive_Streams">https://en.wikipedia.org/wiki/Reactive_Streams</a></p>
-</blockquote>
-</blockquote>
-<h2 id="响应式编程的优势"><a href="#响应式编程的优势" class="headerlink" title="响应式编程的优势"></a>响应式编程的优势</h2><p>比如常见的 Web 服务，在传统的阻塞编程模型里，每个请求都需要一个线程去处理，请求过程可能需要调用数据库 I/O，远程调用服务等等，都需要线程阻塞等待结果返回。如果是非阻塞的编程模型，请求调用某些服务后，可以保存相关的信息后直接返回，线程继续处理其他新的请求。线程无需一直阻塞在那些耗时的操作上，而是等那些耗时的操作有结果后主动通知线程就绪。这样做的好处是线程不必频繁阻塞，可以利用少量的线程处理大量的请求。</p>
-<h2 id="响应式编程为何不够普及？"><a href="#响应式编程为何不够普及？" class="headerlink" title="响应式编程为何不够普及？"></a>响应式编程为何不够普及？</h2><ul>
-<li>基础服务不够普及。前面提到的响应式编程的优势在于调用某些 API 后可以直接返回，但是就目前来说，响应式的 API 普及度远远不够。比如 JDBC，没有提供非阻塞 API ，线程调用后需要等待响应，响应式的优势难以体现（目前也出现了一些响应式的数据库客户端 API，比如 R2DBC，但都不普及）。</li>
-<li>应用学习的成本问题。</li>
-</ul>
-<h1 id="Project-Reactor"><a href="#Project-Reactor" class="headerlink" title="Project Reactor"></a>Project Reactor</h1><p>Project Reactor 基于 Reactive Stream 规范，提供了可以构造非阻塞（异步）应用的响应库。</p>
-<h2 id="非阻塞（异步）"><a href="#非阻塞（异步）" class="headerlink" title="非阻塞（异步）"></a>非阻塞（异步）</h2><p>Java 对于异步编程也提供了支持，我们可以为方法传入一个 <strong>Callable</strong>参数或者立即返回一个 <strong>Future<T></T></strong> ，当前线程则不用一直等待直到有结果返回，而是当有结果可以返回的时候再获取。相比于同步的阻塞调用，线程不用阻塞等待结果返回，可以先服务其他请求，在结果返回后再去获取。</p>
-<h2 id="Reactor-与-Callback、Future"><a href="#Reactor-与-Callback、Future" class="headerlink" title="Reactor 与 Callback、Future"></a>Reactor 与 Callback、Future<T></T></h2><p>假设我们要异步实现这样一个服务：通过 userService 获取用户前五个点赞列表（如果有的话通过 favoriteService 获取详细的点赞信息），如果没有点赞列表则调用 suggestionService 获取推荐列表。</p>
-<h3 id="回调写法"><a href="#回调写法" class="headerlink" title="回调写法"></a>回调写法</h3><p>![image (11)](reactor-project/image (11).png)</p>
-<p>可以看到每个服务调用都需要 onSuccess，onError 处理来处理服务调用的问题，调用正确时，调用其他服务时又需要 Callback 代码。</p>
-<h3 id="使用-Reactor"><a href="#使用-Reactor" class="headerlink" title="使用 Reactor"></a>使用 Reactor</h3><p>![image (12)](reactor-project/image (12).png)</p>
-<ol>
-<li>根据 userId 获取 Favorites 列表</li>
-<li>从 Favorites 列表获取对应的 Detail 信息</li>
-<li>如果 Favorites 是 empty 的话，改成获取推荐列表</li>
-<li>只需要 5 个信息</li>
-<li>通过 UI thread 处理数据</li>
-<li>最后，通过 subscribe 触发数据流，然后通过 show 方法展示数据。</li>
-</ol>
-<p>Reactor 提供了需许多易用的操作，可以应对复杂的业务。</p>
-<h2 id="Reactor-一些核心的概念"><a href="#Reactor-一些核心的概念" class="headerlink" title="Reactor 一些核心的概念"></a>Reactor 一些核心的概念</h2><h3 id="Publisher-Subscriber"><a href="#Publisher-Subscriber" class="headerlink" title="Publisher-Subscriber"></a>Publisher-Subscriber</h3><p>Publisher 负责生产数据；但是默认情况下 Publisher 不会做任何事情，直到有 Subscriber 订阅了它，Publisher 被订阅后，就会主动向 Subscriber <strong>push</strong> 数据。</p>
-<h3 id="Nothing-Happens-Until-You-subscribe"><a href="#Nothing-Happens-Until-You-subscribe" class="headerlink" title="Nothing Happens Until You subscribe()"></a>Nothing Happens Until You subscribe()</h3><p>定义了 Publisher，以及一系列对数据流的操作后，默认地数据还没有被进行任何操作。只有调用了 subscribe 后，才会触发数据流开始操作。</p>
-<h3 id="Flux-0…N-，Mono-0…1"><a href="#Flux-0…N-，Mono-0…1" class="headerlink" title="Flux - [0…N]，Mono - [0…1]"></a>Flux - [0…N]，Mono - [0…1]</h3><p>Reactor 中，Flux 和 Mono 就是标准的 Publiser<T> 。Flux 的含义是可能有 0 到 N 个数据的流。Mono 则表示至多只有一个。</T></p>
-<h3 id="Backpressure"><a href="#Backpressure" class="headerlink" title="Backpressure"></a>Backpressure</h3><p>当 Publisher 生产的数据 Subscriber 来不及消费的时候，数据过多得积压可能发生错误，比如内存占用变大等等。Reactor 可以通过订阅者的 onRequest,onCancle 来指定需要处理的数据量避免 Backpressure 问题。</p>
-<h2 id="运用-Reactor"><a href="#运用-Reactor" class="headerlink" title="运用 Reactor"></a>运用 Reactor</h2><h3 id="核心概念的简单示例"><a href="#核心概念的简单示例" class="headerlink" title="核心概念的简单示例"></a>核心概念的简单示例</h3><p>![image (13)](reactor-project/image (13).png)</p>
-<ul>
-<li><p>Flux.range 生成数据流</p>
-</li>
-<li><h3 id="R2DBC、WebFlux"><a href="#R2DBC、WebFlux" class="headerlink" title="R2DBC、WebFlux"></a>R2DBC、WebFlux</h3></li>
-</ul>
-<p>![image (14)](reactor-project/image (14).png)</p>
-<p>![image (15)](reactor-project/image (15).png)</p>
-<h1 id="debug"><a href="#debug" class="headerlink" title="debug"></a>debug</h1><h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ul>
-<li><a href="https://projectreactor.io/docs/core/3.2.2.RELEASE/reference/index.html#about-doc">https://projectreactor.io/docs/core/3.2.2.RELEASE/reference/index.html#about-doc</a></li>
-<li><a href="https://projectreactor.io/">https://projectreactor.io/</a></li>
-<li><a href="https://wiki.jikexueyuan.com/project/android-weekly/issue-145/introduction-to-RP.html">https://wiki.jikexueyuan.com/project/android-weekly/issue-145/introduction-to-RP.html</a></li>
-<li><a href="https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#spring-webflux">https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#spring-webflux</a></li>
-<li><a href="https://r2dbc.io/">https://r2dbc.io/</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>Java</category>
-      </categories>
-      <tags>
-        <tag>java</tag>
-        <tag>reactive programming</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Hexo+GithubPages+Mac+Win 部署问题记录</title>
-    <url>/2021/04/01/hexo+win+mac/</url>
-    <content><![CDATA[<h2 id="本地初始化一个Hexo项目"><a href="#本地初始化一个Hexo项目" class="headerlink" title="本地初始化一个Hexo项目"></a>本地初始化一个Hexo项目</h2><p><strong>注意：本地的目录不要动</strong>，<strong>可以重命名</strong>。</p>
-<p>重新新建一个空目录，作为你的博客目录。进入该目录，初始化一个Hexo项目：<span id="more"></span></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo init</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git *--save</span><br></pre></td></tr></table></figure>
-
-<p>然后用自己原来博客里的文件替换掉这里的<code>source\</code>, <code>scaffolds\</code>, <code>themes\</code>,<code>_config.yml</code>替换成自己原来博客里的。<strong>注意，一定要把themes/next中的.git/目录删除</strong></p>
-<p>然后上传到代码仓库，同时初始化了 main 分支。</p>
-<p>最后切换 git checkout -b hexo, 之后基于这个分支做修改，hexo d 部署在配置的分支上，这边就是设置的 main 分支（和 github page 里设置的分支一致可直接在 page 中访问到）。</p>
-<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><p>使用到的插件列表：</p>
-<p><img src="/2021/04/01/hexo+win+mac/Sni_2409222314.png" alt="Sni_2409222314"></p>
-<p><code>.gitignore</code>文件中过滤了<code>node_modules\</code>，所以 clone 来的目录里没有<code>node_modules\</code>，这是hexo所需要的组件，所以要在该目录中重新安装hexo，<strong>但不需要hexo init</strong>。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install hexo</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
-
-<h3 id="不过滤-gitignore-的内容协作尝试"><a href="#不过滤-gitignore-的内容协作尝试" class="headerlink" title="不过滤 .gitignore 的内容协作尝试"></a>不过滤 .gitignore 的内容协作尝试</h3><p>hexo clean，hexo generate 正常，hexo d 部署的时候报错</p>
-<p><img src="/2021/04/01/hexo+win+mac/Sni_2409230640.png" alt="Sni_2409230640"></p>
-<p>.deploy_git 文件夹冲突，猜想应该是 hexo d 的时候操作 .deploy_git 的时候文件无法覆盖类似的冲突。</p>
-<p>解决方法：删除 .deploy_git，重新 hexo d 生成即可。（我们可以在 .gitignore 里过滤这个文件夹）</p>
-<h2 id="常见语法"><a href="#常见语法" class="headerlink" title="常见语法"></a>常见语法</h2><ul>
-<li>tag: <ul>
-<li>-&nbsp;tag1</li>
-<li>-&nbsp;tag2</li>
-</ul>
-</li>
-<li>空格：’&amp;nbsp + ;’</li>
-<li>文章缩略显示：&lt;!–more– &gt;</li>
-</ul>
-<h2 id="样式设置"><a href="#样式设置" class="headerlink" title="样式设置"></a>样式设置</h2><p><a href="https://github.com/iissnan/hexo-theme-next/issues/928">关于footer修改问题 · Issue #928 · iissnan/hexo-theme-next (github.com)</a></p>
-<p><a href="https://blog.csdn.net/Wonz5130/article/details/84666519">Hexo 显示分类、标签问题</a></p>
-<p><a href="https://blog.csdn.net/as480133937/article/details/100138838">Hexo-Next 主题博客个性化配置</a></p>
-<ul>
-<li>目录自动展开和换行：主题配置文件搜索 toc。</li>
-</ul>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://wandouduoduo.github.io/articles/902dbefe.html">mac和windows协同写hexo博客</a></p>
-<p><a href="https://www.caoayu.xyz/post/hexo/">hexo 图片显示+typora</a></p>
-]]></content>
-      <categories>
-        <category>hexo</category>
-      </categories>
-      <tags>
-        <tag>blog</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>TCP 学习记录</title>
-    <url>/2021/04/15/tcp-related/</url>
-    <content><![CDATA[<p>首先了解 TCP 在 OSI 的七层模型中的第四层 - 传输层（来自《图解 TCP/IP》）<span id="more"></span></p>
-<p>![image (1)](tcp-related/image (1).png)</p>
-<p>再简单的看一下 客户端 和 服务端之间的数据传输</p>
-<p>![image (2)](tcp-related/image (2).png)</p>
-<p>数据发送时经过每一层都会加上对应的协议头，接收端则会一层层解析头，交给高层的协议处理。</p>
-<h1 id="TCP-首部"><a href="#TCP-首部" class="headerlink" title="TCP 首部"></a>TCP 首部</h1><p>![image (3)](tcp-related/image (3).png)</p>
-<p>其中我觉得比较重要的几个内容是</p>
-<ul>
-<li><strong>序号</strong>。为包编上号，解决包的乱序问题。</li>
-<li><strong>确认序号，<strong><strong>A</strong></strong>cknowledgement Number。</strong>也就是我们常说的确认应答号 ACK ，可以解决丢包的问题。</li>
-<li><strong>Window</strong>。也就是我们常说的<strong>滑动窗口。</strong></li>
-<li><strong>TCP Flags，状态位。</strong></li>
-<li><strong>Port，</strong>应用监听的端口号。</li>
-</ul>
-<h1 id="TCP-的状态机"><a href="#TCP-的状态机" class="headerlink" title="TCP 的状态机"></a>TCP 的状态机</h1><p>TCP 就是靠改变，维持通讯双方的<strong>状态</strong>来保证他们之间的“连接”的。</p>
-<p>![image (4)](tcp-related/image (4).png)</p>
-<p>上图中，客户端发送 SYN ，就是期待发起连接，客户端就切换为 SYN-SENT 状态。服务端被动监听端口，处于 LISTEN 状态。Server 接收到 SYN 包后，也向 client 发送 SYN，以及对接收到的 SYN 的 ACK，此时 server 处于 SYN-RECEIVED 状态。 client 收到 server 的 SYN 以及对于自己之前 SYN 的 ACK 后，也要针对 server 的 SYN 发送 ACK，就变成 ESTABLISHED 状态。若此刻 server 成功收到最后这个 ACK ，也进入 ESTABLISHED 状态。</p>
-<p>刚才描述的过程就是我们常说的<strong>建立连接时的三次握手。</strong></p>
-<p>![image (5)](tcp-related/image (5).png)</p>
-<p>对于三次握手，重要的点在于：</p>
-<ul>
-<li><strong>Synchronize Sequence Numbers，SYN。</strong>SYN seq = x seq = y，主要就是双方去确定 <strong>Sequence Numbers</strong>的值。****这个号就是以后通信要用到的包的序号。</li>
-</ul>
-<p>![image (6)](tcp-related/image (6)-2560545.png)</p>
-<p>对于<strong>四次挥手断开连接</strong>，因为TCP连接是全双工（两方可以互相同时传输数据）的，所以当任何一方想要断开连接时，都不能那么任性。你可以保证自己没有数据要发送了，但是你不知道对方还有没有数据要继续发送。所以我理解为什么是四次，因为双方都需要像对方提出断开连接并收一下 ACK。</p>
-<p>在建立连接和断开连接时会有各种复杂情况，以下说明一些常见的</p>
-<ul>
-<li>建立连接时，客户端发送 SYN 后，直接掉线。server 就收不到 client 对于自己 SYN 的 ACK。当然 server 会一直尝试发送 SYN-ACK。 在Linux下，默认重试次数为5次，重试的间隔时间从1s开始每次都翻售，5次的重试时间间隔为1s, 2s, 4s, 8s, 16s，总共31s，第5次发出后还要等32s都知道第5次也超时了，所以，总共需要 1s + 2s + 4s+ 8s+ 16s + 32s = 2^6 -1 = 63s，TCP才会把断开这个连接。</li>
-<li>断开连接时的 time-wait 到 close 状态中间等待的一段 2MSL 时间，（Maximum Segment Lifetime）。因为双方在最后收到对方的 FIN 报文时，要给对方一个 ACK，让对方知道自己知道你要也要断开连接了。而不是发了 ACK 直接跑路，这样 B 就一直收不到自己 FIN 的 ACK。</li>
-<li>这个 MSL ，<strong>报文最大生存时间</strong>。可以理解成报文在网络中可以存活的最长时间，超过这个时间还没到达目的地，就会被丢弃。所有 A B 等待的 2MSL 时间还有一个原因就是，避免下一个占用了此端口的应用收到上次与自己无关连接的包。等那么久还没有收到包也就被丢弃了。</li>
-</ul>
-<h1 id="TCP-重传机制"><a href="#TCP-重传机制" class="headerlink" title="TCP 重传机制"></a>TCP 重传机制</h1><p>TCP 保证可靠，稳定的传输，保证包全部顺利到达对方。但是网络世界很复杂，各种意外情况如何去保证呢？</p>
-<p>其中一种就是前面提到的 ACK 机制。比如接收端收到 4000 的包，ACK 回去要 4001 之后的包，发送端就知道 4000 包成功到达了。</p>
-<p>其中的意外情况有，1）接收端没收到 4000 的包，就一直 ACK 3999，发送端就知道要重发 4000 的包了。2）发送端没收到 ACK，就以为接收端没收到（实际上收到了），也重发 4000 的包。</p>
-<h2 id="累计应答"><a href="#累计应答" class="headerlink" title="累计应答"></a>累计应答</h2><p>相比于一个一个包的发送，确认。实际上，接收端只会给发送端 ACK 收到的连续包的最后一个序号。比如发送端发送了 1-5 个包，接收端 ACK 一个 3 （x + 1,3这个包还没收到）给发送端。说明收到了 1,2 两个包。也就是<strong>累计应答</strong>。</p>
-<p>需要注意的是，seq 和 ACK 是以字节数来计算的，故不能跳着 ack。<strong>只能确认最大的连续收到的包。</strong></p>
-<h2 id="引入窗口"><a href="#引入窗口" class="headerlink" title="引入窗口"></a>引入窗口</h2><p>简单的重传机制就是发一个等一个，效率低。</p>
-<p>引入窗口的目的就是减少等待，在没有收到部分包 ACK 的情况下，允许发送最大的段。比如窗口被定义为 5，就允许最多连续发送 5 个段，而不是一个个等待。</p>
-<h2 id="重发控制"><a href="#重发控制" class="headerlink" title="重发控制"></a>重发控制</h2><p>![image (7)](tcp-related/image (7).png)</p>
-<p>![image (8)](tcp-related/image (8).png)</p>
-<p>还有一种需要重发的情况是，发送端一直接收不到 ACK。TCP 就会等待一段时间，如果超过就重发。这个等待时间不宜超过 RTT（数据包往返的时间），否则可能进行不必要的重传。</p>
-<p>重发的时候就涉及到一个问题，当发送端一直接收不到 3001 的 ACK 时（接收端确实没有收到 3000 的数据），而接收端收到了到 5001 的数据（放在缓冲区）。那么发送端到底是选择重发 3000 的数据，还是把 3001 ，4001, 5001 全部重发呢？</p>
-<h2 id="SACK"><a href="#SACK" class="headerlink" title="SACK"></a>SACK</h2><p>**Selective Acknowledgment (SACK)**（参看<a href="http://tools.ietf.org/html/rfc2018">RFC 2018</a>），这种方式需要在TCP头里加一个SACK的东西，ACK还是Fast Retransmit的ACK，SACK则是汇报收到的数据碎版。参看下图：</p>
-<p>![image (9)](tcp-related/image (9).png)</p>
-<p>接收端不仅发送 ACK，还发送一个 SACK 向发送端说明自己缓冲区已经收到了 5000 的数据（只是还无法想你发送 5001 的 ACK ，因为在前面断了一截儿）。</p>
-<p>但是，发送端不能把 SACK 作为真正意义上的 ACK 看待，因为接收端对于 SACK 的数据是可能放弃掉的。后续发送端如果检测到 ACK 没有实际性的增长，仍然需要重发该部分的数据。</p>
-<h1 id="滑动窗口，窗口控制"><a href="#滑动窗口，窗口控制" class="headerlink" title="滑动窗口，窗口控制"></a>滑动窗口，窗口控制</h1><p>TCP 头中有一个 window 字段，又叫 Advertised-Window，这个字段的作用是接收端会告诉发送端自己能接受处理的最大数据，发送端会根据这个值调整发送的数据多少，避免接收端压力太大。</p>
-<p>且这个 window 是有可能到 0 的。也就是说，发送端不再发送数据。</p>
-<p>当 window 变成 0 的时候，发送方会定时发送窗口探测数据包，看看有没有增加 window 值的可能。一般这个值会设置成3次，第次大约30-60秒（不同的实现可能会不一样）。如果3次过后还是0的话，有的TCP实现就会发RST把链接断了。</p>
-<h1 id="TCP-拥塞控制"><a href="#TCP-拥塞控制" class="headerlink" title="TCP 拥塞控制"></a>TCP 拥塞控制</h1><p>前面讨论的窗口，关注的点是接收端的处理能力。这里的拥塞控制也有一个窗口的概念，但是关注的点是对于整个网络的影响。</p>
-<p>我们知道，TCP 有超时重发机制，如果每个 TCP 不顾及整个网络的情况，不断的重发数据，网络状况因此可能更差，形成恶性循环。</p>
-<h2 id="慢启动"><a href="#慢启动" class="headerlink" title="慢启动"></a><strong>慢启动</strong></h2><p>Congestion Window，cwnd。MSS（maximum segment size最大分段长度）</p>
-<p>算法如下</p>
-<ol>
-<li>连接建立，初始化 cwnd 为 1，说明可以传输一个 MSS 大小</li>
-<li>每收到一个 ACK，cwnd++，线性增长</li>
-<li>每过一个 RTT，cwnd = cwnd * 2，指数增长</li>
-<li>ssthresh（slow start threshold），当 cwnd &gt;= ssthresh 时，进入“拥塞避免算法”</li>
-</ol>
-<p>从算法过程可以判断，当网络状况良好的时候，ACK 的快，RTT 也快，这个慢启动也不算非常慢。网络状况差的话，那就是缓慢增长，到定义的阈值。</p>
-<h2 id="拥塞避免算法-–-Congestion-Avoidance"><a href="#拥塞避免算法-–-Congestion-Avoidance" class="headerlink" title="拥塞避免算法 – Congestion Avoidance"></a>拥塞避免算法 – Congestion Avoidance</h2><p>前面说过，还有一个ssthresh（slow start threshold），是一个上限，当cwnd &gt;= ssthresh时，就会进入“拥塞避免算法”。一般来说ssthresh的值是65535，单位是字节，当cwnd达到这个值时后，算法如下：</p>
-<p>1）收到一个ACK时，cwnd = cwnd + 1/cwnd</p>
-<p>2）当每过一个RTT时，cwnd = cwnd + 1</p>
-<p>这样就可以避免增长过快导致网络拥塞，慢慢的增加调整到网络的最佳值。很明显，是一个线性上升的算法。</p>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ul>
-<li><a href="https://coolshell.cn/articles/11564.html">TCP 的那些事儿</a> </li>
-<li><a href="https://time.geekbang.org/column/intro/85">趣谈网络协议</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>网络协议</category>
-      </categories>
-      <tags>
-        <tag>tcp</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Spring 事务传播机制</title>
     <url>/2021/05/12/spring-transaction-spread/</url>
     <content><![CDATA[<h1 id="事务传播机制"><a href="#事务传播机制" class="headerlink" title="事务传播机制"></a>事务传播机制</h1><p>首先我们看 <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/TransactionDefinition.html">TransactionDefinition</a> 接口的注释。</p>
@@ -1549,6 +1514,85 @@
       </tags>
   </entry>
   <entry>
+    <title>TCP 学习记录</title>
+    <url>/2021/04/15/tcp-related/</url>
+    <content><![CDATA[<p>首先了解 TCP 在 OSI 的七层模型中的第四层 - 传输层（来自《图解 TCP/IP》）<span id="more"></span></p>
+<p><img src="/2021/04/15/tcp-related/image(1).png" alt="image(1)"></p>
+<p>再简单的看一下 客户端 和 服务端之间的数据传输</p>
+<p><img src="/2021/04/15/tcp-related/image(2).png" alt="image(2)"></p>
+<p>数据发送时经过每一层都会加上对应的协议头，接收端则会一层层解析头，交给高层的协议处理。</p>
+<h1 id="TCP-首部"><a href="#TCP-首部" class="headerlink" title="TCP 首部"></a>TCP 首部</h1><p><img src="/2021/04/15/tcp-related/image(3).png" alt="image(3)"></p>
+<p>其中我觉得比较重要的几个内容是</p>
+<ul>
+<li><strong>序号</strong>。为包编上号，解决包的乱序问题。</li>
+<li><strong>确认序号，<strong><strong>A</strong></strong>cknowledgement Number。</strong>也就是我们常说的确认应答号 ACK ，可以解决丢包的问题。</li>
+<li><strong>Window</strong>。也就是我们常说的<strong>滑动窗口。</strong></li>
+<li><strong>TCP Flags，状态位。</strong></li>
+<li><strong>Port，</strong>应用监听的端口号。</li>
+</ul>
+<h1 id="TCP-的状态机"><a href="#TCP-的状态机" class="headerlink" title="TCP 的状态机"></a>TCP 的状态机</h1><p>TCP 就是靠改变，维持通讯双方的<strong>状态</strong>来保证他们之间的“连接”的。</p>
+<p><img src="/2021/04/15/tcp-related/image(4).png" alt="image(4)"></p>
+<p>上图中，客户端发送 SYN ，就是期待发起连接，客户端就切换为 SYN-SENT 状态。服务端被动监听端口，处于 LISTEN 状态。Server 接收到 SYN 包后，也向 client 发送 SYN，以及对接收到的 SYN 的 ACK，此时 server 处于 SYN-RECEIVED 状态。 client 收到 server 的 SYN 以及对于自己之前 SYN 的 ACK 后，也要针对 server 的 SYN 发送 ACK，就变成 ESTABLISHED 状态。若此刻 server 成功收到最后这个 ACK ，也进入 ESTABLISHED 状态。</p>
+<p>刚才描述的过程就是我们常说的<strong>建立连接时的三次握手。</strong></p>
+<p><img src="/2021/04/15/tcp-related/image(5).png" alt="image(5)"></p>
+<p>对于三次握手，重要的点在于：</p>
+<ul>
+<li><strong>Synchronize Sequence Numbers，SYN。</strong>SYN seq = x seq = y，主要就是双方去确定 <strong>Sequence Numbers</strong>的值。****这个号就是以后通信要用到的包的序号。</li>
+</ul>
+<p><img src="/2021/04/15/tcp-related/image(6)-2560545.png" alt="image(6)"></p>
+<p>对于<strong>四次挥手断开连接</strong>，因为TCP连接是全双工（两方可以互相同时传输数据）的，所以当任何一方想要断开连接时，都不能那么任性。你可以保证自己没有数据要发送了，但是你不知道对方还有没有数据要继续发送。所以我理解为什么是四次，因为双方都需要像对方提出断开连接并收一下 ACK。</p>
+<p>在建立连接和断开连接时会有各种复杂情况，以下说明一些常见的</p>
+<ul>
+<li>建立连接时，客户端发送 SYN 后，直接掉线。server 就收不到 client 对于自己 SYN 的 ACK。当然 server 会一直尝试发送 SYN-ACK。 在Linux下，默认重试次数为5次，重试的间隔时间从1s开始每次都翻售，5次的重试时间间隔为1s, 2s, 4s, 8s, 16s，总共31s，第5次发出后还要等32s都知道第5次也超时了，所以，总共需要 1s + 2s + 4s+ 8s+ 16s + 32s = 2^6 -1 = 63s，TCP才会把断开这个连接。</li>
+<li>断开连接时的 time-wait 到 close 状态中间等待的一段 2MSL 时间，（Maximum Segment Lifetime）。因为双方在最后收到对方的 FIN 报文时，要给对方一个 ACK，让对方知道自己知道你要也要断开连接了。而不是发了 ACK 直接跑路，这样 B 就一直收不到自己 FIN 的 ACK。</li>
+<li>这个 MSL ，<strong>报文最大生存时间</strong>。可以理解成报文在网络中可以存活的最长时间，超过这个时间还没到达目的地，就会被丢弃。所有 A B 等待的 2MSL 时间还有一个原因就是，避免下一个占用了此端口的应用收到上次与自己无关连接的包。等那么久还没有收到包也就被丢弃了。</li>
+</ul>
+<h1 id="TCP-重传机制"><a href="#TCP-重传机制" class="headerlink" title="TCP 重传机制"></a>TCP 重传机制</h1><p>TCP 保证可靠，稳定的传输，保证包全部顺利到达对方。但是网络世界很复杂，各种意外情况如何去保证呢？</p>
+<p>其中一种就是前面提到的 ACK 机制。比如接收端收到 4000 的包，ACK 回去要 4001 之后的包，发送端就知道 4000 包成功到达了。</p>
+<p>其中的意外情况有，1）接收端没收到 4000 的包，就一直 ACK 3999，发送端就知道要重发 4000 的包了。2）发送端没收到 ACK，就以为接收端没收到（实际上收到了），也重发 4000 的包。</p>
+<h2 id="累计应答"><a href="#累计应答" class="headerlink" title="累计应答"></a>累计应答</h2><p>相比于一个一个包的发送，确认。实际上，接收端只会给发送端 ACK 收到的连续包的最后一个序号。比如发送端发送了 1-5 个包，接收端 ACK 一个 3 （x + 1,3这个包还没收到）给发送端。说明收到了 1,2 两个包。也就是<strong>累计应答</strong>。</p>
+<p>需要注意的是，seq 和 ACK 是以字节数来计算的，故不能跳着 ack。<strong>只能确认最大的连续收到的包。</strong></p>
+<h2 id="引入窗口"><a href="#引入窗口" class="headerlink" title="引入窗口"></a>引入窗口</h2><p>简单的重传机制就是发一个等一个，效率低。</p>
+<p>引入窗口的目的就是减少等待，在没有收到部分包 ACK 的情况下，允许发送最大的段。比如窗口被定义为 5，就允许最多连续发送 5 个段，而不是一个个等待。</p>
+<h2 id="重发控制"><a href="#重发控制" class="headerlink" title="重发控制"></a>重发控制</h2><p><img src="/2021/04/15/tcp-related/image(7).png" alt="image(7)"></p>
+<p><img src="/2021/04/15/tcp-related/image(8).png" alt="image(8)"></p>
+<p>还有一种需要重发的情况是，发送端一直接收不到 ACK。TCP 就会等待一段时间，如果超过就重发。这个等待时间不宜超过 RTT（数据包往返的时间），否则可能进行不必要的重传。</p>
+<p>重发的时候就涉及到一个问题，当发送端一直接收不到 3001 的 ACK 时（接收端确实没有收到 3000 的数据），而接收端收到了到 5001 的数据（放在缓冲区）。那么发送端到底是选择重发 3000 的数据，还是把 3001 ，4001, 5001 全部重发呢？</p>
+<h2 id="SACK"><a href="#SACK" class="headerlink" title="SACK"></a>SACK</h2><p>**Selective Acknowledgment (SACK)**（参看<a href="http://tools.ietf.org/html/rfc2018">RFC 2018</a>），这种方式需要在TCP头里加一个SACK的东西，ACK还是Fast Retransmit的ACK，SACK则是汇报收到的数据碎版。参看下图：</p>
+<p><img src="/2021/04/15/tcp-related/image(9).png" alt="image(9)"></p>
+<p>接收端不仅发送 ACK，还发送一个 SACK 向发送端说明自己缓冲区已经收到了 5000 的数据（只是还无法想你发送 5001 的 ACK ，因为在前面断了一截儿）。</p>
+<p>但是，发送端不能把 SACK 作为真正意义上的 ACK 看待，因为接收端对于 SACK 的数据是可能放弃掉的。后续发送端如果检测到 ACK 没有实际性的增长，仍然需要重发该部分的数据。</p>
+<h1 id="滑动窗口，窗口控制"><a href="#滑动窗口，窗口控制" class="headerlink" title="滑动窗口，窗口控制"></a>滑动窗口，窗口控制</h1><p>TCP 头中有一个 window 字段，又叫 Advertised-Window，这个字段的作用是接收端会告诉发送端自己能接受处理的最大数据，发送端会根据这个值调整发送的数据多少，避免接收端压力太大。</p>
+<p>且这个 window 是有可能到 0 的。也就是说，发送端不再发送数据。</p>
+<p>当 window 变成 0 的时候，发送方会定时发送窗口探测数据包，看看有没有增加 window 值的可能。一般这个值会设置成3次，第次大约30-60秒（不同的实现可能会不一样）。如果3次过后还是0的话，有的TCP实现就会发RST把链接断了。</p>
+<h1 id="TCP-拥塞控制"><a href="#TCP-拥塞控制" class="headerlink" title="TCP 拥塞控制"></a>TCP 拥塞控制</h1><p>前面讨论的窗口，关注的点是接收端的处理能力。这里的拥塞控制也有一个窗口的概念，但是关注的点是对于整个网络的影响。</p>
+<p>我们知道，TCP 有超时重发机制，如果每个 TCP 不顾及整个网络的情况，不断的重发数据，网络状况因此可能更差，形成恶性循环。</p>
+<h2 id="慢启动"><a href="#慢启动" class="headerlink" title="慢启动"></a><strong>慢启动</strong></h2><p>Congestion Window，cwnd。MSS（maximum segment size最大分段长度）</p>
+<p>算法如下</p>
+<ol>
+<li>连接建立，初始化 cwnd 为 1，说明可以传输一个 MSS 大小</li>
+<li>每收到一个 ACK，cwnd++，线性增长</li>
+<li>每过一个 RTT，cwnd = cwnd * 2，指数增长</li>
+<li>ssthresh（slow start threshold），当 cwnd &gt;= ssthresh 时，进入“拥塞避免算法”</li>
+</ol>
+<p>从算法过程可以判断，当网络状况良好的时候，ACK 的快，RTT 也快，这个慢启动也不算非常慢。网络状况差的话，那就是缓慢增长，到定义的阈值。</p>
+<h2 id="拥塞避免算法-–-Congestion-Avoidance"><a href="#拥塞避免算法-–-Congestion-Avoidance" class="headerlink" title="拥塞避免算法 – Congestion Avoidance"></a>拥塞避免算法 – Congestion Avoidance</h2><p>前面说过，还有一个ssthresh（slow start threshold），是一个上限，当cwnd &gt;= ssthresh时，就会进入“拥塞避免算法”。一般来说ssthresh的值是65535，单位是字节，当cwnd达到这个值时后，算法如下：</p>
+<p>1）收到一个ACK时，cwnd = cwnd + 1/cwnd</p>
+<p>2）当每过一个RTT时，cwnd = cwnd + 1</p>
+<p>这样就可以避免增长过快导致网络拥塞，慢慢的增加调整到网络的最佳值。很明显，是一个线性上升的算法。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ul>
+<li><a href="https://coolshell.cn/articles/11564.html">TCP 的那些事儿</a> </li>
+<li><a href="https://time.geekbang.org/column/intro/85">趣谈网络协议</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>网络协议</category>
+      </categories>
+      <tags>
+        <tag>tcp</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>《鸟哥的Linux私房菜》学习记录</title>
     <url>/2021/05/22/niao-ge-linux-dishes-study-record/</url>
     <content><![CDATA[<p>硬件 - 内核 - 系统调用 - 应用程序。操作系统（Linux 系统）就在 内核 - 系统调用那两层。</p>
@@ -1571,7 +1615,7 @@
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ man command，命令的详细操作手册。</span><br></pre></td></tr></table></figure>
 
 <p>执行 man 后，会进入一个类似 Vim 的界面，可用通过 PageUP 或 PageDown（或者空格键 ）进行翻页。/String，或者 ？String，向下 向上查找出现了 String 的内容。并通过 n/N 查找匹配的下一个/上一个。<br>巨简单的一种文本编辑器：nano。图片底部的 ^ + 字母表示，Ctrl + 字母就会执行对应的操作。</p>
-<p>![image (1)](niao-ge-linux-dishes-study-record/image (1).png)</p>
+<p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(1).png" alt="image(1)"></p>
 <h2 id="文件属性管理"><a href="#文件属性管理" class="headerlink" title="文件属性管理"></a>文件属性管理</h2><h3 id="chgrp，chown，chmod"><a href="#chgrp，chown，chmod" class="headerlink" title="chgrp，chown，chmod"></a>chgrp，chown，chmod</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">修改文件所属用户组， -R 递归操作所有子目录</span><br><span class="line">$ chgrp [-R] groupName filename/dirname</span><br><span class="line"></span><br><span class="line">修改文件拥有者，-R 递归操作所有子目录</span><br><span class="line">$ chown [-R] useName filename/dirname</span><br><span class="line"></span><br><span class="line">修改文件权限</span><br><span class="line">1）数字形式： read = 4 = 2^2，write = 2 = 2^1，x = 1 = 2^0</span><br><span class="line">$ chmod [-R] 761 filename/dirname</span><br><span class="line">2）符号形式：a - 全部用户，o - ohters，u - user，g - group</span><br><span class="line">$ chmod [-R] u+rwx,g=rx,o-rwx,a+rwx filename/dirname</span><br></pre></td></tr></table></figure>
 
 <p><strong>权限对于文件和目录的不同作用意义</strong>：</p>
@@ -1605,7 +1649,7 @@
 </ul>
 </li>
 </ul>
-<h3 id="文件和目录的默认权限：umask-S，umask-新的-umask-值"><a href="#文件和目录的默认权限：umask-S，umask-新的-umask-值" class="headerlink" title="文件和目录的默认权限：umask -S，umask 新的 umask 值"></a>文件和目录的默认权限：umask -S，umask 新的 umask 值</h3><p>![image (2)](niao-ge-linux-dishes-study-record/image (2).png)</p>
+<h3 id="文件和目录的默认权限：umask-S，umask-新的-umask-值"><a href="#文件和目录的默认权限：umask-S，umask-新的-umask-值" class="headerlink" title="文件和目录的默认权限：umask -S，umask 新的 umask 值"></a>文件和目录的默认权限：umask -S，umask 新的 umask 值</h3><p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(2).png" alt="image(2)"></p>
 <p>0022 的数字指的是该默认权限需要减掉的权限。第一位的 0 个人猜测是 root 用户的，似乎没办法改变。后三位 022 的 0 代表 u = rwx，2 代表 group-w（即 g = rx）,同理最后一位的 2 一样，只是作用的用户是 others。</p>
 <h3 id="查找文件"><a href="#查找文件" class="headerlink" title="查找文件"></a>查找文件</h3><ul>
 <li>locate regexWord，从已建的数据库中查询，所以不用到处查磁盘。但是数据库更新频率不高，CentOS 7 是一天一更。可以使用 updatedb 命令更新，这个命令会花一些时间。<ul>
@@ -1704,9 +1748,9 @@
 </ul>
 <h3 id="其他常见的压缩和备份工具：dd，cpio"><a href="#其他常见的压缩和备份工具：dd，cpio" class="headerlink" title="其他常见的压缩和备份工具：dd，cpio"></a>其他常见的压缩和备份工具：dd，cpio</h3><h2 id="vim-和-Shell"><a href="#vim-和-Shell" class="headerlink" title="vim 和 Shell"></a>vim 和 Shell</h2><h3 id="vim-的缓存，恢复和重新打开时的警告信息"><a href="#vim-的缓存，恢复和重新打开时的警告信息" class="headerlink" title="vim 的缓存，恢复和重新打开时的警告信息"></a>vim 的缓存，恢复和重新打开时的警告信息</h3><p>使用 vim 编辑文件时，vim 会在编辑文件的同个目录下建立一个 .<strong>原文件名.swp</strong>的文件保存你对原文件的操作记录。这样可以在意外的情况下恢复你上次可能未保存编辑的操作。</p>
 <p>因为 vim 被异常结束，导致交换文件没有按照正常流程结束，所以交换文件会保留下来。</p>
-<p>![image (3)](niao-ge-linux-dishes-study-record/image (3)-2561646.png)</p>
+<p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(3)-2561646.png" alt="image(3)"></p>
 <p>当你重新打开文件的时候，会提示你存在交换文件，你可以选择最后一行提供的 6 种操作。</p>
-<p>![image (4)](niao-ge-linux-dishes-study-record/image (4).png)</p>
+<p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(4).png" alt="image(4)"></p>
 <ul>
 <li>E，不加载交换文件的内容直接编辑。</li>
 <li>R，从交换文件恢复操作，但是交换文件还是存在目录中，可以手动删除避免每次打开出现类似提示。</li>
@@ -1717,7 +1761,7 @@
 <li>2，表示标准错误输出。</li>
 <li>0，默认表示标准输入。</li>
 </ul>
-<p>![image (5)](niao-ge-linux-dishes-study-record/image (5).png)</p>
+<p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(5).png" alt="image(5)"></p>
 <p>有了对应的代码后，我们可以通过对应的信息将本应该<strong>输出</strong>到屏幕中的内容重定向（&gt;,&gt;&gt;）到文件中。</p>
 <p>实战：将正确和错误结果分别重定向到不同文件中</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ find /ect/test -name fhx.txt &gt; writePut 2&gt; wrongPut</span><br></pre></td></tr></table></figure>
@@ -1743,7 +1787,7 @@
 </ul>
 </li>
 </ul>
-<p>![image (6)](niao-ge-linux-dishes-study-record/image (6).png)</p>
+<p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(6).png" alt="image(6)"></p>
 <ul>
 <li>fg，（foreground），将后台任务取出到前台运行，不加参数默认取 + 号的那个任务。<ul>
 <li>fg  jobNumber，取出对应编号的任务到前台执行。</li>
@@ -1756,7 +1800,7 @@
 <ul>
 <li>你可以使用 <strong>ps -l</strong> 查看只和自己的 bash 有关的进程。</li>
 </ul>
-<p>![image (7)](niao-ge-linux-dishes-study-record/image (7).png)</p>
+<p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(7).png" alt="image(7)"></p>
 <pre><code>* F：process flags，进程标识。用来说明进程的权限。
 * S：STAT。
     * R，Running
@@ -1770,7 +1814,7 @@
 <li><p>使用 <strong>ps aux</strong> 查看整个系统的进程。</p>
 </li>
 <li><p><strong>top。top</strong>执行后，会处于动态查看系统状态的界面，如下图。</p>
-<p>![image (8)](niao-ge-linux-dishes-study-record/image (8).png)</p>
+<p><img src="/2021/05/22/niao-ge-linux-dishes-study-record/image(8).png" alt="image(8)"></p>
 <ul>
 <li>第 3 行中的 wa 指的是系统 I/O 的 wait，平时可以多注意这一项。</li>
 <li>最后一行的交换区（虚拟内存）用量也需要注意，用的越多说明系统内存可能告急。<ul>
@@ -1913,7 +1957,7 @@
 <li>ltrim key start end，截取 list，保留范围内内的元素。同样的 end 索引值的位置会被包含（如果有的话）</li>
 <li>blpop/brpop key [key …] timeout。<strong>阻塞 timeout 秒，直到 pop 出数据</strong></li>
 </ul>
-<h4 id="运用场景"><a href="#运用场景" class="headerlink" title="运用场景"></a>运用场景</h4><p>![image (1)](redis-gee-study-record/image (1).png)</p>
+<h4 id="运用场景"><a href="#运用场景" class="headerlink" title="运用场景"></a>运用场景</h4><p><img src="/2021/07/01/redis-gee-study-record/image(1).png" alt="image(1)"></p>
 <h3 id="set"><a href="#set" class="headerlink" title="set"></a>set</h3><p>set 也用于保存多个字符串元素。set 和 list 不同之处在于 set 是存储的元素是<strong>无序</strong>的且<strong>不允许有重复的元素。</strong></p>
 <p>set 除了常规的 crud 外，还支持计算集合键的 交集，并集，差集等。利用这些计算可以很好的运用在实际问题中。</p>
 <h4 id="命令-3"><a href="#命令-3" class="headerlink" title="命令"></a>命令</h4><ol>
@@ -1951,7 +1995,7 @@
 <li>sunionstore，sdiffstore 也是一样的。</li>
 </ul>
 <h4 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h4><p>标签场景。</p>
-<p>![image (2)](redis-gee-study-record/image (2).png)</p>
+<p><img src="/2021/07/01/redis-gee-study-record/image(2).png" alt="image(2)"></p>
 <h3 id="sorted-set"><a href="#sorted-set" class="headerlink" title="sorted set"></a>sorted set</h3><p>sorted set 保留了 set 不能存储重复元素的特点，新增了 score 属性，作为<strong>排序</strong>的依据。也就是说 sorted set 是有序的 set，但是内部存储元素的方式不同，sorted set 通过 score-member 存储。注意 sorted set 中不能重复的元素指的是 score-member 中的 <strong>member</strong>，score 可以一样。</p>
 <h4 id="命令-4"><a href="#命令-4" class="headerlink" title="命令"></a>命令</h4><ol>
 <li><strong>新增</strong></li>
@@ -2008,7 +2052,7 @@
 <li>zinterstore destination numkeys key [key …] [WEIGHTS weight] [AGGREGATE SUM|MIN|MAX]</li>
 </ul>
 <h4 id="应用场景-1"><a href="#应用场景-1" class="headerlink" title="应用场景"></a>应用场景</h4><p>排行榜系统</p>
-<p>![image (3)](redis-gee-study-record/image (3).png)</p>
+<p><img src="/2021/07/01/redis-gee-study-record/image(3).png" alt="image(3)"></p>
 <h3 id="Bitmap"><a href="#Bitmap" class="headerlink" title="Bitmap"></a>Bitmap</h3><p>二值状态统计，比如签到未签到，打卡未打卡，用 0和1就可以表示。</p>
 <p>Bitmap 底层是使用 String 类型，String 本身会保存为二进制的字节数组，字节数组的每个 bit 位就可以用来表示一个元素的二值状态。</p>
 <h4 id="命令-5"><a href="#命令-5" class="headerlink" title="命令"></a>命令</h4><ul>
@@ -2077,17 +2121,17 @@
 <h1 id="第三部分"><a href="#第三部分" class="headerlink" title="第三部分"></a>第三部分</h1><h2 id="一，基本架构"><a href="#一，基本架构" class="headerlink" title="一，基本架构"></a>一，基本架构</h2><p>索引模块 - 数据库根据 key 定位对应的 value 位置。Redis 和 Memcached 采用哈希表作为<strong>索引的类型</strong>。</p>
 <p>通常基于内存的键值数据库都会采用哈希表（随机访问的时间复杂度O(1)），这也和内存的硬件特性有关 - 提供高性能的随机访问。</p>
 <p><strong>内存分配器。</strong>数据库中存储的键值对一般大小不一，不同的内存分配器面对这些情况有不同的效果。Redis 提供多种内存分配选项，之间的分配效率也不同。</p>
-<p>![image (4)](redis-gee-study-record/image (4).png)</p>
+<p><img src="/2021/07/01/redis-gee-study-record/image(4).png" alt="image(4)"></p>
 <h2 id="二、数据结构"><a href="#二、数据结构" class="headerlink" title="二、数据结构"></a>二、数据结构</h2><p>采用全局哈希表高效定位 key 对应的 value 的位置。哈希冲突影响性能后，采用渐进式 rehash 把数据拷贝，最后迁移至更大的哈希表中。</p>
 <p>渐进式 rehash 过程中，服务器仍响应客户端请求，对于已拷贝的数据，如果被修改会如何处理？</p>
 <p>比如索引 5 中的 entry （entry 中包含了 key，value 指针分别指向实际的键和值）链被拷贝到新的哈希表 2 中，后续的请求修改了索引 5 中的 value 值，需要重新去哈希表2中寻找并修改对应值吗？</p>
 <p>答：《Redis 设计与实现》中具体说明了渐进式 rehash 的过程 - rehash 时，哈希表 1 某个索引中的数据“拷贝”至哈希表 2 后，哈希表 1 中对应的索引值会设置为 NULL。</p>
 <p><strong>丰富的数据类型使用的底层数据结构种类。</strong></p>
-<p>![image (5)](redis-gee-study-record/image (5).png)</p>
+<p><img src="/2021/07/01/redis-gee-study-record/image(5).png" alt="image(5)"></p>
 <p>压缩列表类似数组，都是紧凑的数据结构，但压缩列表在表头固定有三个字段分别表示：列表长度，列表尾的偏移量和列表中的 entry 个数；表尾固定有一个 zlend 表示列表结束。（LPOP,RPUSH 等操作，只要 O(1) 的时间复杂度）</p>
 <p>跳表就是添加多级索引的链表。O(logN)</p>
 <h2 id="三、Redis-中的单线程指的是什么？"><a href="#三、Redis-中的单线程指的是什么？" class="headerlink" title="三、Redis 中的单线程指的是什么？"></a>三、Redis 中的单线程指的是什么？</h2><p>我们常说的 Redis 单线程，<strong>指的是 Redis 中的网络 IO 和键值对读写由单线程完成（对外提供的两个主要服务）</strong>。其他的诸如持久化，数据同步等是由其他线程完成的。</p>
-<p>![image (6)](redis-gee-study-record/image (6).png)</p>
+<p><img src="/2021/07/01/redis-gee-study-record/image(6).png" alt="image(6)"></p>
 <p>Redis 6.0，把网络 IO 相关的事情利用多线程处理了 -&gt; 客户端请求的读取和解析。</p>
 <p>第 3 讲 和 第 39 讲</p>
 <p><a href="https://redislabs.com/blog/diving-into-redis-6/">https://redislabs.com/blog/diving-into-redis-6/</a></p>
@@ -2103,8 +2147,8 @@
 <li><a href="https://en.wikipedia.org/wiki/Fork_(system_call)">https://en.wikipedia.org/wiki/Fork_(system_call)</a></li>
 <li><a href="https://linux.die.net/man/2/fork">https://linux.die.net/man/2/fork</a></li>
 </ul>
-<p>![image (7)](redis-gee-study-record/image (7).png)</p>
-<p>![image (8)](redis-gee-study-record/image (8).png)</p>
+<p><img src="/2021/07/01/redis-gee-study-record/image(7).png" alt="image(7)"></p>
+<p><img src="/2021/07/01/redis-gee-study-record/image(8).png" alt="image(8)"></p>
 <p>重放 AOF 文件时，也是单线程一个个重放恢复数据，会比较慢。</p>
 <p>五、RDB</p>
 <p>内存快照。RDB 记录数据库某个时刻的所有数据，不像 aof 记录的是操作，所以数据恢复速度很快，就是把 RDB 文件加载到内存中即可。</p>
@@ -2112,7 +2156,7 @@
 <p>默认使用 bgsave 生成 RDB 文件，生成文件的过程中，主线程不被阻塞，仍正常处理读<strong>写</strong>请求。</p>
 <p>Copy On Write，写时复制技术，子进程由主线程 fork 生成，共享主线程的所有内存数据。但主线程处理写请求时，内存中的数据在修改前会生成一个副本给子进程使用。这样在生成 RDB 文件时也不影响主线程处理写请求。<strong>写时复制，如果内存数据被修改，就要分配新的内存空间了，其余部分是共享的</strong>。</p>
 <p><strong>Redis 4.0 提出混合使用 RDB 和 AOF 的方法。</strong>怎么实践，写一篇针对这个问题的实践文章。</p>
-<p>![image (9)](redis-gee-study-record/image (9).png)</p>
+<p><img src="/2021/07/01/redis-gee-study-record/image(9).png" alt="image(9)"></p>
 <p>redis 持久化方案官网 topic：</p>
 <p><a href="https://redis.io/topics/persistence">https://redis.io/topics/persistence</a></p>
 <p><a href="http://oldblog.antirez.com/post/redis-persistence-demystified.html">http://oldblog.antirez.com/post/redis-persistence-demystified.html</a></p>
@@ -2185,7 +2229,7 @@
 <li><a href="https://time.geekbang.org/column/article/350285">21 | 分布式锁：为什么基于etcd实现分布式锁比Redis锁更安全？ (geekbang.org)</a></li>
 <li><a href="https://time.geekbang.org/column/article/125983">41 | 如何设计更优的分布式锁？ (geekbang.org)</a></li>
 </ol>
-<p>![image (10)](redis-gee-study-record/image (10).png)</p>
+<p><img src="/2021/07/01/redis-gee-study-record/image(10).png" alt="image(10)"></p>
 ]]></content>
       <categories>
         <category>Redis</category>

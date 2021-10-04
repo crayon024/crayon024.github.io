@@ -16,7 +16,7 @@ tags:
 
 ## FastDFS 框架设计思路
 
-![image (4)](fastdfs-record/image (4)-2663185.png)
+![image(4)](fastdfs-record/image(4)-2663185.png)
 
 FastDFS 文件系统总体上划分为三个部分，Client，Tracker Server 和 Storage Server。
 
@@ -46,28 +46,28 @@ ClientGlobal 中的 TrackerGroup g_tracker_group; 字段用来保存配置的地
 
 初始化客户端，通过 StorageClient  提供的 API 操作文件。
 
-![image (5)](fastdfs-record/image (5).png)
+![image(5)](fastdfs-record/image(5).png)
 
 以文件上传为例：
 
 客户端调用 StorageClient 提供的**upload_file**(... args)  方法。
 
-![image (6)](fastdfs-record/image (6).png)
+![image(6)](fastdfs-record/image(6).png)
 
 所有暴露出来的接口，最终都由 **do_upload_file()** 执行。
 
 **do_upload_file(）**先保证当前 Client 有可用的 storageServer 连接，通过 **newxxxxStorageConnection()** 保证。
 
-![image (7)](fastdfs-record/image (7).png)
+![image(7)](fastdfs-record/image(7).png)
 
 后通过 storageServer 获取 Connection。
 
-![image (8)](fastdfs-record/image (8).png)
+![image(8)](fastdfs-record/image(8).png)
 
 上传成功后，返回 group 和根据内部规则生成的 remote_file_name（后续访问文件则需要根据这个信息进行访问）。
 
-![image (9)](fastdfs-record/image (9).png)
+![image(9)](fastdfs-record/image(9).png)
 
 最后根据是否开启了连接池配置，返回连接或者关闭连接。
 
-![image (10)](fastdfs-record/image (10).png)
+![image(10)](fastdfs-record/image(10).png)

@@ -40,12 +40,15 @@
 <meta property="og:image" content="http://example.com/2021/09/19/Concurrent-Programming-2/Sni_0210170533.png">
 <meta property="og:image" content="http://example.com/2021/09/19/Concurrent-Programming-2/Sni_0210171143.png">
 <meta property="og:image" content="http://example.com/2021/09/19/Concurrent-Programming-2/Sni_0210173400.png">
+<meta property="og:image" content="http://example.com/2021/09/19/Concurrent-Programming-2/carbon.png">
+<meta property="og:image" content="http://example.com/2021/09/19/Concurrent-Programming-2/Sni_0410190800.png">
 <meta property="og:image" content="http://example.com/2021/09/19/Concurrent-Programming-2/Sni_0210200355.png">
 <meta property="og:image" content="http://example.com/2021/09/19/Concurrent-Programming-2/Sni_0210175044.png">
 <meta property="og:image" content="http://example.com/2021/09/19/Concurrent-Programming-2/Sni_0210193029.png">
 <meta property="og:image" content="http://example.com/2021/09/19/Concurrent-Programming-2/image-20211002180904481.png">
 <meta property="og:image" content="http://example.com/2021/09/19/Concurrent-Programming-2/image-20211002180833955.png">
 <meta property="og:image" content="http://example.com/2021/09/19/Concurrent-Programming-2/Sni_0210194058.png">
+<meta property="og:image" content="http://example.com/2021/09/19/Concurrent-Programming-2/Sni_0410105523.png">
 <meta property="article:published_time" content="2021-09-19T13:06:50.000Z">
 <meta property="article:modified_time" content="2021-09-19T13:06:50.000Z">
 <meta property="article:author" content="Hexin Fang">
@@ -168,7 +171,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%94%81"><span class="nav-number">1.</span> <span class="nav-text">锁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Lock-%E6%8E%A5%E5%8F%A3"><span class="nav-number">1.1.</span> <span class="nav-text">Lock 接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AQS"><span class="nav-number">1.2.</span> <span class="nav-text">AQS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%90%8C%E6%AD%A5%E7%BB%84%E4%BB%B6"><span class="nav-number">1.2.1.</span> <span class="nav-text">使用同步组件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ReentrantLock"><span class="nav-number">1.3.</span> <span class="nav-text">ReentrantLock</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ReentrantLock-%E7%9A%84%E5%86%85%E9%83%A8-AQS-%E5%AE%9E%E7%8E%B0%E7%B1%BB%EF%BC%88%E5%9F%BA%E4%BA%8E%E9%BB%98%E8%AE%A4%E7%9A%84-NonFairSync%EF%BC%89"><span class="nav-number">1.3.1.</span> <span class="nav-text">ReentrantLock 的内部 AQS 实现类（基于默认的 NonFairSync）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ReentrantReadWriteLock"><span class="nav-number">1.4.</span> <span class="nav-text">ReentrantReadWriteLock</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7"><span class="nav-number">2.</span> <span class="nav-text">并发工具</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Condition-%E6%8E%A5%E5%8F%A3"><span class="nav-number">2.1.</span> <span class="nav-text">Condition 接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LockSupport"><span class="nav-number">2.2.</span> <span class="nav-text">LockSupport</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Semaphore"><span class="nav-number">2.3.</span> <span class="nav-text">Semaphore</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CountDawnLatch"><span class="nav-number">2.4.</span> <span class="nav-text">CountDawnLatch</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CyclicBarrier"><span class="nav-number">2.5.</span> <span class="nav-text">CyclicBarrier</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ThreadLocal"><span class="nav-number">2.6.</span> <span class="nav-text">ThreadLocal</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#parallel-stream"><span class="nav-number">2.7.</span> <span class="nav-text">parallel stream</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Future-CompleteableFuture"><span class="nav-number">2.8.</span> <span class="nav-text">Future CompleteableFuture</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E5%8E%9F%E5%AD%90%E7%B1%BB"><span class="nav-number">3.</span> <span class="nav-text">并发原子类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E5%AE%B9%E5%99%A8"><span class="nav-number">4.</span> <span class="nav-text">并发容器</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%94%81"><span class="nav-number">1.</span> <span class="nav-text">锁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Lock-%E6%8E%A5%E5%8F%A3"><span class="nav-number">1.1.</span> <span class="nav-text">Lock 接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AQS"><span class="nav-number">1.2.</span> <span class="nav-text">AQS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%90%8C%E6%AD%A5%E7%BB%84%E4%BB%B6"><span class="nav-number">1.2.1.</span> <span class="nav-text">使用同步组件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ReentrantLock"><span class="nav-number">1.3.</span> <span class="nav-text">ReentrantLock</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ReentrantLock-%E7%9A%84%E5%86%85%E9%83%A8-AQS-%E5%AE%9E%E7%8E%B0%E7%B1%BB%EF%BC%88%E5%9F%BA%E4%BA%8E%E9%BB%98%E8%AE%A4%E7%9A%84-NonFairSync%EF%BC%89"><span class="nav-number">1.3.1.</span> <span class="nav-text">ReentrantLock 的内部 AQS 实现类（基于默认的 NonFairSync）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ReentrantReadWriteLock"><span class="nav-number">1.4.</span> <span class="nav-text">ReentrantReadWriteLock</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">1.4.1.</span> <span class="nav-text">使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E8%AF%BB%E5%86%99%E9%94%81%E5%AE%9E%E7%8E%B0%E7%AE%80%E6%98%93%E7%BC%93%E5%AD%98%E6%96%B9%E6%A1%88%E7%9A%84-demo"><span class="nav-number">1.4.2.</span> <span class="nav-text">利用读写锁实现简易缓存方案的 demo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%9E%E5%85%AC%E5%B9%B3%E9%94%81-%E8%AF%BB%E5%86%99%E9%94%81%E6%8E%92%E9%98%9F%E9%97%AE%E9%A2%98"><span class="nav-number">1.4.3.</span> <span class="nav-text">非公平锁 读写锁排队问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">1.4.4.</span> <span class="nav-text">注意的问题</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E5%B7%A5%E5%85%B7"><span class="nav-number">2.</span> <span class="nav-text">并发工具</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Condition-%E6%8E%A5%E5%8F%A3"><span class="nav-number">2.1.</span> <span class="nav-text">Condition 接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LockSupport"><span class="nav-number">2.2.</span> <span class="nav-text">LockSupport</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Semaphore"><span class="nav-number">2.3.</span> <span class="nav-text">Semaphore</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CountDawnLatch"><span class="nav-number">2.4.</span> <span class="nav-text">CountDawnLatch</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CyclicBarrier"><span class="nav-number">2.5.</span> <span class="nav-text">CyclicBarrier</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ThreadLocal"><span class="nav-number">2.6.</span> <span class="nav-text">ThreadLocal</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#parallel-stream"><span class="nav-number">2.7.</span> <span class="nav-text">parallel stream</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Future-CompleteableFuture"><span class="nav-number">2.8.</span> <span class="nav-text">Future CompleteableFuture</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E5%8E%9F%E5%AD%90%E7%B1%BB"><span class="nav-number">3.</span> <span class="nav-text">并发原子类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E5%AE%B9%E5%99%A8"><span class="nav-number">4.</span> <span class="nav-text">并发容器</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E9%93%BE%E6%8E%A5"><span class="nav-number">5.</span> <span class="nav-text">相关链接</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -339,7 +342,33 @@
 </ul>
 </li>
 </ol>
-<h2 id="ReentrantReadWriteLock"><a href="#ReentrantReadWriteLock" class="headerlink" title="ReentrantReadWriteLock"></a>ReentrantReadWriteLock</h2><h1 id="并发工具"><a href="#并发工具" class="headerlink" title="并发工具"></a>并发工具</h1><h2 id="Condition-接口"><a href="#Condition-接口" class="headerlink" title="Condition 接口"></a>Condition 接口</h2><p>通过 Lock.newCondition() ，相当于进一步的通信协作。可以 new 多个 Conditions 出来。</p>
+<h2 id="ReentrantReadWriteLock"><a href="#ReentrantReadWriteLock" class="headerlink" title="ReentrantReadWriteLock"></a>ReentrantReadWriteLock</h2><p>Java 中 ReadWriteLock 接口，也就是读写锁。与直接的互斥锁不同，读写锁中的读锁允许多个线程一起读临界资源。这种锁在读多写少的场景下性能比互斥锁好很多。读写锁有这 3 个特点：</p>
+<ol>
+<li>读共享</li>
+<li>写互斥</li>
+<li>写的时候，无法获取到读锁（也就是不可读）</li>
+</ol>
+<p>Java 中 ReadWriteLock 有两个实现： ReadWriteView in StampLock 和 ReentrantReadWriteLock。这部分我们主要分析常用的第二个实现 可重入读写锁。</p>
+<h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Example</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 实例化 ReentrantReadWriteLock() rwl</span></span><br><span class="line">    <span class="keyword">final</span> ReadWriteLock rwl = <span class="keyword">new</span> ReentrantReadWriteLock();</span><br><span class="line">    <span class="comment">// 通过 rwl 获取对应的锁</span></span><br><span class="line">    <span class="keyword">final</span> Lock r = rwl.readLock();</span><br><span class="line">    <span class="keyword">final</span> Lock w = rwl.writeLock();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="利用读写锁实现简易缓存方案的-demo"><a href="#利用读写锁实现简易缓存方案的-demo" class="headerlink" title="利用读写锁实现简易缓存方案的 demo"></a>利用读写锁实现简易缓存方案的 demo</h3><p><img src="/2021/09/19/Concurrent-Programming-2/carbon.png" alt="carbon (1)"></p>
+<h3 id="非公平锁-读写锁排队问题"><a href="#非公平锁-读写锁排队问题" class="headerlink" title="非公平锁 读写锁排队问题"></a>非公平锁 读写锁排队问题</h3><p><img src="/2021/09/19/Concurrent-Programming-2/Sni_0410190800.png" alt="Sni_0410190800"></p>
+<p>写锁始终不排队。非公平实现下，被阻塞的线程等待锁，如果此时阻塞在读锁，那么新来的读锁可能可以一起去共享锁，这样的话申请写锁的线程一直被插队，无法执行。</p>
+<p>实现中的 readerShouldBlock() 调用的方法 apparentlyFirstQueuedIsExclusive()，等待队列头线程是写，读请求阻塞，排在写的后面来避免写请求一直被阻塞的问题。</p>
+<h3 id="注意的问题"><a href="#注意的问题" class="headerlink" title="注意的问题"></a>注意的问题</h3><ol>
+<li>不支持锁的升级。<strong>获取读锁后，获取写锁</strong>，会导致写锁永远阻塞，进而读锁无法释放，相关的线程也被阻塞。</li>
+<li>支持锁的降级。锁的降级用在的场景在于虽然拥有写锁包含了读锁的功能，但及时释放写锁可能让其他等待读的线程拿到锁。<ol>
+<li>获取写锁</li>
+<li>业务处理</li>
+<li><strong>获取读锁</strong></li>
+<li>释放写锁</li>
+<li>业务处理</li>
+<li>最后释放读锁。</li>
+</ol>
+</li>
+<li>写锁支持 Condition 条件变量，读锁不支持。</li>
+</ol>
+<h1 id="并发工具"><a href="#并发工具" class="headerlink" title="并发工具"></a>并发工具</h1><h2 id="Condition-接口"><a href="#Condition-接口" class="headerlink" title="Condition 接口"></a>Condition 接口</h2><p>通过 Lock.newCondition() ，相当于进一步的通信协作。可以 new 多个 Conditions 出来。</p>
 <p><img src="/2021/09/19/Concurrent-Programming-2/Sni_0210200355.png" alt="Sni_0210200355"></p>
 <h2 id="LockSupport"><a href="#LockSupport" class="headerlink" title="LockSupport"></a>LockSupport</h2><p><img src="/2021/09/19/Concurrent-Programming-2/Sni_0210175044.png" alt="Sni_0210175044"></p>
 <p>Java 6 加入 part/parkNanos/parkUntil(Ojbeck blocker,long nanos,long dendlin)。</p>
@@ -367,7 +396,25 @@
 <li>压力一般，无锁一次写入成功的概率高，性能高些。</li>
 <li>压力大，自旋导致 cpu 消耗大，性能差些。</li>
 </ol>
-<h1 id="并发容器"><a href="#并发容器" class="headerlink" title="并发容器"></a>并发容器</h1>
+<h1 id="并发容器"><a href="#并发容器" class="headerlink" title="并发容器"></a>并发容器</h1><p><img src="/2021/09/19/Concurrent-Programming-2/Sni_0410105523.png" alt="Sni_0410105523"></p>
+<ul>
+<li>阻塞队列的 ArrayBlockingQueue 和 LinkedBlockingQueue 支持有界队列。</li>
+</ul>
+<h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ol>
+<li><p><a target="_blank" rel="noopener" href="https://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html">https://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html</a>，JSR-133 FAQ</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="http://ifeve.com/jmm-faq/">Java内存模型FAQ | 并发编程网 – ifeve.com</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/intro/100023901?utm_source=u_nav_web&utm_medium=u_nav_web&utm_term=u_nav_web&tab=catalog">Java并发编程实战 (geekbang.org)</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/specs/jls/se7/html/jls-17.html#jls-17.4">https://docs.oracle.com/javase/specs/jls/se7/html/jls-17.html#jls-17.4</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="http://gee.cs.oswego.edu/dl/cpj/jmm.html">http://gee.cs.oswego.edu/dl/cpj/jmm.html</a>，Conucrrent Programming in Java，Doug Lea</p>
+</li>
+<li><p>《Java 并发编程的艺术》</p>
+</li>
+</ol>
+
     </div>
 
     

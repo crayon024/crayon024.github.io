@@ -9,17 +9,17 @@ tags:
 
 首先了解 TCP 在 OSI 的七层模型中的第四层 - 传输层（来自《图解 TCP/IP》）<!--more-->
 
-![image (1)](tcp-related/image (1).png)
+![image(1)](tcp-related/image(1).png)
 
 再简单的看一下 客户端 和 服务端之间的数据传输
 
-![image (2)](tcp-related/image (2).png)
+![image(2)](tcp-related/image(2).png)
 
 数据发送时经过每一层都会加上对应的协议头，接收端则会一层层解析头，交给高层的协议处理。
 
 # TCP 首部
 
-![image (3)](tcp-related/image (3).png)
+![image(3)](tcp-related/image(3).png)
 
 其中我觉得比较重要的几个内容是
 
@@ -33,19 +33,19 @@ tags:
 
 TCP 就是靠改变，维持通讯双方的**状态**来保证他们之间的“连接”的。
 
-![image (4)](tcp-related/image (4).png)
+![image(4)](tcp-related/image(4).png)
 
 上图中，客户端发送 SYN ，就是期待发起连接，客户端就切换为 SYN-SENT 状态。服务端被动监听端口，处于 LISTEN 状态。Server 接收到 SYN 包后，也向 client 发送 SYN，以及对接收到的 SYN 的 ACK，此时 server 处于 SYN-RECEIVED 状态。 client 收到 server 的 SYN 以及对于自己之前 SYN 的 ACK 后，也要针对 server 的 SYN 发送 ACK，就变成 ESTABLISHED 状态。若此刻 server 成功收到最后这个 ACK ，也进入 ESTABLISHED 状态。
 
 刚才描述的过程就是我们常说的**建立连接时的三次握手。**
 
-![image (5)](tcp-related/image (5).png)
+![image(5)](tcp-related/image(5).png)
 
 对于三次握手，重要的点在于：
 
 * **Synchronize Sequence Numbers，SYN。**SYN seq = x seq = y，主要就是双方去确定 **Sequence Numbers**的值。****这个号就是以后通信要用到的包的序号。
 
-![image (6)](tcp-related/image (6)-2560545.png)
+![image(6)](tcp-related/image(6)-2560545.png)
 
 对于**四次挥手断开连接**，因为TCP连接是全双工（两方可以互相同时传输数据）的，所以当任何一方想要断开连接时，都不能那么任性。你可以保证自己没有数据要发送了，但是你不知道对方还有没有数据要继续发送。所以我理解为什么是四次，因为双方都需要像对方提出断开连接并收一下 ACK。
 
@@ -77,9 +77,9 @@ TCP 保证可靠，稳定的传输，保证包全部顺利到达对方。但是�
 
 ## 重发控制
 
-![image (7)](tcp-related/image (7).png)
+![image(7)](tcp-related/image(7).png)
 
-![image (8)](tcp-related/image (8).png)
+![image(8)](tcp-related/image(8).png)
 
 还有一种需要重发的情况是，发送端一直接收不到 ACK。TCP 就会等待一段时间，如果超过就重发。这个等待时间不宜超过 RTT（数据包往返的时间），否则可能进行不必要的重传。
 
@@ -89,7 +89,7 @@ TCP 保证可靠，稳定的传输，保证包全部顺利到达对方。但是�
 
 **Selective Acknowledgment (SACK)**（参看[RFC 2018](http://tools.ietf.org/html/rfc2018)），这种方式需要在TCP头里加一个SACK的东西，ACK还是Fast Retransmit的ACK，SACK则是汇报收到的数据碎版。参看下图：
 
-![image (9)](tcp-related/image (9).png)
+![image(9)](tcp-related/image(9).png)
 
 接收端不仅发送 ACK，还发送一个 SACK 向发送端说明自己缓冲区已经收到了 5000 的数据（只是还无法想你发送 5001 的 ACK ，因为在前面断了一截儿）。
 

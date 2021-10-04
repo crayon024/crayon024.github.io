@@ -191,19 +191,19 @@ show global variables like 'autocommit';
 
 **Session C**：对表进行查询，发现被阻塞
 
-![image (11)](Mysql-geektime-study-record/image (11)-2558947.png)
+![image(11)](Mysql-geektime-study-record/image(11)-2558947.png)
 
 之后，在 **Session A**进行事务提交操作
 
-![image (12)](Mysql-geektime-study-record/image (12).png)
+![image(12)](Mysql-geektime-study-record/image(12).png)
 
 **Session B**：
 
-![image (13)](Mysql-geektime-study-record/image (13).png)
+![image(13)](Mysql-geektime-study-record/image(13).png)
 
 **Session C**：
 
-![image (14)](Mysql-geektime-study-record/image (14).png)
+![image(14)](Mysql-geektime-study-record/image(14).png)
 
 事务中的 MDL 锁，在语句开始是申请，在事务结束时才释放。但是这也不太好解释为什么 C 中的查询语句会被阻塞，因为 B 申请 MDL 写锁失败了。（从设计初衷来说为了防止 C 被饿死，因为后续可能一直来 MDL 读锁，导致 C 一直不能被执行）。
 
@@ -245,9 +245,9 @@ InnoDB 中每个事务都有一个唯一 ID，是在事务开始的时候，按�
   * 在这个数组中有相同的 ID ，说明这个事务是“活跃”的，说明还没提交，不认可。
   * 没有相同的 ID，说明已经提交，要认可，即对于这个事务来说是可见的。
 
-![image (15)](Mysql-geektime-study-record/image (15).png)
+![image(15)](Mysql-geektime-study-record/image(15).png)
 
-![image (16)](Mysql-geektime-study-record/image (16).png)
+![image(16)](Mysql-geektime-study-record/image(16).png)
 
 ## 当前读
 
@@ -259,7 +259,7 @@ InnoDB 中每个事务都有一个唯一 ID，是在事务开始的时候，按�
 
 事务 C 改成下面这样呢？
 
-![image (17)](Mysql-geektime-study-record/image (17).png)
+![image(17)](Mysql-geektime-study-record/image(17).png)
 
 事务 C' 没有马上提交，而 B 要更新 k 值，需要进行当前读。因为 C' 没有提交，该行的写锁还没释放，B 就会被阻塞。
 
@@ -325,7 +325,7 @@ show variables like '%innodb_change_buffer%';
 explain select * from t where (a between 1 and 1000)  and (b between 50000 and 100000) order by b limit 1;
 ```
 
-![image (18)](Mysql-geektime-study-record/image (18)-2559058.png)
+![image(18)](Mysql-geektime-study-record/image(18)-2559058.png)
 
 * rows 代表可能扫描的行数
 * Extra 中说明使用了索引
@@ -335,7 +335,7 @@ explain select * from t where (a between 1 and 1000)  and (b between 50000 and 
 explain select * from t where (a between 1 and 1000)  and (b between 50000 and 100000) order by b,a limit 1;
 ```
 
-![image (19)](Mysql-geektime-study-record/image (19).png)
+![image(19)](Mysql-geektime-study-record/image(19).png)
 
 ## 直接最佳实践
 

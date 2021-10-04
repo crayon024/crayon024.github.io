@@ -132,7 +132,7 @@ list 类型可以存储多个有序的字符串。支持双端的 push 和 pop�
 
 #### 运用场景
 
-![image (1)](redis-gee-study-record/image (1).png)
+![image(1)](redis-gee-study-record/image(1).png)
 
 
 ### set
@@ -165,7 +165,7 @@ set 除了常规的 crud 外，还支持计算集合键的 交集，并集，差
 
 标签场景。
 
-![image (2)](redis-gee-study-record/image (2).png)
+![image(2)](redis-gee-study-record/image(2).png)
 
 
 ### sorted set
@@ -213,7 +213,7 @@ sorted set 保留了 set 不能存储重复元素的特点，新增了 score 属
 
 排行榜系统
 
-![image (3)](redis-gee-study-record/image (3).png)
+![image(3)](redis-gee-study-record/image(3).png)
 
 ### Bitmap
 
@@ -316,7 +316,7 @@ Redis 还提供一个 WATCH key 命令用于在 multi 之前来确保事务中�
 
 **内存分配器。**数据库中存储的键值对一般大小不一，不同的内存分配器面对这些情况有不同的效果。Redis 提供多种内存分配选项，之间的分配效率也不同。
 
-![image (4)](redis-gee-study-record/image (4).png)
+![image(4)](redis-gee-study-record/image(4).png)
 
 ## 二、数据结构
 
@@ -330,7 +330,7 @@ Redis 还提供一个 WATCH key 命令用于在 multi 之前来确保事务中�
 
 **丰富的数据类型使用的底层数据结构种类。**
 
-![image (5)](redis-gee-study-record/image (5).png)
+![image(5)](redis-gee-study-record/image(5).png)
 
 压缩列表类似数组，都是紧凑的数据结构，但压缩列表在表头固定有三个字段分别表示：列表长度，列表尾的偏移量和列表中的 entry 个数；表尾固定有一个 zlend 表示列表结束。（LPOP,RPUSH 等操作，只要 O(1) 的时间复杂度）
 
@@ -340,7 +340,7 @@ Redis 还提供一个 WATCH key 命令用于在 multi 之前来确保事务中�
 
 我们常说的 Redis 单线程，**指的是 Redis 中的网络 IO 和键值对读写由单线程完成（对外提供的两个主要服务）**。其他的诸如持久化，数据同步等是由其他线程完成的。
 
-![image (6)](redis-gee-study-record/image (6).png)
+![image(6)](redis-gee-study-record/image(6).png)
 
 Redis 6.0，把网络 IO 相关的事情利用多线程处理了 -> 客户端请求的读取和解析。
 
@@ -366,9 +366,9 @@ AOF **采用后写**，命令执行成功才写入日志，避免检查命令的
 * [https://en.wikipedia.org/wiki/Fork_(system_call)](https://en.wikipedia.org/wiki/Fork_(system_call))
 * [https://linux.die.net/man/2/fork](https://linux.die.net/man/2/fork)
 
-![image (7)](redis-gee-study-record/image (7).png)
+![image(7)](redis-gee-study-record/image(7).png)
 
-![image (8)](redis-gee-study-record/image (8).png)
+![image(8)](redis-gee-study-record/image(8).png)
 
 
 重放 AOF 文件时，也是单线程一个个重放恢复数据，会比较慢。
@@ -386,7 +386,7 @@ Copy On Write，写时复制技术，子进程由主线程 fork 生成，共享�
 
 **Redis 4.0 提出混合使用 RDB 和 AOF 的方法。**怎么实践，写一篇针对这个问题的实践文章。
 
-![image (9)](redis-gee-study-record/image (9).png)
+![image(9)](redis-gee-study-record/image(9).png)
 
 redis 持久化方案官网 topic：
 
@@ -516,5 +516,5 @@ Redisson，看门狗，守护线程。在操作期间如果快要过期，自动
 7. [21 | 分布式锁：为什么基于etcd实现分布式锁比Redis锁更安全？ (geekbang.org)](https://time.geekbang.org/column/article/350285)
 8. [41 | 如何设计更优的分布式锁？ (geekbang.org)](https://time.geekbang.org/column/article/125983)
 
-![image (10)](redis-gee-study-record/image (10).png)
+![image(10)](redis-gee-study-record/image(10).png)
 
