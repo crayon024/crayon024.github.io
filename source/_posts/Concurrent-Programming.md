@@ -126,8 +126,6 @@ public class Sync {
 }
 ```
 
-
-
 # Java 线程
 
 ## Runnable 接口
@@ -290,6 +288,133 @@ shutdown() 和 shutdownNow()
 ![Snipaste_1510472015](Concurrent-Programming/Snipaste_1510472015.png)
 
 # CompletableFuture
+
+我们知道Future接口提供了方法来检测异步计算是否已经结束（使用isDone方法），等待异步操作结束，以及获取计算的结果。但是这些特性还不足以让你编写简洁的并发代码。比如，我们很难表述Future结果之间的依赖性；任务之间等待、组合结果等等。CompletableFuture 可以传入回调对象；任务完成，发生异常等情况的回调方法等等。
+
+## 创建 CompletableFuture 对象
+
+通常使用这 4 种静态方法创建：
+
+```java
+//使用默认线程池, 公共的 ForkJoinPool 线程池，cpu core num
+static CompletableFuture<Void> runAsync(Runnable runnable)
+static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier)
+//可以指定线程池  
+static CompletableFuture<Void> runAsync(Runnable runnable, Executor executor)
+static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier, Executor executor)  
+```
+
+创建 CompletableFuture 对象时，会自动异步执行传入的方法 Runnable#run() 和 Supplier#get() 方法。
+如果不指定线程池参数，所有 CompletableFuture 对象共享一个 ForkJoinPool 线程池，如果是 IO 密集型的任务，系统的性能则会收到影响。**所以强烈建议根据业务类型使用不同的线程池保证性能。**
+
+## 使用 CompletableFuture 
+
+### 串行依赖关系
+
+```java
+CompletionStage<R> thenApply(fn);
+CompletionStage<R> thenApplyAsync(fn);
+CompletionStage<Void> thenAccept(consumer);
+CompletionStage<Void> thenAcceptAsync(consumer);
+CompletionStage<Void> thenRun(action);
+CompletionStage<Void> thenRunAsync(action);
+CompletionStage<R> thenCompose(fn);
+CompletionStage<R> thenComposeAsync(fn);
+```
+
+###  AND 汇聚关系
+
+```java
+
+CompletionStage<R> thenCombine(other, fn);
+CompletionStage<R> thenCombineAsync(other, fn);
+CompletionStage<Void> thenAcceptBoth(other, consumer);
+CompletionStage<Void> thenAcceptBothAsync(other, consumer);
+CompletionStage<Void> runAfterBoth(other, action);
+CompletionStage<Void> runAfterBothAsync(other, action);
+```
+
+### OR 汇聚关系
+
+```java
+CompletionStage applyToEither(other, fn);
+CompletionStage applyToEitherAsync(other, fn);
+CompletionStage acceptEither(other, consumer);
+CompletionStage acceptEitherAsync(other, consumer);
+CompletionStage runAfterEither(other, action);
+CompletionStage runAfterEitherAsync(other, action);
+```
+
+### 异常处理
+
+```java
+// try-catch
+CompletionStage exceptionally(fn);
+// try-finally
+CompletionStage<R> whenComplete(consumer); 
+CompletionStage<R> whenCompleteAsync(consumer);
+CompletionStage<R> handle(fn);
+CompletionStage<R> handleAsync(fn);
+```
+
+```java
+public class CompletableFutureDemo {
+    public static void main(String[] args) {
+        // 1. 串行依赖关系
+        String join1 = CompletableFuture.supplyAsync(() -> "result1").thenApply((result) -> result + " result2").join();
+        CompletableFuture<Void> noneResult = CompletableFuture.supplyAsync(() -> "result1").thenAcceptAsync(System.out::println);
+
+        // 2. and 汇聚关系
+        CompletableFuture<Void> first = CompletableFuture.runAsync(() -> System.out.println("第一步输出"));
+        CompletableFuture<Student> hello = CompletableFuture.supplyAsync(() -> new Student("ni hao"));
+
+        CompletableFuture<Student> notGood = first.thenCombine(hello, (Void, student) -> {
+            System.out.println(student.getName());
+            student.setName("wo bu hao");
+            return student;
+        });
+        Student student = notGood.join();
+        System.out.println(student.getName());
+
+        // 3. or 汇聚关系
+        CompletableFuture<String> slow = CompletableFuture.supplyAsync(() -> {
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return "slow finish";
+        });
+        CompletableFuture<String> quick = CompletableFuture.supplyAsync(() -> "quick");
+
+        String quickOrSlow = quick.applyToEither(slow, s -> s).join();
+        System.out.println(quickOrSlow);
+
+        // 4. 异常处理
+        CompletableFuture<String> exTest = CompletableFuture.supplyAsync(() -> {
+            boolean f = false;
+            if (!f) {
+                throw new RuntimeException("runtime e test");
+            }
+            return "222";
+        });
+
+        String join = exTest.exceptionally((e) -> {
+            System.out.println(e.getMessage());
+            return "333";
+        }).join();
+        System.out.println(join);
+
+        CompletableFuture<String> handle = exTest.handle((s, throwable) -> {
+            System.out.println(throwable.getMessage());
+            // null
+            System.out.println(s);
+            return s + "handle";
+        });
+        System.out.println(handle.join());
+    }
+}
+```
 
 # 相关链接 
 

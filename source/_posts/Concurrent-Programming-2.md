@@ -191,9 +191,7 @@ CyclicBarrier 可以重复使用。且可提供一个回调方法，由最后一
 
 ## ThreadLocal
 
-
-
-## parallel stream
+上下文类加载器、线程安全，及时 remove
 
 # 并发原子类
 
@@ -214,9 +212,9 @@ CyclicBarrier 可以重复使用。且可提供一个回调方法，由最后一
 
 ![Sni_0410105523](Concurrent-Programming-2/Sni_0410105523.png)
 
-## Queue
+## BlockingQueue
 
-
+![image-20211018174455373](Concurrent-Programming-2/image-20211018174455373.png)
 
 - 阻塞队列的 ArrayBlockingQueue 和 LinkedBlockingQueue 支持有界队列。
 
@@ -230,3 +228,4 @@ CyclicBarrier 可以重复使用。且可提供一个回调方法，由最后一
 5. [http://gee.cs.oswego.edu/dl/cpj/jmm.html](http://gee.cs.oswego.edu/dl/cpj/jmm.html)，Conucrrent Programming in Java，Doug Lea
 
 6. 《Java 并发编程的艺术》
+
