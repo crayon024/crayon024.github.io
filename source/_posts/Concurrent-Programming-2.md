@@ -195,14 +195,6 @@ CyclicBarrier 可以重复使用。且可提供一个回调方法，由最后一
 
 ## parallel stream
 
-
-
-## Future CompleteableFuture
-
-
-
-
-
 # 并发原子类
 
 ![Sni_0210194058](Concurrent-Programming-2/Sni_0210194058.png)
@@ -221,6 +213,10 @@ CyclicBarrier 可以重复使用。且可提供一个回调方法，由最后一
 # 并发容器
 
 ![Sni_0410105523](Concurrent-Programming-2/Sni_0410105523.png)
+
+## Queue
+
+
 
 - 阻塞队列的 ArrayBlockingQueue 和 LinkedBlockingQueue 支持有界队列。
 

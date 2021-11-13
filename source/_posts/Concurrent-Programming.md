@@ -260,9 +260,36 @@ ThreadPoolExecutor(
 
 通过 execute() 或者 submit(); 注意 execute() 没有返回值，可能无法知晓任务执行情况（吞异常）;
 
+submit() 重载了 3 个版本:
+
+```java
+//1. 提交Runnable任务,返回的 Future 只能用来判断任务执行情况
+Future<?> 
+  submit(Runnable task);
+//2. 提交Callable任务, Callable 实现的方法有返回值
+<T> Future<T> 
+  submit(Callable<T> task);
+//3. 提交Runnable任务及结果引用, 经典用法是 result 传入给 task
+// task 子线程和主线程可以共享 result 数据状态
+<T> Future<T> 
+  submit(Runnable task, T result);
+```
+
 ## 关闭
 
 shutdown() 和 shutdownNow()
+
+# Future
+
+通过 Future 接口可以很简单的获取到异步任务的执行结果。Future 接口提供了 5 个方法，可以判断任务状态，取消任务，阻塞/超时获取结果。
+
+![Snipaste_1510482415](Concurrent-Programming/Snipaste_1510482415.png)
+
+在线程池部分我们讲到可以通过 submit() 方法提交任务，通过返回的 Future 获取任务的执行结果。下面代码是 submit() 配合 Future 的 demo。
+
+![Snipaste_1510472015](Concurrent-Programming/Snipaste_1510472015.png)
+
+# CompletableFuture
 
 # 相关链接 
 

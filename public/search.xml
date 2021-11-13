@@ -177,8 +177,15 @@
 </li>
 </ul>
 <h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>通过 execute() 或者 submit(); 注意 execute() 没有返回值，可能无法知晓任务执行情况（吞异常）;</p>
+<p>submit() 重载了 3 个版本:</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//1. 提交Runnable任务,返回的 Future 只能用来判断任务执行情况</span></span><br><span class="line">Future&lt;?&gt; </span><br><span class="line">  submit(Runnable task);</span><br><span class="line"><span class="comment">//2. 提交Callable任务, Callable 实现的方法有返回值</span></span><br><span class="line">&lt;T&gt; <span class="function">Future&lt;T&gt; </span></span><br><span class="line"><span class="function">  <span class="title">submit</span><span class="params">(Callable&lt;T&gt; task)</span></span>;</span><br><span class="line"><span class="comment">//3. 提交Runnable任务及结果引用, 经典用法是 result 传入给 task</span></span><br><span class="line"><span class="comment">// task 子线程和主线程可以共享 result 数据状态</span></span><br><span class="line">&lt;T&gt; <span class="function">Future&lt;T&gt; </span></span><br><span class="line"><span class="function">  <span class="title">submit</span><span class="params">(Runnable task, T result)</span></span>;</span><br></pre></td></tr></table></figure>
+
 <h2 id="关闭"><a href="#关闭" class="headerlink" title="关闭"></a>关闭</h2><p>shutdown() 和 shutdownNow()</p>
-<h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ol>
+<h1 id="Future"><a href="#Future" class="headerlink" title="Future"></a>Future</h1><p>通过 Future 接口可以很简单的获取到异步任务的执行结果。Future 接口提供了 5 个方法，可以判断任务状态，取消任务，阻塞/超时获取结果。</p>
+<p><img src="/2021/08/11/Concurrent-Programming/Snipaste_1510482415.png" alt="Snipaste_1510482415"></p>
+<p>在线程池部分我们讲到可以通过 submit() 方法提交任务，通过返回的 Future 获取任务的执行结果。下面代码是 submit() 配合 Future 的 demo。</p>
+<p><img src="/2021/08/11/Concurrent-Programming/Snipaste_1510472015.png" alt="Snipaste_1510472015"></p>
+<h1 id="CompletableFuture"><a href="#CompletableFuture" class="headerlink" title="CompletableFuture"></a>CompletableFuture</h1><h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ol>
 <li><p><a href="https://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html">https://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html</a>，JSR-133 FAQ</p>
 </li>
 <li><p><a href="http://ifeve.com/jmm-faq/">Java内存模型FAQ | 并发编程网 – ifeve.com</a></p>
@@ -694,7 +701,7 @@
 <h2 id="CyclicBarrier"><a href="#CyclicBarrier" class="headerlink" title="CyclicBarrier"></a>CyclicBarrier</h2><p>循环屏障，线程到达屏障（await() 方法），停下来等待，达到定义的数量后，一起放行所有被拦住的线程，继续往下执行。</p>
 <p>CyclicBarrier 可以重复使用。且可提供一个回调方法，由最后一个到达且触发放行的线程执行。</p>
 <p><img src="/2021/08/19/Concurrent-Programming-2/image-20211002180833955.png" alt="image-20211002180833955"></p>
-<h2 id="ThreadLocal"><a href="#ThreadLocal" class="headerlink" title="ThreadLocal"></a>ThreadLocal</h2><h2 id="parallel-stream"><a href="#parallel-stream" class="headerlink" title="parallel stream"></a>parallel stream</h2><h2 id="Future-CompleteableFuture"><a href="#Future-CompleteableFuture" class="headerlink" title="Future CompleteableFuture"></a>Future CompleteableFuture</h2><h1 id="并发原子类"><a href="#并发原子类" class="headerlink" title="并发原子类"></a>并发原子类</h1><p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210194058.png" alt="Sni_0210194058"></p>
+<h2 id="ThreadLocal"><a href="#ThreadLocal" class="headerlink" title="ThreadLocal"></a>ThreadLocal</h2><h2 id="parallel-stream"><a href="#parallel-stream" class="headerlink" title="parallel stream"></a>parallel stream</h2><h1 id="并发原子类"><a href="#并发原子类" class="headerlink" title="并发原子类"></a>并发原子类</h1><p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210194058.png" alt="Sni_0210194058"></p>
 <p>并发原子类的核心原理：</p>
 <ol>
 <li>volatile </li>
@@ -707,7 +714,7 @@
 <li>压力大，自旋导致 cpu 消耗大，性能差些。</li>
 </ol>
 <h1 id="并发容器"><a href="#并发容器" class="headerlink" title="并发容器"></a>并发容器</h1><p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0410105523.png" alt="Sni_0410105523"></p>
-<ul>
+<h2 id="Queue"><a href="#Queue" class="headerlink" title="Queue"></a>Queue</h2><ul>
 <li>阻塞队列的 ArrayBlockingQueue 和 LinkedBlockingQueue 支持有界队列。</li>
 </ul>
 <h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ol>
