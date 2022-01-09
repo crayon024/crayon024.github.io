@@ -30,13 +30,13 @@
 <meta property="og:site_name" content="Crayon">
 <meta property="og:description" content="简介ConcurrentHashMap 是高性能的线程安全的哈希容器。 值得一提的是 ConcurrentHashMap 的 key 和 value 不允许 null 值。 Doug Lea 和 Josh Bloch 对 HashMap，ConcurrentHashMap key 允不允许 null 值的讨论。  http:&#x2F;&#x2F;cs.oswego.edu&#x2F;pipermail&#x2F;concurrency">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.com//image-20210925124000740.png">
-<meta property="og:image" content="http://example.com/.com//image-20210925124058747.png">
-<meta property="og:image" content="http://example.com/.com//image-20210925124118357.png">
-<meta property="og:image" content="http://example.com/.com//image-20210925124156045.png">
-<meta property="og:image" content="http://example.com/.com//image-20210925124249047.png">
-<meta property="og:image" content="http://example.com/.com//image-20210925124311450.png">
-<meta property="og:image" content="http://example.com/.com//image-20210925124327406.png">
+<meta property="og:image" content="http://example.com/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124000740.png">
+<meta property="og:image" content="http://example.com/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124058747.png">
+<meta property="og:image" content="http://example.com/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124118357.png">
+<meta property="og:image" content="http://example.com/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124156045.png">
+<meta property="og:image" content="http://example.com/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124249047.png">
+<meta property="og:image" content="http://example.com/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124311450.png">
+<meta property="og:image" content="http://example.com/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124327406.png">
 <meta property="article:published_time" content="2021-05-05T04:39:27.000Z">
 <meta property="article:modified_time" content="2021-05-05T04:39:27.000Z">
 <meta property="article:author" content="Hexin Fang">
@@ -44,7 +44,7 @@
 <meta property="article:tag" content="java 集合">
 <meta property="article:tag" content="源码分析">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.com//image-20210925124000740.png">
+<meta name="twitter:image" content="http://example.com/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124000740.png">
 
 
 <link rel="canonical" href="http://example.com/2021/05/05/ConcurrentHashMap-Analyse/">
@@ -283,9 +283,9 @@
 <p>邮件里大致的内容说明是因为 null 值有二义性。在并发环境下，如果你通过 get(key) 得到了一个 null 值，无法判断是因为 map 中不存在这个 key 还是因为 key 对应的 value 是 null。在并发环境下，你无法通过调用 containsKey() 来确定。</p>
 <p>因为不允许 null 值，所以在 ConcurrentHashMap 中，可以通过 get() 是否为 null 来直接判断是否 contains 一个 key。</p>
 <h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><h2 id="存储结构"><a href="#存储结构" class="headerlink" title="存储结构"></a>存储结构</h2><p>JDK 1.8 之后，采用的存储结构与 HashMap 一样，Node&lt;K,V&gt;[] table。不同的是 Node 中的 val 和 next 用<strong>volatile</strong>来修饰，用于保证可见性。</p>
-<p><img src="/.com//image-20210925124000740.png" alt="image-20210925124000740"></p>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124000740.png" alt="image-20210925124000740"></p>
 <h2 id="put-方法"><a href="#put-方法" class="headerlink" title="put() 方法"></a>put() 方法</h2><ol>
-<li><p><img src="/.com//image-20210925124058747.png" alt="image-20210925124058747">rehash，保证均匀分布</p>
+<li><p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124058747.png" alt="image-20210925124058747">rehash，保证均匀分布</p>
 </li>
 <li><p>索引定位后，如果该槽上没有值，通过 CAS 更新。这里的 tabAt，casTabAt 需要利用到 volatile 的可见性来保证正确。</p>
 </li>
@@ -298,12 +298,12 @@
 <li><p>槽根节点的 hash 值小于 0，说明是树节点，走红黑树的插入逻辑。</p>
 </li>
 <li><p>插入后，判断阈值来进行树化。</p>
-<p><img src="/.com//image-20210925124118357.png" alt="image-20210925124118357"></p>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124118357.png" alt="image-20210925124118357"></p>
 </li>
 </ol>
 <p>JDK 1.8 之后，利用了 CAS+synchronized，相比于 1.7 的锁定 Segment 的方式，取消了ReentrantLock 使用synchronized（看来 1.8 对于 synchronized 的优化很可观。网上的资源提到 synchronized 的锁升级，其实在 1.6 就已经引入），优化了锁的粒度和使用。</p>
 <h2 id="get-方法"><a href="#get-方法" class="headerlink" title="get() 方法"></a>get() 方法</h2><p>get 方法相对比较简单，因为使用了<strong>volatile</strong>修饰 val 和 next 变量，get 的时候可以无锁操作。</p>
-<p><img src="/.com//image-20210925124156045.png" alt="image-20210925124156045"></p>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124156045.png" alt="image-20210925124156045"></p>
 <ol>
 <li><p>索引定位哈希槽的位置上是否有值，没有的话直接返回 null。有的话，比较哈希槽上根节点的 key ，一致的话直接返回 val 值。</p>
 </li>
@@ -312,15 +312,15 @@
 <li><p>都不满足的话，在链表中往下遍历查找。</p>
 </li>
 </ol>
-<p><img src="/.com//image-20210925124249047.png" alt="image-20210925124249047"></p>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124249047.png" alt="image-20210925124249047"></p>
 <h1 id="硬件同步原语-CAS"><a href="#硬件同步原语-CAS" class="headerlink" title="硬件同步原语 CAS"></a>硬件同步原语 CAS</h1><p>硬件同步原语是由计算机硬件提供的一组原子操作，具体来说就是 CPU 提供的实现，可以保证指令操作的原子性。</p>
 <p>CAS（Compare and Swap）的意思是，先获取某个想要修改的旧值，然后在修改的时候，比较当前的值和旧值，如果一致，就更新为新的，返回 true。否则就不改变，返回 false。</p>
 <p>还有一个常用的 FAA（Fetch and Add），的作用是获取某个变量的值，然后将变量的值增加，然后返回旧值。</p>
 <p>在各种高级编程语言中，这些原语一般都有相应的实现。</p>
 <p>比如 JDK 中提供的 CAS 。</p>
-<p><img src="/.com//image-20210925124311450.png"></p>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124311450.png"></p>
 <p>Java 中的 FAA 好像是通过 CAS 实现的。</p>
-<h3 id><a href="#" class="headerlink" title></a><img src="/.com//image-20210925124327406.png" alt="image-20210925124327406"></h3><h3 id="CAS-的-ABA-问题"><a href="#CAS-的-ABA-问题" class="headerlink" title="CAS 的 ABA 问题"></a>CAS 的 ABA 问题</h3><p>CAS 在写入时仅仅判断当前值和旧值，期间值可能改变过，但是无法判断。Java 提供了<a target="_blank" rel="noopener" href="http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html?fileGuid=Hxch6t3HxHCRkVqG">AtomicStampedReference</a>工具类，通过版本号的方式来完善这个问题。</p>
+<h3 id><a href="#" class="headerlink" title></a><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124327406.png" alt="image-20210925124327406"></h3><h3 id="CAS-的-ABA-问题"><a href="#CAS-的-ABA-问题" class="headerlink" title="CAS 的 ABA 问题"></a>CAS 的 ABA 问题</h3><p>CAS 在写入时仅仅判断当前值和旧值，期间值可能改变过，但是无法判断。Java 提供了<a target="_blank" rel="noopener" href="http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html?fileGuid=Hxch6t3HxHCRkVqG">AtomicStampedReference</a>工具类，通过版本号的方式来完善这个问题。</p>
 <h3 id="CAS-的开销和优点"><a href="#CAS-的开销和优点" class="headerlink" title="CAS 的开销和优点"></a>CAS 的开销和优点</h3><p>使用 CAS 可以避免使用锁，减小开销。但是 CAS 面对频繁的资源竞争的话，一直反复采用 CAS 尝试更新失败概率高，CPU 的开销也随之变大。</p>
 <p>CAS 像是乐观锁的思路，总认为修改成功的概率很高。悲观锁的思路就是共享资源的竞争可能很频繁，就采用独占的方式操作，比如  synchronized 关键字。</p>
 <h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><p>ConcurrentHashMap 是高性能的线程安全的容器，但并不意味着使用它就没有安全问题。比如其 size() ，putALL() 等方法在并发情况下只能反映中间情况。</p>

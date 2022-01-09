@@ -30,9 +30,9 @@
 <meta property="og:site_name" content="Crayon">
 <meta property="og:description" content="常说 Redis 利用 I&#x2F;O 多路复用，单线程处理来自许多客户端的网络请求。本文简单的从网络通信、I&#x2F;O 模型、Redis 大致如何利用 I&#x2F;O 多路复用模型了解下相关知识。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.com//image-20210925114649571.png">
-<meta property="og:image" content="http://example.com/.com//image-20210925114705214.png">
-<meta property="og:image" content="http://example.com/.com//image-20210925114735701.png">
+<meta property="og:image" content="http://example.com/2021/04/14/Redis-Multi-IO-Model/image-20210925114649571.png">
+<meta property="og:image" content="http://example.com/2021/04/14/Redis-Multi-IO-Model/image-20210925114705214.png">
+<meta property="og:image" content="http://example.com/2021/04/14/Redis-Multi-IO-Model/image-20210925114735701.png">
 <meta property="article:published_time" content="2021-04-14T10:54:14.000Z">
 <meta property="article:modified_time" content="2021-04-14T10:54:14.000Z">
 <meta property="article:author" content="Hexin Fang">
@@ -40,7 +40,7 @@
 <meta property="article:tag" content="io">
 <meta property="article:tag" content="redis">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.com//image-20210925114649571.png">
+<meta name="twitter:image" content="http://example.com/2021/04/14/Redis-Multi-IO-Model/image-20210925114649571.png">
 
 
 <link rel="canonical" href="http://example.com/2021/04/14/Redis-Multi-IO-Model/">
@@ -301,8 +301,8 @@
 <li>信号驱动 I/O</li>
 <li>异步 I/O</li>
 </ul>
-<h3 id="阻塞-I-O-模型"><a href="#阻塞-I-O-模型" class="headerlink" title="阻塞 I/O 模型"></a>阻塞 I/O 模型</h3><p><img src="/.com//image-20210925114649571.png" alt="image-20210925114649571"></p>
-<h3 id="I-O-多路复用模型"><a href="#I-O-多路复用模型" class="headerlink" title="I/O 多路复用模型"></a>I/O 多路复用模型</h3><p><img src="/.com//image-20210925114705214.png" alt="image-20210925114705214"></p>
+<h3 id="阻塞-I-O-模型"><a href="#阻塞-I-O-模型" class="headerlink" title="阻塞 I/O 模型"></a>阻塞 I/O 模型</h3><p><img src="/2021/04/14/Redis-Multi-IO-Model/image-20210925114649571.png" alt="image-20210925114649571"></p>
+<h3 id="I-O-多路复用模型"><a href="#I-O-多路复用模型" class="headerlink" title="I/O 多路复用模型"></a>I/O 多路复用模型</h3><p><img src="/2021/04/14/Redis-Multi-IO-Model/image-20210925114705214.png" alt="image-20210925114705214"></p>
 <p>在这个模型里，程序会阻塞在 select 调用上。select 函数允许程序<strong>同时监听多个 fd</strong>的就绪状态。</p>
 <h2 id="select-poll-epoll-kqueue-等调用"><a href="#select-poll-epoll-kqueue-等调用" class="headerlink" title="select/poll/epoll, kqueue 等调用"></a>select/poll/epoll, kqueue 等调用</h2><ul>
 <li><a target="_blank" rel="noopener" href="https://man7.org/linux/man-pages/man2/select.2.html">https://man7.org/linux/man-pages/man2/select.2.html</a></li>
@@ -317,7 +317,7 @@
 <li>I/O 多路复用程序同时监听多个 sockfd，当其中有 sockfd 准备就绪(产生对应的事件)，I/O 多路复用程序将就绪的 sockfd 放入准备好的队列，同步有序地一个一个将套接字给 file event dispatcher。</li>
 <li>file event dispatcher 根据传来的对应事件分配给对应的事件处理器进行处理。</li>
 </ul>
-<p><img src="/.com//image-20210925114735701.png" alt="image-20210925114735701"></p>
+<p><img src="/2021/04/14/Redis-Multi-IO-Model/image-20210925114735701.png" alt="image-20210925114735701"></p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Redis 通过利用 I/O 多路复用模型，结合简洁的模块设置，让 Redis 在单线程架构的基础上同时为多个客户端提供服务。</p>
 <h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul>
 <li><a target="_blank" rel="noopener" href="https://draveness.me/redis-io-multiplexing/">Redis 和 I/O 多路复用 - 面向信仰编程</a></li>

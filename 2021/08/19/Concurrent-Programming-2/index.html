@@ -30,32 +30,32 @@
 <meta property="og:site_name" content="Crayon">
 <meta property="og:description" content="锁Lock 接口Java 1.5 之后，并发包新增了 Lock 接口以及相关实现类来提供更丰富的锁功能。synchronized 同步块虽然使用上很便携，但是可操作性比较欠缺">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.com//Sni_0210113909.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0210113932-3146023.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0210120908.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0210124106.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0210124230.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0210162819.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0210165349.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0210170533.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0210171143.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0210173400.png">
-<meta property="og:image" content="http://example.com/.com//carbon.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0410190800.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0210200355.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0210175044.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0210193029.png">
-<meta property="og:image" content="http://example.com/.com//image-20211002180904481.png">
-<meta property="og:image" content="http://example.com/.com//image-20211002180833955.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0210194058.png">
-<meta property="og:image" content="http://example.com/.com//Sni_0410105523.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210113909.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210113932-3146023.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210120908.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210124106.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210124230.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210162819.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210165349.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210170533.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210171143.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210173400.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/carbon.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0410190800.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210200355.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210175044.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210193029.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/image-20211002180904481.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/image-20211002180833955.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210194058.png">
+<meta property="og:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0410105523.png">
 <meta property="article:published_time" content="2021-08-19T13:06:50.000Z">
 <meta property="article:modified_time" content="2021-08-19T13:06:50.000Z">
 <meta property="article:author" content="Hexin Fang">
 <meta property="article:tag" content="java">
 <meta property="article:tag" content="java 并发系列">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.com//Sni_0210113909.png">
+<meta name="twitter:image" content="http://example.com/2021/08/19/Concurrent-Programming-2/Sni_0210113909.png">
 
 
 <link rel="canonical" href="http://example.com/2021/08/19/Concurrent-Programming-2/">
@@ -284,11 +284,11 @@
     <div class="post-body" itemprop="articleBody">
         <h1 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h1><h2 id="Lock-接口"><a href="#Lock-接口" class="headerlink" title="Lock 接口"></a>Lock 接口</h2><p>Java 1.5 之后，并发包新增了 Lock 接口以及相关实现类来提供更丰富的锁功能。synchronized 同步块虽然使用上很便携，但是可操作性比较欠缺<span id="more"></span>。通过引入 Lock ，程序员可以手动获取锁，释放锁，<strong>超时获取锁，非阻塞获取锁，响应中断</strong>等等。</p>
 <p>基于 Lock 接口，提供了许多好用的实现类。</p>
-<p><img src="/.com//Sni_0210113909.png" alt="Sni_0210113909"></p>
-<p><img src="/.com//Sni_0210113932-3146023.png" alt="Sni_0210113932"></p>
+<p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210113909.png" alt="Sni_0210113909"></p>
+<p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210113932-3146023.png" alt="Sni_0210113932"></p>
 <h2 id="AQS"><a href="#AQS" class="headerlink" title="AQS"></a>AQS</h2><p>AbstractQueuedSynchronizer - 队列同步器，许多 Lock 的实现类都是基于这个基础组件来实现资源的访问控制的。</p>
 <p>AQS 是基于模板方法模式设计的，想要实现同步组件，我们可以继承 AQS，重写对应的方法，然后调用 AQS 提供的模板方法来使用。</p>
-<h3 id="使用同步组件"><a href="#使用同步组件" class="headerlink" title="使用同步组件"></a>使用同步组件</h3><p><img src="/.com//Sni_0210120908.png" alt="Sni_0210120908"></p>
+<h3 id="使用同步组件"><a href="#使用同步组件" class="headerlink" title="使用同步组件"></a>使用同步组件</h3><p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210120908.png" alt="Sni_0210120908"></p>
 <p>可以看到 5 个可由我们重写的方法（这些资源就是 AQS 里面的 state 基础变量）：</p>
 <ul>
 <li>尝试获取内部的资源</li>
@@ -298,8 +298,8 @@
 <li>是否是独占模式</li>
 </ul>
 <p>一般我们将该实现类放到内部，然后暴露给外部使用的方法中调用这些方法来进行控制。</p>
-<p><img src="/.com//Sni_0210124106.png" alt="Sni_0210124106"></p>
-<p><img src="/.com//Sni_0210124230.png" alt="Sni_0210124230"></p>
+<p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210124106.png" alt="Sni_0210124106"></p>
+<p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210124230.png" alt="Sni_0210124230"></p>
 <p>暴露出来的方法，比如 tryLock() 内部调用我们重写的 tryAcquire 方法。内部的 tryAcquire() 方法实现，核心是围绕着 <strong>state</strong> 进行资源控制的。主要通过这 3 个方法:</p>
 <ol>
 <li>getState()</li>
@@ -307,12 +307,12 @@
 <li>compareAndSetState()</li>
 </ol>
 <p>上面的这个简单实现表示，如果state == 0，表示没有线程占用，我们用 cas 成功后，当前线程则获取到锁。state此时 == 1。</p>
-<p><img src="/.com//Sni_0210162819.png" alt="Sni_0210162819"></p>
+<p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210162819.png" alt="Sni_0210162819"></p>
 <p>MyLock 实现 Lock 接口，通过内部类实现 AQS，进行资源控制。lock() 方法则是直接调用 AQS 提供的**模板方法 acquire()**，先是 tryAcquire() 不行的话就去排队。</p>
 <h2 id="ReentrantLock"><a href="#ReentrantLock" class="headerlink" title="ReentrantLock"></a>ReentrantLock</h2><p>可重入锁。它支持同一个线程对同步资源重复加锁（释放锁也需要调用对应次数 unlock())。</p>
-<p><img src="/.com//Sni_0210165349.png" alt="Sni_0210165349"></p>
+<p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210165349.png" alt="Sni_0210165349"></p>
 <p>ReentrantLock 提供了公平锁和非公平锁，公平的指的是排队等待锁的线程获取锁是否公平。公平的话，当锁可获取时，等待最久的线程优先获取锁。不公平就是无法保证。非公平的锁性能一般高些（线程切换，同一个线程重复占用）。</p>
-<h3 id="ReentrantLock-的内部-AQS-实现类（基于默认的-NonFairSync）"><a href="#ReentrantLock-的内部-AQS-实现类（基于默认的-NonFairSync）" class="headerlink" title="ReentrantLock 的内部 AQS 实现类（基于默认的 NonFairSync）"></a>ReentrantLock 的内部 AQS 实现类（基于默认的 NonFairSync）</h3><p><img src="/.com//Sni_0210170533.png" alt="Sni_0210170533"></p>
+<h3 id="ReentrantLock-的内部-AQS-实现类（基于默认的-NonFairSync）"><a href="#ReentrantLock-的内部-AQS-实现类（基于默认的-NonFairSync）" class="headerlink" title="ReentrantLock 的内部 AQS 实现类（基于默认的 NonFairSync）"></a>ReentrantLock 的内部 AQS 实现类（基于默认的 NonFairSync）</h3><p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210170533.png" alt="Sni_0210170533"></p>
 <ol>
 <li>NonfairSync#lock()。cas 获取 state，<ol>
 <li>设置成功拿到锁，设置独占线程。</li>
@@ -321,10 +321,10 @@
 </li>
 <li>tryAcquire() 直接调用父类的 nonfiarTryAcquire() 实现，实现如下。</li>
 </ol>
-<p><img src="/.com//Sni_0210171143.png" alt="Sni_0210171143"></p>
+<p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210171143.png" alt="Sni_0210171143"></p>
 <ol start="3">
 <li><p>公平锁的 tryAcruire() 实现，在判断 c == 0 后，设置同步位的时候调用 hasQueuedPredecessors() 一起判断。该方法的注释如下。</p>
-<p><img src="/.com//Sni_0210173400.png" alt="Sni_0210173400"></p>
+<p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210173400.png" alt="Sni_0210173400"></p>
 </li>
 <li><p>Sync#nonfairTryAquire</p>
 <ul>
@@ -351,8 +351,8 @@
 <p>Java 中 ReadWriteLock 有两个实现： ReadWriteView in StampLock 和 ReentrantReadWriteLock。这部分我们主要分析常用的第二个实现 可重入读写锁。</p>
 <h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Example</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 实例化 ReentrantReadWriteLock() rwl</span></span><br><span class="line">    <span class="keyword">final</span> ReadWriteLock rwl = <span class="keyword">new</span> ReentrantReadWriteLock();</span><br><span class="line">    <span class="comment">// 通过 rwl 获取对应的锁</span></span><br><span class="line">    <span class="keyword">final</span> Lock r = rwl.readLock();</span><br><span class="line">    <span class="keyword">final</span> Lock w = rwl.writeLock();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h3 id="利用读写锁实现简易缓存方案的-demo"><a href="#利用读写锁实现简易缓存方案的-demo" class="headerlink" title="利用读写锁实现简易缓存方案的 demo"></a>利用读写锁实现简易缓存方案的 demo</h3><p><img src="/.com//carbon.png" alt="carbon (1)"></p>
-<h3 id="非公平锁-读写锁排队问题"><a href="#非公平锁-读写锁排队问题" class="headerlink" title="非公平锁 读写锁排队问题"></a>非公平锁 读写锁排队问题</h3><p><img src="/.com//Sni_0410190800.png" alt="Sni_0410190800"></p>
+<h3 id="利用读写锁实现简易缓存方案的-demo"><a href="#利用读写锁实现简易缓存方案的-demo" class="headerlink" title="利用读写锁实现简易缓存方案的 demo"></a>利用读写锁实现简易缓存方案的 demo</h3><p><img src="/2021/08/19/Concurrent-Programming-2/carbon.png" alt="carbon (1)"></p>
+<h3 id="非公平锁-读写锁排队问题"><a href="#非公平锁-读写锁排队问题" class="headerlink" title="非公平锁 读写锁排队问题"></a>非公平锁 读写锁排队问题</h3><p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0410190800.png" alt="Sni_0410190800"></p>
 <p>写锁始终不排队。非公平实现下，被阻塞的线程等待锁，如果此时阻塞在读锁，那么新来的读锁可能可以一起去共享锁，这样的话申请写锁的线程一直被插队，无法执行。</p>
 <p>实现中的 readerShouldBlock() 调用的方法 apparentlyFirstQueuedIsExclusive()，等待队列头线程是写，读请求阻塞，排在写的后面来避免写请求一直被阻塞的问题。</p>
 <h3 id="注意的问题"><a href="#注意的问题" class="headerlink" title="注意的问题"></a>注意的问题</h3><ol>
@@ -369,22 +369,22 @@
 <li>写锁支持 Condition 条件变量，读锁不支持。</li>
 </ol>
 <h1 id="并发工具"><a href="#并发工具" class="headerlink" title="并发工具"></a>并发工具</h1><h2 id="Condition-接口"><a href="#Condition-接口" class="headerlink" title="Condition 接口"></a>Condition 接口</h2><p>通过 Lock.newCondition() ，相当于进一步的通信协作。可以 new 多个 Conditions 出来。</p>
-<p><img src="/.com//Sni_0210200355.png" alt="Sni_0210200355"></p>
-<h2 id="LockSupport"><a href="#LockSupport" class="headerlink" title="LockSupport"></a>LockSupport</h2><p><img src="/.com//Sni_0210175044.png" alt="Sni_0210175044"></p>
+<p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210200355.png" alt="Sni_0210200355"></p>
+<h2 id="LockSupport"><a href="#LockSupport" class="headerlink" title="LockSupport"></a>LockSupport</h2><p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210175044.png" alt="Sni_0210175044"></p>
 <p>Java 6 加入 part/parkNanos/parkUntil(Ojbeck blocker,long nanos,long dendlin)。</p>
 <p>unpark() 方法传入一个 thread 参数，唤醒线程要让其他线程来。</p>
 <p>对象 blocker 的作用，大致是方便诊断工具，为我们提供更多信息。</p>
 <p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/36939218/what-is-the-usage-of-the-parameter-of-locksupport-parkobject-blocker">java - What is the usage of the parameter of LockSupport.park(Object blocker)? - Stack Overflow</a></p>
 <h2 id="Semaphore"><a href="#Semaphore" class="headerlink" title="Semaphore"></a>Semaphore</h2><p>线程通过调用 acquire() 获取信号量 permit，permit - 1 &gt; 0，则表示成功，线程可以继续往下执行；否则等待。</p>
 <p>线程通过调用 releasse() 释放 permit，permit + 1。</p>
-<p><img src="/.com//Sni_0210193029.png" alt="Sni_0210193029"></p>
+<p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210193029.png" alt="Sni_0210193029"></p>
 <h2 id="CountDawnLatch"><a href="#CountDawnLatch" class="headerlink" title="CountDawnLatch"></a>CountDawnLatch</h2><p>线程等待（调用 await() 方法）,其他线程通过 countDown() 方法减少计数，变成 0 后，等待的那个线程继续往下执行。</p>
 <p>不能重复使用。</p>
-<p><img src="/.com//image-20211002180904481.png" alt="image-20211002180904481"></p>
+<p><img src="/2021/08/19/Concurrent-Programming-2/image-20211002180904481.png" alt="image-20211002180904481"></p>
 <h2 id="CyclicBarrier"><a href="#CyclicBarrier" class="headerlink" title="CyclicBarrier"></a>CyclicBarrier</h2><p>循环屏障，线程到达屏障（await() 方法），停下来等待，达到定义的数量后，一起放行所有被拦住的线程，继续往下执行。</p>
 <p>CyclicBarrier 可以重复使用。且可提供一个回调方法，由最后一个到达且触发放行的线程执行。</p>
-<p><img src="/.com//image-20211002180833955.png" alt="image-20211002180833955"></p>
-<h2 id="ThreadLocal"><a href="#ThreadLocal" class="headerlink" title="ThreadLocal"></a>ThreadLocal</h2><h2 id="parallel-stream"><a href="#parallel-stream" class="headerlink" title="parallel stream"></a>parallel stream</h2><h1 id="并发原子类"><a href="#并发原子类" class="headerlink" title="并发原子类"></a>并发原子类</h1><p><img src="/.com//Sni_0210194058.png" alt="Sni_0210194058"></p>
+<p><img src="/2021/08/19/Concurrent-Programming-2/image-20211002180833955.png" alt="image-20211002180833955"></p>
+<h2 id="ThreadLocal"><a href="#ThreadLocal" class="headerlink" title="ThreadLocal"></a>ThreadLocal</h2><h2 id="parallel-stream"><a href="#parallel-stream" class="headerlink" title="parallel stream"></a>parallel stream</h2><h1 id="并发原子类"><a href="#并发原子类" class="headerlink" title="并发原子类"></a>并发原子类</h1><p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0210194058.png" alt="Sni_0210194058"></p>
 <p>并发原子类的核心原理：</p>
 <ol>
 <li>volatile </li>
@@ -396,7 +396,7 @@
 <li>压力一般，无锁一次写入成功的概率高，性能高些。</li>
 <li>压力大，自旋导致 cpu 消耗大，性能差些。</li>
 </ol>
-<h1 id="并发容器"><a href="#并发容器" class="headerlink" title="并发容器"></a>并发容器</h1><p><img src="/.com//Sni_0410105523.png" alt="Sni_0410105523"></p>
+<h1 id="并发容器"><a href="#并发容器" class="headerlink" title="并发容器"></a>并发容器</h1><p><img src="/2021/08/19/Concurrent-Programming-2/Sni_0410105523.png" alt="Sni_0410105523"></p>
 <h2 id="Queue"><a href="#Queue" class="headerlink" title="Queue"></a>Queue</h2><ul>
 <li>阻塞队列的 ArrayBlockingQueue 和 LinkedBlockingQueue 支持有界队列。</li>
 </ul>

@@ -30,16 +30,16 @@
 <meta property="og:site_name" content="Crayon">
 <meta property="og:description" content="起步依赖不用定义版本，起步依赖中包含的依赖版本都交由 SpringBoot 的版本进行管理。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.com//image-20210925164916991.png">
-<meta property="og:image" content="http://example.com/.com//image-20210925164929129.png">
-<meta property="og:image" content="http://example.com/.com//image-20210925164941741.png">
+<meta property="og:image" content="http://example.com/2021/02/28/SpringBoot-autoconfiguration-starter/image-20210925164916991.png">
+<meta property="og:image" content="http://example.com/2021/02/28/SpringBoot-autoconfiguration-starter/image-20210925164929129.png">
+<meta property="og:image" content="http://example.com/2021/02/28/SpringBoot-autoconfiguration-starter/image-20210925164941741.png">
 <meta property="article:published_time" content="2021-02-28T10:54:14.000Z">
 <meta property="article:modified_time" content="2021-02-28T10:54:14.000Z">
 <meta property="article:author" content="Hexin Fang">
 <meta property="article:tag" content="spring boot">
 <meta property="article:tag" content="spring">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.com//image-20210925164916991.png">
+<meta name="twitter:image" content="http://example.com/2021/02/28/SpringBoot-autoconfiguration-starter/image-20210925164916991.png">
 
 
 <link rel="canonical" href="http://example.com/2021/02/28/SpringBoot-autoconfiguration-starter/">
@@ -271,11 +271,11 @@
 <p>如果需要制定某个依赖的版本，额外正常定义指定即可，Maven 会使用最近定义的依赖，覆盖传递依赖引入的另一个依赖。如果用 Gradle，<strong>因为 Gradle 倾向于引入较新版本<strong><strong>的</strong></strong>依赖</strong>，如果你需要<strong>指定较低<strong><strong>版本</strong></strong>的依赖</strong>，需要先排除起步依赖中的相关依赖，再引入特需版本依赖。</p>
 <h1 id="自动配置"><a href="#自动配置" class="headerlink" title="自动配置"></a>自动配置</h1><p>每当程序启动的时候，SpringBoot 的自动配置都需要根据 ClassPath 里是否有某个类来做合适的 Bean 配置。根据各种内置的自动配置类的条件是否匹配进行一些配置方便用户直接使用。</p>
 <h2 id="条件化配置"><a href="#条件化配置" class="headerlink" title="条件化配置"></a>条件化配置</h2><p>自动配置的类都在 spring-boot-autoconfigure 这个jar 包中。里面的自动配置类使用到了 Spring 提供的<strong>条件化配置</strong>（Spring 4.0开始引入）。Condition 类与 @Conditional 注解。</p>
-<p><img src="/.com//image-20210925164916991.png" alt="image-20210925164916991"></p>
+<p><img src="/2021/02/28/SpringBoot-autoconfiguration-starter/image-20210925164916991.png" alt="image-20210925164916991"></p>
 <p>SpringBoot 提供的丰富的条件化注解</p>
-<p><img src="/.com//image-20210925164929129.png" alt="image-20210925164929129"></p>
+<p><img src="/2021/02/28/SpringBoot-autoconfiguration-starter/image-20210925164929129.png" alt="image-20210925164929129"></p>
 <h2 id="覆盖自动配置"><a href="#覆盖自动配置" class="headerlink" title="覆盖自动配置"></a>覆盖自动配置</h2><p>自动配置的 @ConditionalOnMissingBean 注解，是覆盖自动配置的关键。</p>
-<h2 id="自动配置的各种属性配置微调"><a href="#自动配置的各种属性配置微调" class="headerlink" title="自动配置的各种属性配置微调"></a>自动配置的各种属性配置微调</h2><p><img src="/.com//image-20210925164941741.png" alt="image-20210925164941741"></p>
+<h2 id="自动配置的各种属性配置微调"><a href="#自动配置的各种属性配置微调" class="headerlink" title="自动配置的各种属性配置微调"></a>自动配置的各种属性配置微调</h2><p><img src="/2021/02/28/SpringBoot-autoconfiguration-starter/image-20210925164941741.png" alt="image-20210925164941741"></p>
 <h1 id="相关书籍"><a href="#相关书籍" class="headerlink" title="相关书籍"></a>相关书籍</h1><p>《SpringBoot 实战》</p>
 
     </div>

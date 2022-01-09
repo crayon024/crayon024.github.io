@@ -30,24 +30,24 @@
 <meta property="og:site_name" content="Crayon">
 <meta property="og:description" content="第一部分基础数据类型的用法在学习操作具体数据类型前，先来学习可以应用在所有 key 上的常用命令。多多利用 Tab 键补全可以使用的 Redis 命令。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.com//image.png">
-<meta property="og:image" content="http://example.com/.com//image(1).png">
-<meta property="og:image" content="http://example.com/.com//image(2).png">
-<meta property="og:image" content="http://example.com/.com//image(3).png">
-<meta property="og:image" content="http://example.com/.com//image(4).png">
-<meta property="og:image" content="http://example.com/.com//image(5).png">
-<meta property="og:image" content="http://example.com/.com//image(6).png">
-<meta property="og:image" content="http://example.com/.com//image(7).png">
-<meta property="og:image" content="http://example.com/.com//image(8).png">
-<meta property="og:image" content="http://example.com/.com//image(9).png">
-<meta property="og:image" content="http://example.com/.com//image(10).png">
+<meta property="og:image" content="http://example.com/2021/04/01/redis-gee-study-record/image.png">
+<meta property="og:image" content="http://example.com/2021/04/01/redis-gee-study-record/image(1).png">
+<meta property="og:image" content="http://example.com/2021/04/01/redis-gee-study-record/image(2).png">
+<meta property="og:image" content="http://example.com/2021/04/01/redis-gee-study-record/image(3).png">
+<meta property="og:image" content="http://example.com/2021/04/01/redis-gee-study-record/image(4).png">
+<meta property="og:image" content="http://example.com/2021/04/01/redis-gee-study-record/image(5).png">
+<meta property="og:image" content="http://example.com/2021/04/01/redis-gee-study-record/image(6).png">
+<meta property="og:image" content="http://example.com/2021/04/01/redis-gee-study-record/image(7).png">
+<meta property="og:image" content="http://example.com/2021/04/01/redis-gee-study-record/image(8).png">
+<meta property="og:image" content="http://example.com/2021/04/01/redis-gee-study-record/image(9).png">
+<meta property="og:image" content="http://example.com/2021/04/01/redis-gee-study-record/image(10).png">
 <meta property="article:published_time" content="2021-04-01T10:54:14.000Z">
 <meta property="article:modified_time" content="2021-04-01T10:54:14.000Z">
 <meta property="article:author" content="Hexin Fang">
-<meta property="article:tag" content="redis">
 <meta property="article:tag" content="专栏学习">
+<meta property="article:tag" content="redis">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.com//image.png">
+<meta name="twitter:image" content="http://example.com/2021/04/01/redis-gee-study-record/image.png">
 
 
 <link rel="canonical" href="http://example.com/2021/04/01/redis-gee-study-record/">
@@ -360,7 +360,7 @@
 </ul>
 <p>对 hash 的<strong>操作主要针对的类型是 hash 类型里的 field 域 ，</strong>会帮助我们更好理解。</p>
 <h4 id="使用场景-1"><a href="#使用场景-1" class="headerlink" title="使用场景"></a>使用场景</h4><p>哈希类型用来存储类似关系表展示的信息看起来相比于 字符串 类型更加直观。</p>
-<p><img src="/.com//image.png" alt="image"></p>
+<p><img src="/2021/04/01/redis-gee-study-record/image.png" alt="image"></p>
 <h3 id="list"><a href="#list" class="headerlink" title="list"></a>list</h3><p>list 类型可以存储多个有序的字符串。支持双端的 push 和 pop，且因为是有序存储，可以通过索引下标获取元素。</p>
 <h4 id="命令-2"><a href="#命令-2" class="headerlink" title="命令"></a>命令</h4><ol>
 <li><strong>插入，特定位置插入，修改特定位置的值</strong></li>
@@ -391,7 +391,7 @@
 <li>ltrim key start end，截取 list，保留范围内内的元素。同样的 end 索引值的位置会被包含（如果有的话）</li>
 <li>blpop/brpop key [key …] timeout。<strong>阻塞 timeout 秒，直到 pop 出数据</strong></li>
 </ul>
-<h4 id="运用场景"><a href="#运用场景" class="headerlink" title="运用场景"></a>运用场景</h4><p><img src="/.com//image(1).png" alt="image(1)"></p>
+<h4 id="运用场景"><a href="#运用场景" class="headerlink" title="运用场景"></a>运用场景</h4><p><img src="/2021/04/01/redis-gee-study-record/image(1).png" alt="image(1)"></p>
 <h3 id="set"><a href="#set" class="headerlink" title="set"></a>set</h3><p>set 也用于保存多个字符串元素。set 和 list 不同之处在于 set 是存储的元素是<strong>无序</strong>的且<strong>不允许有重复的元素。</strong></p>
 <p>set 除了常规的 crud 外，还支持计算集合键的 交集，并集，差集等。利用这些计算可以很好的运用在实际问题中。</p>
 <h4 id="命令-3"><a href="#命令-3" class="headerlink" title="命令"></a>命令</h4><ol>
@@ -429,7 +429,7 @@
 <li>sunionstore，sdiffstore 也是一样的。</li>
 </ul>
 <h4 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h4><p>标签场景。</p>
-<p><img src="/.com//image(2).png" alt="image(2)"></p>
+<p><img src="/2021/04/01/redis-gee-study-record/image(2).png" alt="image(2)"></p>
 <h3 id="sorted-set"><a href="#sorted-set" class="headerlink" title="sorted set"></a>sorted set</h3><p>sorted set 保留了 set 不能存储重复元素的特点，新增了 score 属性，作为<strong>排序</strong>的依据。也就是说 sorted set 是有序的 set，但是内部存储元素的方式不同，sorted set 通过 score-member 存储。注意 sorted set 中不能重复的元素指的是 score-member 中的 <strong>member</strong>，score 可以一样。</p>
 <h4 id="命令-4"><a href="#命令-4" class="headerlink" title="命令"></a>命令</h4><ol>
 <li><strong>新增</strong></li>
@@ -486,7 +486,7 @@
 <li>zinterstore destination numkeys key [key …] [WEIGHTS weight] [AGGREGATE SUM|MIN|MAX]</li>
 </ul>
 <h4 id="应用场景-1"><a href="#应用场景-1" class="headerlink" title="应用场景"></a>应用场景</h4><p>排行榜系统</p>
-<p><img src="/.com//image(3).png" alt="image(3)"></p>
+<p><img src="/2021/04/01/redis-gee-study-record/image(3).png" alt="image(3)"></p>
 <h3 id="Bitmap"><a href="#Bitmap" class="headerlink" title="Bitmap"></a>Bitmap</h3><p>二值状态统计，比如签到未签到，打卡未打卡，用 0和1就可以表示。</p>
 <p>Bitmap 底层是使用 String 类型，String 本身会保存为二进制的字节数组，字节数组的每个 bit 位就可以用来表示一个元素的二值状态。</p>
 <h4 id="命令-5"><a href="#命令-5" class="headerlink" title="命令"></a>命令</h4><ul>
@@ -555,17 +555,17 @@
 <h1 id="第三部分"><a href="#第三部分" class="headerlink" title="第三部分"></a>第三部分</h1><h2 id="一，基本架构"><a href="#一，基本架构" class="headerlink" title="一，基本架构"></a>一，基本架构</h2><p>索引模块 - 数据库根据 key 定位对应的 value 位置。Redis 和 Memcached 采用哈希表作为<strong>索引的类型</strong>。</p>
 <p>通常基于内存的键值数据库都会采用哈希表（随机访问的时间复杂度O(1)），这也和内存的硬件特性有关 - 提供高性能的随机访问。</p>
 <p><strong>内存分配器。</strong>数据库中存储的键值对一般大小不一，不同的内存分配器面对这些情况有不同的效果。Redis 提供多种内存分配选项，之间的分配效率也不同。</p>
-<p><img src="/.com//image(4).png" alt="image(4)"></p>
+<p><img src="/2021/04/01/redis-gee-study-record/image(4).png" alt="image(4)"></p>
 <h2 id="二、数据结构"><a href="#二、数据结构" class="headerlink" title="二、数据结构"></a>二、数据结构</h2><p>采用全局哈希表高效定位 key 对应的 value 的位置。哈希冲突影响性能后，采用渐进式 rehash 把数据拷贝，最后迁移至更大的哈希表中。</p>
 <p>渐进式 rehash 过程中，服务器仍响应客户端请求，对于已拷贝的数据，如果被修改会如何处理？</p>
 <p>比如索引 5 中的 entry （entry 中包含了 key，value 指针分别指向实际的键和值）链被拷贝到新的哈希表 2 中，后续的请求修改了索引 5 中的 value 值，需要重新去哈希表2中寻找并修改对应值吗？</p>
 <p>答：《Redis 设计与实现》中具体说明了渐进式 rehash 的过程 - rehash 时，哈希表 1 某个索引中的数据“拷贝”至哈希表 2 后，哈希表 1 中对应的索引值会设置为 NULL。</p>
 <p><strong>丰富的数据类型使用的底层数据结构种类。</strong></p>
-<p><img src="/.com//image(5).png" alt="image(5)"></p>
+<p><img src="/2021/04/01/redis-gee-study-record/image(5).png" alt="image(5)"></p>
 <p>压缩列表类似数组，都是紧凑的数据结构，但压缩列表在表头固定有三个字段分别表示：列表长度，列表尾的偏移量和列表中的 entry 个数；表尾固定有一个 zlend 表示列表结束。（LPOP,RPUSH 等操作，只要 O(1) 的时间复杂度）</p>
 <p>跳表就是添加多级索引的链表。O(logN)</p>
 <h2 id="三、Redis-中的单线程指的是什么？"><a href="#三、Redis-中的单线程指的是什么？" class="headerlink" title="三、Redis 中的单线程指的是什么？"></a>三、Redis 中的单线程指的是什么？</h2><p>我们常说的 Redis 单线程，<strong>指的是 Redis 中的网络 IO 和键值对读写由单线程完成（对外提供的两个主要服务）</strong>。其他的诸如持久化，数据同步等是由其他线程完成的。</p>
-<p><img src="/.com//image(6).png" alt="image(6)"></p>
+<p><img src="/2021/04/01/redis-gee-study-record/image(6).png" alt="image(6)"></p>
 <p>Redis 6.0，把网络 IO 相关的事情利用多线程处理了 -&gt; 客户端请求的读取和解析。</p>
 <p>第 3 讲 和 第 39 讲</p>
 <p><a target="_blank" rel="noopener" href="https://redislabs.com/blog/diving-into-redis-6/">https://redislabs.com/blog/diving-into-redis-6/</a></p>
@@ -581,8 +581,8 @@
 <li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Fork_(system_call)">https://en.wikipedia.org/wiki/Fork_(system_call)</a></li>
 <li><a target="_blank" rel="noopener" href="https://linux.die.net/man/2/fork">https://linux.die.net/man/2/fork</a></li>
 </ul>
-<p><img src="/.com//image(7).png" alt="image(7)"></p>
-<p><img src="/.com//image(8).png" alt="image(8)"></p>
+<p><img src="/2021/04/01/redis-gee-study-record/image(7).png" alt="image(7)"></p>
+<p><img src="/2021/04/01/redis-gee-study-record/image(8).png" alt="image(8)"></p>
 <p>重放 AOF 文件时，也是单线程一个个重放恢复数据，会比较慢。</p>
 <p>五、RDB</p>
 <p>内存快照。RDB 记录数据库某个时刻的所有数据，不像 aof 记录的是操作，所以数据恢复速度很快，就是把 RDB 文件加载到内存中即可。</p>
@@ -590,7 +590,7 @@
 <p>默认使用 bgsave 生成 RDB 文件，生成文件的过程中，主线程不被阻塞，仍正常处理读<strong>写</strong>请求。</p>
 <p>Copy On Write，写时复制技术，子进程由主线程 fork 生成，共享主线程的所有内存数据。但主线程处理写请求时，内存中的数据在修改前会生成一个副本给子进程使用。这样在生成 RDB 文件时也不影响主线程处理写请求。<strong>写时复制，如果内存数据被修改，就要分配新的内存空间了，其余部分是共享的</strong>。</p>
 <p><strong>Redis 4.0 提出混合使用 RDB 和 AOF 的方法。</strong>怎么实践，写一篇针对这个问题的实践文章。</p>
-<p><img src="/.com//image(9).png" alt="image(9)"></p>
+<p><img src="/2021/04/01/redis-gee-study-record/image(9).png" alt="image(9)"></p>
 <p>redis 持久化方案官网 topic：</p>
 <p><a target="_blank" rel="noopener" href="https://redis.io/topics/persistence">https://redis.io/topics/persistence</a></p>
 <p><a target="_blank" rel="noopener" href="http://oldblog.antirez.com/post/redis-persistence-demystified.html">http://oldblog.antirez.com/post/redis-persistence-demystified.html</a></p>
@@ -663,7 +663,7 @@
 <li><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/350285">21 | 分布式锁：为什么基于etcd实现分布式锁比Redis锁更安全？ (geekbang.org)</a></li>
 <li><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/125983">41 | 如何设计更优的分布式锁？ (geekbang.org)</a></li>
 </ol>
-<p><img src="/.com//image(10).png" alt="image(10)"></p>
+<p><img src="/2021/04/01/redis-gee-study-record/image(10).png" alt="image(10)"></p>
 
     </div>
 
@@ -673,8 +673,8 @@
 
     <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/redis/" rel="tag"># redis</a>
               <a href="/tags/%E4%B8%93%E6%A0%8F%E5%AD%A6%E4%B9%A0/" rel="tag"># 专栏学习</a>
+              <a href="/tags/redis/" rel="tag"># redis</a>
           </div>
 
         

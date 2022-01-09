@@ -30,11 +30,11 @@
 <meta property="og:site_name" content="Crayon">
 <meta property="og:description" content="从网卡接收数据说起 网卡收到传输的数据 并将收到的数据写到内存">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.com//Snipaste_1011152521-3968094.png">
-<meta property="og:image" content="http://example.com/.com//Snipaste_1011162146-3968094.png">
-<meta property="og:image" content="http://example.com/.com//Snipaste_1011162455-3968094.png">
-<meta property="og:image" content="http://example.com/.com//Snipaste_1011162612-3968094.png">
-<meta property="og:image" content="http://example.com/.com//Snipaste_1011170111-3968094.png">
+<meta property="og:image" content="http://example.com/2021/09/01/epoll/Snipaste_1011152521-3968094.png">
+<meta property="og:image" content="http://example.com/2021/09/01/epoll/Snipaste_1011162146-3968094.png">
+<meta property="og:image" content="http://example.com/2021/09/01/epoll/Snipaste_1011162455-3968094.png">
+<meta property="og:image" content="http://example.com/2021/09/01/epoll/Snipaste_1011162612-3968094.png">
+<meta property="og:image" content="http://example.com/2021/09/01/epoll/Snipaste_1011170111-3968094.png">
 <meta property="article:published_time" content="2021-09-01T10:54:14.000Z">
 <meta property="article:modified_time" content="2021-09-01T10:54:14.000Z">
 <meta property="article:author" content="Hexin Fang">
@@ -42,7 +42,7 @@
 <meta property="article:tag" content="io">
 <meta property="article:tag" content="redis">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.com//Snipaste_1011152521-3968094.png">
+<meta name="twitter:image" content="http://example.com/2021/09/01/epoll/Snipaste_1011152521-3968094.png">
 
 
 <link rel="canonical" href="http://example.com/2021/09/01/epoll/">
@@ -274,7 +274,7 @@
 <li>并将收到的数据写到内存<span id="more"></span></li>
 <li>cpu 中断。网卡将数据写入内存后，向 cpu 发出中断信号，cpu 执行网卡中断程序。（硬件的信号优先级高）</li>
 </ol>
-<p><img src="/.com//Snipaste_1011152521-3968094.png" alt="Snipaste_1011152521"></p>
+<p><img src="/2021/09/01/epoll/Snipaste_1011152521-3968094.png" alt="Snipaste_1011152521"></p>
 <ol start="4">
 <li>中断程序主要有两个功能。<ol>
 <li>将数据写到对应的 socket （与端口对应）接收缓冲区中。执行过程中对应的进程进入<strong>对应的 socket 等待队列</strong>（阻塞状态）。</li>
@@ -289,17 +289,17 @@
 <p>进程A 阻塞在 select 调用上。</p>
 <p>当任何一个 socket 有数据后，中断程序唤醒进程，将进程 A 从<strong>所有等待队列</strong>中移除，加入到工作队列中。进程 A 被唤醒后，说明至少有一个 socket 收到了数据，<strong>遍历 socket_sets</strong> 就可知道哪个有数据。</p>
 <p>我们知道，如今的服务端需要同时管理的客户端连接数比较大。select 调用中需要多次遍历，需要同时监听的 socket 越多，select 调用的效率越低。也是因此，select 最多支持同时监听 1024 个 socket。</p>
-<p><img src="/.com//Snipaste_1011162146-3968094.png" alt="Snipaste_1011162146"></p>
+<p><img src="/2021/09/01/epoll/Snipaste_1011162146-3968094.png" alt="Snipaste_1011162146"></p>
 <h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><blockquote>
 <p><a target="_blank" rel="noopener" href="https://man7.org/linux/man-pages/man7/epoll.7.html">https://man7.org/linux/man-pages/man7/epoll.7.html</a></p>
 </blockquote>
-<h4 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h4><p><img src="/.com//Snipaste_1011162455-3968094.png" alt="Snipaste_1011162455"></p>
-<p><img src="/.com//Snipaste_1011162612-3968094.png" alt="Snipaste_1011162612"></p>
+<h4 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h4><p><img src="/2021/09/01/epoll/Snipaste_1011162455-3968094.png" alt="Snipaste_1011162455"></p>
+<p><img src="/2021/09/01/epoll/Snipaste_1011162612-3968094.png" alt="Snipaste_1011162612"></p>
 <p>假如进程 A 需要同时监控 socket1，socket2，socket3。先调用 <a target="_blank" rel="noopener" href="https://man7.org/linux/man-pages/man2/epoll_create.2.html">epoll_create</a> 方法创建一个 eventpoll 对象（返回一个 fd 指向该对象），和 socket 类似，eventpoll 也有自己对应的等待队列。</p>
 <p>调用 <a target="_blank" rel="noopener" href="https://man7.org/linux/man-pages/man2/epoll_ctl.2.html">epoll_ctl</a> 添加/删除 监听的 socket（interest list（rbr））。操作系统将 eventpoll 对象添加到 socket1/2/3 的等待队列中。</p>
 <p>当任何一个 socket 有数据后，中断程序为 eventpoll 的 <strong>ready list（双向链表）</strong> 添加对应的 socket 引用。<strong>唤醒等待队列中的进程。</strong></p>
 <p>进程 A 执行到 <a target="_blank" rel="noopener" href="https://man7.org/linux/man-pages/man2/epoll_wait.2.html">epoll_wait</a> ，等待数据，如果 <strong>ready list</strong> 不为空，epoll_wait 返回，<strong>唤醒 eventpoll 等待队列中的进程</strong>。如果为空，进程 A 阻塞在 epoll_wait 调用上等待数据，操作系统会把进程 A 加入到 <strong>eventpoll 的等待队列</strong>中。</p>
-<p><img src="/.com//Snipaste_1011170111-3968094.png" alt="Snipaste_1011170111"></p>
+<p><img src="/2021/09/01/epoll/Snipaste_1011170111-3968094.png" alt="Snipaste_1011170111"></p>
 <h4 id="优势"><a href="#优势" class="headerlink" title="优势"></a>优势</h4><p>epoll 通过一个中间层 <strong>eventpoll 对象及其对应的等待队列</strong>，进程被阻塞时只需要一次添加到等待队列中。</p>
 <p>通过 <strong>ready list</strong> 引用有数据的 socket 。进程被唤醒后，可以直接知道哪些 socket 有数据。</p>
 <h4 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h4><ul>

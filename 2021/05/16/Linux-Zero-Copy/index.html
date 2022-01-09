@@ -30,9 +30,9 @@
 <meta property="og:site_name" content="Crayon">
 <meta property="og:description" content="原文地址：https:&#x2F;&#x2F;www.linuxjournal.com&#x2F;article&#x2F;6345?page&#x3D;0,0 wiki词条：https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Zero-copy">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.com//image-20210925123537658.png">
-<meta property="og:image" content="http://example.com/.com//image-20210925123558017.png">
-<meta property="og:image" content="http://example.com/.com//image-20210925123623123.png">
+<meta property="og:image" content="http://example.com/2021/05/16/Linux-Zero-Copy/image-20210925123537658.png">
+<meta property="og:image" content="http://example.com/2021/05/16/Linux-Zero-Copy/image-20210925123558017.png">
+<meta property="og:image" content="http://example.com/2021/05/16/Linux-Zero-Copy/image-20210925123623123.png">
 <meta property="article:published_time" content="2021-05-15T16:00:00.000Z">
 <meta property="article:modified_time" content="2021-05-15T16:00:00.000Z">
 <meta property="article:author" content="Hexin Fang">
@@ -40,7 +40,7 @@
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="io">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.com//image-20210925123537658.png">
+<meta name="twitter:image" content="http://example.com/2021/05/16/Linux-Zero-Copy/image-20210925123537658.png">
 
 
 <link rel="canonical" href="http://example.com/2021/05/16/Linux-Zero-Copy/">
@@ -282,11 +282,11 @@
 </ul>
 <p>假设你打算使用某软件将本机磁盘上的文件传输给某个客户端。</p>
 <p>因为计算机系统的保护机制，用户应用程序是在用户空间上运行，在涉及到硬件资源操作时，通过系统调用（比如调用 read() 方法读取文件内容），借助内核间接访问资源。</p>
-<p><img src="/.com//image-20210925123537658.png" alt="image-20210925123537658"></p>
+<p><img src="/2021/05/16/Linux-Zero-Copy/image-20210925123537658.png" alt="image-20210925123537658"></p>
 <p>可以看到，整个过程有四次文件复制操作。过程中，因为涉及到内核态与用户态之间的上下文转换和频繁且缓慢的 I/O 操作，其读写性能是比较糟糕的。</p>
-<p><img src="/.com//image-20210925123558017.png" alt="image-20210925123558017"></p>
+<p><img src="/2021/05/16/Linux-Zero-Copy/image-20210925123558017.png" alt="image-20210925123558017"></p>
 <p>零拷贝技术可以简单的理解成将参与到整个过程中的 <strong>用户空间态</strong> 省去，省去上下文切换的开销，减少 I/O 操作，很好的提高了效率。</p>
-<p><img src="/.com//image-20210925123623123.png" alt="image-20210925123623123"></p>
+<p><img src="/2021/05/16/Linux-Zero-Copy/image-20210925123623123.png" alt="image-20210925123623123"></p>
 <p>图片中，从内核缓存到 socket buffer 的 copy 操作被优化了。这需要硬件技术的帮忙。</p>
 <p> 通过支持聚集操作的网络接口，待传输的数据不必占用主存的连续空间，网卡的 DMA 引擎也可以将分布在不同位置的数据集中到一个数据传输中。</p>
 <blockquote>

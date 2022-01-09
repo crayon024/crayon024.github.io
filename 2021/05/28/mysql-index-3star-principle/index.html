@@ -30,14 +30,14 @@
 <meta property="og:site_name" content="Crayon">
 <meta property="og:description" content="磁盘 I&#x2F;O 《数据库索引设计与优化》第二章  随机 I&#x2F;O每次数据库从磁盘随机读取一个页大约会花费10 ms左右，10 ms 是根据磁盘活动等情况大致估算出来的。我们只要意识到每次随机 I&#x2F;O 的成本是很高的即可。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.com//image-20210925124904465.png">
+<meta property="og:image" content="http://example.com/2021/05/28/mysql-index-3star-principle/image-20210925124904465.png">
 <meta property="article:published_time" content="2021-05-28T11:45:55.000Z">
 <meta property="article:modified_time" content="2021-05-28T11:45:55.000Z">
 <meta property="article:author" content="Hexin Fang">
 <meta property="article:tag" content="mysql">
 <meta property="article:tag" content="索引设计">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.com//image-20210925124904465.png">
+<meta name="twitter:image" content="http://example.com/2021/05/28/mysql-index-3star-principle/image-20210925124904465.png">
 
 
 <link rel="canonical" href="http://example.com/2021/05/28/mysql-index-3star-principle/">
@@ -270,7 +270,7 @@
 <h2 id="随机-I-O"><a href="#随机-I-O" class="headerlink" title="随机 I/O"></a>随机 I/O</h2><p>每次数据库从磁盘随机读取一个页大约会花费<strong>10 ms</strong>左右，10 ms 是根据磁盘活动等情况大致估算出来的。我们只要意识到每次随机 I/O 的成本是很高的即可。</p>
 <span id="more"></span>
 
-<h2 id><a href="#" class="headerlink" title></a><img src="/.com//image-20210925124904465.png" alt="image-20210925124904465"></h2><h2 id="顺序-I-O"><a href="#顺序-I-O" class="headerlink" title="顺序 I/O"></a>顺序 I/O</h2><p>顺序读取的速度大约在<strong>40 MB/s</strong>，对于一个 4 KB 大小的页来说，平均的页读取时间为 0.1 ms，相比随机 I/O 的 10 ms提升了两个数量级。</p>
+<h2 id><a href="#" class="headerlink" title></a><img src="/2021/05/28/mysql-index-3star-principle/image-20210925124904465.png" alt="image-20210925124904465"></h2><h2 id="顺序-I-O"><a href="#顺序-I-O" class="headerlink" title="顺序 I/O"></a>顺序 I/O</h2><p>顺序读取的速度大约在<strong>40 MB/s</strong>，对于一个 4 KB 大小的页来说，平均的页读取时间为 0.1 ms，相比随机 I/O 的 10 ms提升了两个数量级。</p>
 <p>顺序读取的优势在于，DBMS 意识到将要读取多个页，将发出多页 I/O 请求。且由于 DBMS 事先知道哪些页需要被读取，可能预先将其读取。</p>
 <h1 id="索引模型"><a href="#索引模型" class="headerlink" title="索引模型"></a>索引模型</h1><p>实现索引的方式有很多种，采用不同方式设计的索引在不同的场景的效率也不同。对应的效率可以类比到数据结构的特性。例如依赖哈希表设计的索引天然不适合范围查询。</p>
 <ul>

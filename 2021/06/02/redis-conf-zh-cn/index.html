@@ -30,15 +30,15 @@
 <meta property="og:site_name" content="Crayon">
 <meta property="og:description" content="Redis - redis.conf 中文翻译 Redis 5.0.8 默认配置文件的翻译。个人英语水平有限，应以原文档为标准。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.com//image-20210925113724247.png">
-<meta property="og:image" content="http://example.com/.com//image-20210925114039445.png">
+<meta property="og:image" content="http://example.com/2021/06/02/redis-conf-zh-cn/image-20210925113724247.png">
+<meta property="og:image" content="http://example.com/2021/06/02/redis-conf-zh-cn/image-20210925114039445.png">
 <meta property="article:published_time" content="2021-06-02T12:33:20.000Z">
 <meta property="article:modified_time" content="2021-06-02T12:33:20.000Z">
 <meta property="article:author" content="Hexin Fang">
 <meta property="article:tag" content="翻译">
 <meta property="article:tag" content="redis">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.com//image-20210925113724247.png">
+<meta name="twitter:image" content="http://example.com/2021/06/02/redis-conf-zh-cn/image-20210925113724247.png">
 
 
 <link rel="canonical" href="http://example.com/2021/06/02/redis-conf-zh-cn/">
@@ -357,7 +357,7 @@
 <p>AOF 文件的存储位置也会使用这个配置项。</p>
 <p>注意：配置一个目录而不是文件名。</p>
 <h3 id="dir"><a href="#dir" class="headerlink" title="dir ./"></a>dir ./</h3><h2 id="REPLICATION（复制）"><a href="#REPLICATION（复制）" class="headerlink" title="REPLICATION（复制）"></a>REPLICATION（复制）</h2><p>主从复制。使用 replicaof 来让一个 Redis 实例复制另一个 Redis 实例。接来下是关于 Redis 复制需要了解的一些事情。</p>
-<p><img src="/.com//image-20210925113724247.png" alt="image-20210925113724247"></p>
+<p><img src="/2021/06/02/redis-conf-zh-cn/image-20210925113724247.png" alt="image-20210925113724247"></p>
 <p>1）Redis 复制时异步进行的，但是可以通过配置让 Redis 主节点拒绝写请求：配置会给定一个值，主节点至少需要和大于该值的从节点个数成功连接。</p>
 <p>2）如果 Redis 从节点和主节点意外断连了很少的一段时间，从节点可以向主节点进行<strong>增量复制</strong>。你可以根据你的需要配置复制的备份日志文件大小（在下一部分可以看到相关的配置）</p>
 <p>3）复制会自动进行且不需要人为介入（intervention）。在网络划分后复制会自动与主节点重连且同步数据。</p>
@@ -635,7 +635,7 @@
 <li>如果 R &lt; P，计数器的值才会进行增长。</li>
 </ol>
 <p>lfu_log_factor 的默认值为 10。下面这个表展示了不同的 lfu_log_factor 值以及 key 访问频率对应的计数器变化的频率：</p>
-<p><img src="/.com//image-20210925114039445.png" alt="image-20210925114039445"></p>
+<p><img src="/2021/06/02/redis-conf-zh-cn/image-20210925114039445.png" alt="image-20210925114039445"></p>
 <p>注意 1：上面的表可以通过以下的命令获取：</p>
 <p>redis-benchmark -n 1000000 incr foo</p>
 <p>redis-cli object freq foo</p>

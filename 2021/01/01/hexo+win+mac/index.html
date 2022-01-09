@@ -30,14 +30,14 @@
 <meta property="og:site_name" content="Crayon">
 <meta property="og:description" content="本地初始化一个Hexo项目注意：本地的目录不要动，可以重命名。 重新新建一个空目录，作为你的博客目录。进入该目录，初始化一个Hexo项目：">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.com//Sni_2409222314.png">
-<meta property="og:image" content="http://example.com/.com//Sni_2409230640.png">
+<meta property="og:image" content="http://example.com/2021/01/01/hexo+win+mac/Sni_2409222314.png">
+<meta property="og:image" content="http://example.com/2021/01/01/hexo+win+mac/Sni_2409230640.png">
 <meta property="article:published_time" content="2021-01-01T13:54:14.000Z">
 <meta property="article:modified_time" content="2021-01-01T13:54:14.000Z">
 <meta property="article:author" content="Hexin Fang">
 <meta property="article:tag" content="blog">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.com//Sni_2409222314.png">
+<meta name="twitter:image" content="http://example.com/2021/01/01/hexo+win+mac/Sni_2409222314.png">
 
 
 <link rel="canonical" href="http://example.com/2021/01/01/hexo+win+mac/">
@@ -272,12 +272,12 @@
 <p>然后上传到代码仓库，同时初始化了 main 分支。</p>
 <p>最后切换 git checkout -b hexo, 之后基于这个分支做修改，hexo d 部署在配置的分支上，这边就是设置的 main 分支（和 github page 里设置的分支一致可直接在 page 中访问到）。</p>
 <h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><p>使用到的插件列表：</p>
-<p><img src="/.com//Sni_2409222314.png" alt="Sni_2409222314"></p>
+<p><img src="/2021/01/01/hexo+win+mac/Sni_2409222314.png" alt="Sni_2409222314"></p>
 <p><code>.gitignore</code>文件中过滤了<code>node_modules\</code>，所以 clone 来的目录里没有<code>node_modules\</code>，这是hexo所需要的组件，所以要在该目录中重新安装hexo，<strong>但不需要hexo init</strong>。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">npm install hexo</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
 
 <h3 id="不过滤-gitignore-的内容协作尝试"><a href="#不过滤-gitignore-的内容协作尝试" class="headerlink" title="不过滤 .gitignore 的内容协作尝试"></a>不过滤 .gitignore 的内容协作尝试</h3><p>hexo clean，hexo generate 正常，hexo d 部署的时候报错</p>
-<p><img src="/.com//Sni_2409230640.png" alt="Sni_2409230640"></p>
+<p><img src="/2021/01/01/hexo+win+mac/Sni_2409230640.png" alt="Sni_2409230640"></p>
 <p>.deploy_git 文件夹冲突，猜想应该是 hexo d 的时候操作 .deploy_git 的时候文件无法覆盖类似的冲突。</p>
 <p>解决方法：删除 .deploy_git，重新 hexo d 生成即可。（我们可以在 .gitignore 里过滤这个文件夹）</p>
 <h2 id="常见语法"><a href="#常见语法" class="headerlink" title="常见语法"></a>常见语法</h2><ul>

@@ -30,21 +30,21 @@
 <meta property="og:site_name" content="Crayon">
 <meta property="og:description" content="首先了解 TCP 在 OSI 的七层模型中的第四层 - 传输层（来自《图解 TCP&#x2F;IP》）">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.com//image(1).png">
-<meta property="og:image" content="http://example.com/.com//image(2).png">
-<meta property="og:image" content="http://example.com/.com//image(3).png">
-<meta property="og:image" content="http://example.com/.com//image(4).png">
-<meta property="og:image" content="http://example.com/.com//image(5).png">
-<meta property="og:image" content="http://example.com/.com//image(6)-2560545.png">
-<meta property="og:image" content="http://example.com/.com//image(7).png">
-<meta property="og:image" content="http://example.com/.com//image(8).png">
-<meta property="og:image" content="http://example.com/.com//image(9).png">
+<meta property="og:image" content="http://example.com/2021/02/01/tcp-related/image(1).png">
+<meta property="og:image" content="http://example.com/2021/02/01/tcp-related/image(2).png">
+<meta property="og:image" content="http://example.com/2021/02/01/tcp-related/image(3).png">
+<meta property="og:image" content="http://example.com/2021/02/01/tcp-related/image(4).png">
+<meta property="og:image" content="http://example.com/2021/02/01/tcp-related/image(5).png">
+<meta property="og:image" content="http://example.com/2021/02/01/tcp-related/image(6)-2560545.png">
+<meta property="og:image" content="http://example.com/2021/02/01/tcp-related/image(7).png">
+<meta property="og:image" content="http://example.com/2021/02/01/tcp-related/image(8).png">
+<meta property="og:image" content="http://example.com/2021/02/01/tcp-related/image(9).png">
 <meta property="article:published_time" content="2021-02-01T10:54:14.000Z">
 <meta property="article:modified_time" content="2021-02-01T10:54:14.000Z">
 <meta property="article:author" content="Hexin Fang">
 <meta property="article:tag" content="tcp">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.com//image(1).png">
+<meta name="twitter:image" content="http://example.com/2021/02/01/tcp-related/image(1).png">
 
 
 <link rel="canonical" href="http://example.com/2021/02/01/tcp-related/">
@@ -272,11 +272,11 @@
     
     <div class="post-body" itemprop="articleBody">
         <p>首先了解 TCP 在 OSI 的七层模型中的第四层 - 传输层（来自《图解 TCP/IP》）<span id="more"></span></p>
-<p><img src="/.com//image(1).png" alt="image(1)"></p>
+<p><img src="/2021/02/01/tcp-related/image(1).png" alt="image(1)"></p>
 <p>再简单的看一下 客户端 和 服务端之间的数据传输</p>
-<p><img src="/.com//image(2).png" alt="image(2)"></p>
+<p><img src="/2021/02/01/tcp-related/image(2).png" alt="image(2)"></p>
 <p>数据发送时经过每一层都会加上对应的协议头，接收端则会一层层解析头，交给高层的协议处理。</p>
-<h1 id="TCP-首部"><a href="#TCP-首部" class="headerlink" title="TCP 首部"></a>TCP 首部</h1><p><img src="/.com//image(3).png" alt="image(3)"></p>
+<h1 id="TCP-首部"><a href="#TCP-首部" class="headerlink" title="TCP 首部"></a>TCP 首部</h1><p><img src="/2021/02/01/tcp-related/image(3).png" alt="image(3)"></p>
 <p>其中我觉得比较重要的几个内容是</p>
 <ul>
 <li><strong>序号</strong>。为包编上号，解决包的乱序问题。</li>
@@ -286,15 +286,15 @@
 <li><strong>Port，</strong>应用监听的端口号。</li>
 </ul>
 <h1 id="TCP-的状态机"><a href="#TCP-的状态机" class="headerlink" title="TCP 的状态机"></a>TCP 的状态机</h1><p>TCP 就是靠改变，维持通讯双方的<strong>状态</strong>来保证他们之间的“连接”的。</p>
-<p><img src="/.com//image(4).png" alt="image(4)"></p>
+<p><img src="/2021/02/01/tcp-related/image(4).png" alt="image(4)"></p>
 <p>上图中，客户端发送 SYN ，就是期待发起连接，客户端就切换为 SYN-SENT 状态。服务端被动监听端口，处于 LISTEN 状态。Server 接收到 SYN 包后，也向 client 发送 SYN，以及对接收到的 SYN 的 ACK，此时 server 处于 SYN-RECEIVED 状态。 client 收到 server 的 SYN 以及对于自己之前 SYN 的 ACK 后，也要针对 server 的 SYN 发送 ACK，就变成 ESTABLISHED 状态。若此刻 server 成功收到最后这个 ACK ，也进入 ESTABLISHED 状态。</p>
 <p>刚才描述的过程就是我们常说的<strong>建立连接时的三次握手。</strong></p>
-<p><img src="/.com//image(5).png" alt="image(5)"></p>
+<p><img src="/2021/02/01/tcp-related/image(5).png" alt="image(5)"></p>
 <p>对于三次握手，重要的点在于：</p>
 <ul>
 <li><strong>Synchronize Sequence Numbers，SYN。</strong>SYN seq = x seq = y，主要就是双方去确定 <strong>Sequence Numbers</strong>的值。****这个号就是以后通信要用到的包的序号。</li>
 </ul>
-<p><img src="/.com//image(6)-2560545.png" alt="image(6)"></p>
+<p><img src="/2021/02/01/tcp-related/image(6)-2560545.png" alt="image(6)"></p>
 <p>对于<strong>四次挥手断开连接</strong>，因为TCP连接是全双工（两方可以互相同时传输数据）的，所以当任何一方想要断开连接时，都不能那么任性。你可以保证自己没有数据要发送了，但是你不知道对方还有没有数据要继续发送。所以我理解为什么是四次，因为双方都需要像对方提出断开连接并收一下 ACK。</p>
 <p>在建立连接和断开连接时会有各种复杂情况，以下说明一些常见的</p>
 <ul>
@@ -309,12 +309,12 @@
 <p>需要注意的是，seq 和 ACK 是以字节数来计算的，故不能跳着 ack。<strong>只能确认最大的连续收到的包。</strong></p>
 <h2 id="引入窗口"><a href="#引入窗口" class="headerlink" title="引入窗口"></a>引入窗口</h2><p>简单的重传机制就是发一个等一个，效率低。</p>
 <p>引入窗口的目的就是减少等待，在没有收到部分包 ACK 的情况下，允许发送最大的段。比如窗口被定义为 5，就允许最多连续发送 5 个段，而不是一个个等待。</p>
-<h2 id="重发控制"><a href="#重发控制" class="headerlink" title="重发控制"></a>重发控制</h2><p><img src="/.com//image(7).png" alt="image(7)"></p>
-<p><img src="/.com//image(8).png" alt="image(8)"></p>
+<h2 id="重发控制"><a href="#重发控制" class="headerlink" title="重发控制"></a>重发控制</h2><p><img src="/2021/02/01/tcp-related/image(7).png" alt="image(7)"></p>
+<p><img src="/2021/02/01/tcp-related/image(8).png" alt="image(8)"></p>
 <p>还有一种需要重发的情况是，发送端一直接收不到 ACK。TCP 就会等待一段时间，如果超过就重发。这个等待时间不宜超过 RTT（数据包往返的时间），否则可能进行不必要的重传。</p>
 <p>重发的时候就涉及到一个问题，当发送端一直接收不到 3001 的 ACK 时（接收端确实没有收到 3000 的数据），而接收端收到了到 5001 的数据（放在缓冲区）。那么发送端到底是选择重发 3000 的数据，还是把 3001 ，4001, 5001 全部重发呢？</p>
 <h2 id="SACK"><a href="#SACK" class="headerlink" title="SACK"></a>SACK</h2><p>**Selective Acknowledgment (SACK)**（参看<a target="_blank" rel="noopener" href="http://tools.ietf.org/html/rfc2018">RFC 2018</a>），这种方式需要在TCP头里加一个SACK的东西，ACK还是Fast Retransmit的ACK，SACK则是汇报收到的数据碎版。参看下图：</p>
-<p><img src="/.com//image(9).png" alt="image(9)"></p>
+<p><img src="/2021/02/01/tcp-related/image(9).png" alt="image(9)"></p>
 <p>接收端不仅发送 ACK，还发送一个 SACK 向发送端说明自己缓冲区已经收到了 5000 的数据（只是还无法想你发送 5001 的 ACK ，因为在前面断了一截儿）。</p>
 <p>但是，发送端不能把 SACK 作为真正意义上的 ACK 看待，因为接收端对于 SACK 的数据是可能放弃掉的。后续发送端如果检测到 ACK 没有实际性的增长，仍然需要重发该部分的数据。</p>
 <h1 id="滑动窗口，窗口控制"><a href="#滑动窗口，窗口控制" class="headerlink" title="滑动窗口，窗口控制"></a>滑动窗口，窗口控制</h1><p>TCP 头中有一个 window 字段，又叫 Advertised-Window，这个字段的作用是接收端会告诉发送端自己能接受处理的最大数据，发送端会根据这个值调整发送的数据多少，避免接收端压力太大。</p>
