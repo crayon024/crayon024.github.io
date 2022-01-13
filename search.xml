@@ -1,6 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>2021-&gt; 2022 总结和计划</title>
+    <url>/2022/01/13/2021-2022/</url>
+    <content><![CDATA[<h2 id="2021-总结"><a href="#2021-总结" class="headerlink" title="2021 总结"></a>2021 总结</h2><ol>
+<li><p>我的 21 年关键字是 ‘纠结’。</p>
+<p>2021 年中工作经验满 1 年。从毕业前后拖拉的在不多的应届生岗位中寻找工作。入职后，虽然工作可以胜任，但是对于自己能力的猜疑让自己一直在纠结中度过，回头看来其实纠结的点都是没有必要。</p>
+<p>2021 从英文世界获取信息的能力大幅提升。自己从头翻译了 Redis 5.0.8 的配置文件 redis.conf，心理上不抗拒加上感受到获取到的信息质量确实有差异后，正反馈明显。</p>
+</li>
+<li><p>参加 Java 训练营。</p>
+<p>技术上的收获是从更高的维度完善了技术体系的认知；其次是见识到了社群中更多优秀的同学也在不断进步。</p>
+</li>
+<li><p>拖延。<br>关于这篇总结文章，可以看做是 2022 摆脱拖延的开始。此前内心总有许多想法，但都没有真正去执行。比如为自己的职业生涯，技能提升做一个明确的规划并为之努力。</p>
+<p>比如一直想搞定算法，但是都是有一阵没一阵，并没有系统的提高算法能力。能够应付大部分面试的算法部分。内心的想法很多 - 摄影 （极客时间买了摄影课程）、视频（安装过达芬奇 等等剪辑软件）都不了了之。</p>
+<p>LeetCode:</p>
+<p><img src="/2022/01/13/2021-2022/image-20220113173401456.png" alt="leetcode提交记录"></p>
+<p>GitHub:</p>
+<p><img src="/2022/01/13/2021-2022/image-20220113173717713.png" alt="GitHub提交记录"></p>
+</li>
+<li><p>收获。<br>GitHub + Hexo 搭建了博客，整理了平时的学习笔记发布。</p>
+<p>英文的听读能力有了客观进步。</p>
+</li>
+<li><p>书籍。</p>
+<p>技术：《Java 8 实战》《Netty 实战》《Java 并发编程的艺术》《Java 并发编程实战》《深入理解 Java 虚拟机 JVM》《第一本 Docker 书》<br>其他：《俗世奇人》《软技能：代码之外的生存指南》《你是你吃出来的》《一往无前》《我们唱》《掌控：开启不疲惫、不焦虑的人生》《睡眠革命》《科比：黄金年代》</p>
+</li>
+<li><p>娱乐。</p>
+<ol>
+<li>推荐剧集：《绝命毒师》1-5 季。</li>
+<li>推荐游戏：《巫师 3 狂猎》。</li>
+</ol>
+</li>
+</ol>
+<h2 id="2022-计划"><a href="#2022-计划" class="headerlink" title="2022 计划"></a>2022 计划</h2><p>希望 2022 可以比 2021 更加从容，生活工作上都能如此。</p>
+<ol>
+<li>Object 1：提高技术能力<ol>
+<li>KR1：丰富博客站内容，增加 30 篇内容。</li>
+<li>KR2：完成 5 篇高质量的技术博客。</li>
+<li>KR3：参与开源项目，为开源项目提交代码。</li>
+</ol>
+</li>
+<li>Object 2：搞定算法，能够应付大部分面试的算法部分。<ol>
+<li>KR1：分模块进行刷题训练。DP，搜索，贪心 …</li>
+<li>KR2：LeetCode 剑指 Offer 系列题目刷完。</li>
+</ol>
+</li>
+</ol>
+<p>有了大致的目标后，如何分配自己的时间去做也是重点的部分。我目前的做法基于番茄工作法，从《软技能：代码之外的生存指南》中为自己指定了一天 7 个番茄时钟的做法去实践。</p>
+<p><a href="https://draveness.me/few-words-time-management/">如何管理自己的时间资产</a></p>
+<p><img src="/2022/01/13/2021-2022/image-20220113201324042.png" alt="image-20220113201324042"></p>
+<p><a href="https://book.douban.com/subject/26835090/">软技能：代码之外的生存指南</a></p>
+<p><img src="/2022/01/13/2021-2022/image-20220113201656902.png" alt="image-20220113201656902"></p>
+]]></content>
+      <categories>
+        <category>记录</category>
+      </categories>
+      <tags>
+        <tag>日常</tag>
+        <tag>记录</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>类加载器机制 学习笔记</title>
     <url>/2021/09/15/ClassLoader-And-Tomact-isolation/</url>
     <content><![CDATA[<h2 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h2><p>此篇文章主要从 3 个部分解析 JVM 的类加载机制：</p>
@@ -66,80 +125,6 @@
       <tags>
         <tag>jvm</tag>
         <tag>java</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ConcurrentHashMap 源码分析</title>
-    <url>/2021/05/05/ConcurrentHashMap-Analyse/</url>
-    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>ConcurrentHashMap 是高性能的线程安全的哈希容器。</p>
-<p>值得一提的是 ConcurrentHashMap 的 key 和 value 不允许 null 值。</p>
-<p>Doug Lea 和 Josh Bloch 对 HashMap，ConcurrentHashMap key 允不允许 null 值的讨论。</p>
-<ul>
-<li><p><a href="http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002485.html?fileGuid=Hxch6t3HxHCRkVqG">http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002485.html</a></p>
-</li>
-<li><p><a href="http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002486.html?fileGuid=Hxch6t3HxHCRkVqG">http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002486.html</a></p>
-<span id="more"></span></li>
-</ul>
-<p>邮件里大致的内容说明是因为 null 值有二义性。在并发环境下，如果你通过 get(key) 得到了一个 null 值，无法判断是因为 map 中不存在这个 key 还是因为 key 对应的 value 是 null。在并发环境下，你无法通过调用 containsKey() 来确定。</p>
-<p>因为不允许 null 值，所以在 ConcurrentHashMap 中，可以通过 get() 是否为 null 来直接判断是否 contains 一个 key。</p>
-<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><h2 id="存储结构"><a href="#存储结构" class="headerlink" title="存储结构"></a>存储结构</h2><p>JDK 1.8 之后，采用的存储结构与 HashMap 一样，Node&lt;K,V&gt;[] table。不同的是 Node 中的 val 和 next 用<strong>volatile</strong>来修饰，用于保证可见性。</p>
-<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124000740.png" alt="image-20210925124000740"></p>
-<h2 id="put-方法"><a href="#put-方法" class="headerlink" title="put() 方法"></a>put() 方法</h2><ol>
-<li><p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124058747.png" alt="image-20210925124058747">rehash，保证均匀分布</p>
-</li>
-<li><p>索引定位后，如果该槽上没有值，通过 CAS 更新。这里的 tabAt，casTabAt 需要利用到 volatile 的可见性来保证正确。</p>
-</li>
-<li><p>表正在扩容</p>
-</li>
-<li><p>都不满足，对索引定位到的槽加锁操作。</p>
-</li>
-<li><p>槽节点的 hash 值大等 0，说明该槽上不是红黑树。按照拉链法的方式来插入值。</p>
-</li>
-<li><p>槽根节点的 hash 值小于 0，说明是树节点，走红黑树的插入逻辑。</p>
-</li>
-<li><p>插入后，判断阈值来进行树化。</p>
-<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124118357.png" alt="image-20210925124118357"></p>
-</li>
-</ol>
-<p>JDK 1.8 之后，利用了 CAS+synchronized，相比于 1.7 的锁定 Segment 的方式，取消了ReentrantLock 使用synchronized（看来 1.8 对于 synchronized 的优化很可观。网上的资源提到 synchronized 的锁升级，其实在 1.6 就已经引入），优化了锁的粒度和使用。</p>
-<h2 id="get-方法"><a href="#get-方法" class="headerlink" title="get() 方法"></a>get() 方法</h2><p>get 方法相对比较简单，因为使用了<strong>volatile</strong>修饰 val 和 next 变量，get 的时候可以无锁操作。</p>
-<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124156045.png" alt="image-20210925124156045"></p>
-<ol>
-<li><p>索引定位哈希槽的位置上是否有值，没有的话直接返回 null。有的话，比较哈希槽上根节点的 key ，一致的话直接返回 val 值。</p>
-</li>
-<li><p>哈希槽根节点的 hash 值小于 0 ，说明是红黑树，走红黑树的查找方法。</p>
-</li>
-<li><p>都不满足的话，在链表中往下遍历查找。</p>
-</li>
-</ol>
-<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124249047.png" alt="image-20210925124249047"></p>
-<h1 id="硬件同步原语-CAS"><a href="#硬件同步原语-CAS" class="headerlink" title="硬件同步原语 CAS"></a>硬件同步原语 CAS</h1><p>硬件同步原语是由计算机硬件提供的一组原子操作，具体来说就是 CPU 提供的实现，可以保证指令操作的原子性。</p>
-<p>CAS（Compare and Swap）的意思是，先获取某个想要修改的旧值，然后在修改的时候，比较当前的值和旧值，如果一致，就更新为新的，返回 true。否则就不改变，返回 false。</p>
-<p>还有一个常用的 FAA（Fetch and Add），的作用是获取某个变量的值，然后将变量的值增加，然后返回旧值。</p>
-<p>在各种高级编程语言中，这些原语一般都有相应的实现。</p>
-<p>比如 JDK 中提供的 CAS 。</p>
-<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124311450.png"></p>
-<p>Java 中的 FAA 好像是通过 CAS 实现的。</p>
-<h3 id><a href="#" class="headerlink" title></a><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124327406.png" alt="image-20210925124327406"></h3><h3 id="CAS-的-ABA-问题"><a href="#CAS-的-ABA-问题" class="headerlink" title="CAS 的 ABA 问题"></a>CAS 的 ABA 问题</h3><p>CAS 在写入时仅仅判断当前值和旧值，期间值可能改变过，但是无法判断。Java 提供了<a href="http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html?fileGuid=Hxch6t3HxHCRkVqG">AtomicStampedReference</a>工具类，通过版本号的方式来完善这个问题。</p>
-<h3 id="CAS-的开销和优点"><a href="#CAS-的开销和优点" class="headerlink" title="CAS 的开销和优点"></a>CAS 的开销和优点</h3><p>使用 CAS 可以避免使用锁，减小开销。但是 CAS 面对频繁的资源竞争的话，一直反复采用 CAS 尝试更新失败概率高，CPU 的开销也随之变大。</p>
-<p>CAS 像是乐观锁的思路，总认为修改成功的概率很高。悲观锁的思路就是共享资源的竞争可能很频繁，就采用独占的方式操作，比如  synchronized 关键字。</p>
-<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><p>ConcurrentHashMap 是高性能的线程安全的容器，但并不意味着使用它就没有安全问题。比如其 size() ，putALL() 等方法在并发情况下只能反映中间情况。</p>
-<p>使用 ConcurrentHashMap 的时候，对其的多个操作之间仍然不是原子性的，如果需要的话可以对 map 加锁操作。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>ConcurrentHashMap 在 1.7 之前采用分段锁的形式，默认并发 16，取决于 Segment。1.8 之后的存储结构和 HashMap 类似，且采用 CAS + synchronized 来保证原子性的读写操作。</p>
-<p>使用 ConcurrentHashMap 、CopyOnWriteArrayList 等线程安全的工具类，并不意味着就没有线程安全问题，有关并发安全的知识则需要自己学习运用。</p>
-<h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ol>
-<li><a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentHashMap.html?fileGuid=Hxch6t3HxHCRkVqG">https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentHashMap.html</a>，ConcurrentHashMap 官方文档</li>
-<li><a href="http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html?fileGuid=Hxch6t3HxHCRkVqG">http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html</a>，AtomicStampedReference 使用教程</li>
-<li><a href="https://en.wikipedia.org/wiki/Compare-and-swap?fileGuid=Hxch6t3HxHCRkVqG">https://en.wikipedia.org/wiki/Compare-and-swap</a>，CAS 原语</li>
-</ol>
-]]></content>
-      <categories>
-        <category>Java</category>
-      </categories>
-      <tags>
-        <tag>java</tag>
-        <tag>java 集合</tag>
-        <tag>源码分析</tag>
       </tags>
   </entry>
   <entry>
@@ -432,6 +417,80 @@
       <tags>
         <tag>java</tag>
         <tag>java 并发系列</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ConcurrentHashMap 源码分析</title>
+    <url>/2021/05/05/ConcurrentHashMap-Analyse/</url>
+    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>ConcurrentHashMap 是高性能的线程安全的哈希容器。</p>
+<p>值得一提的是 ConcurrentHashMap 的 key 和 value 不允许 null 值。</p>
+<p>Doug Lea 和 Josh Bloch 对 HashMap，ConcurrentHashMap key 允不允许 null 值的讨论。</p>
+<ul>
+<li><p><a href="http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002485.html?fileGuid=Hxch6t3HxHCRkVqG">http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002485.html</a></p>
+</li>
+<li><p><a href="http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002486.html?fileGuid=Hxch6t3HxHCRkVqG">http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002486.html</a></p>
+<span id="more"></span></li>
+</ul>
+<p>邮件里大致的内容说明是因为 null 值有二义性。在并发环境下，如果你通过 get(key) 得到了一个 null 值，无法判断是因为 map 中不存在这个 key 还是因为 key 对应的 value 是 null。在并发环境下，你无法通过调用 containsKey() 来确定。</p>
+<p>因为不允许 null 值，所以在 ConcurrentHashMap 中，可以通过 get() 是否为 null 来直接判断是否 contains 一个 key。</p>
+<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><h2 id="存储结构"><a href="#存储结构" class="headerlink" title="存储结构"></a>存储结构</h2><p>JDK 1.8 之后，采用的存储结构与 HashMap 一样，Node&lt;K,V&gt;[] table。不同的是 Node 中的 val 和 next 用<strong>volatile</strong>来修饰，用于保证可见性。</p>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124000740.png" alt="image-20210925124000740"></p>
+<h2 id="put-方法"><a href="#put-方法" class="headerlink" title="put() 方法"></a>put() 方法</h2><ol>
+<li><p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124058747.png" alt="image-20210925124058747">rehash，保证均匀分布</p>
+</li>
+<li><p>索引定位后，如果该槽上没有值，通过 CAS 更新。这里的 tabAt，casTabAt 需要利用到 volatile 的可见性来保证正确。</p>
+</li>
+<li><p>表正在扩容</p>
+</li>
+<li><p>都不满足，对索引定位到的槽加锁操作。</p>
+</li>
+<li><p>槽节点的 hash 值大等 0，说明该槽上不是红黑树。按照拉链法的方式来插入值。</p>
+</li>
+<li><p>槽根节点的 hash 值小于 0，说明是树节点，走红黑树的插入逻辑。</p>
+</li>
+<li><p>插入后，判断阈值来进行树化。</p>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124118357.png" alt="image-20210925124118357"></p>
+</li>
+</ol>
+<p>JDK 1.8 之后，利用了 CAS+synchronized，相比于 1.7 的锁定 Segment 的方式，取消了ReentrantLock 使用synchronized（看来 1.8 对于 synchronized 的优化很可观。网上的资源提到 synchronized 的锁升级，其实在 1.6 就已经引入），优化了锁的粒度和使用。</p>
+<h2 id="get-方法"><a href="#get-方法" class="headerlink" title="get() 方法"></a>get() 方法</h2><p>get 方法相对比较简单，因为使用了<strong>volatile</strong>修饰 val 和 next 变量，get 的时候可以无锁操作。</p>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124156045.png" alt="image-20210925124156045"></p>
+<ol>
+<li><p>索引定位哈希槽的位置上是否有值，没有的话直接返回 null。有的话，比较哈希槽上根节点的 key ，一致的话直接返回 val 值。</p>
+</li>
+<li><p>哈希槽根节点的 hash 值小于 0 ，说明是红黑树，走红黑树的查找方法。</p>
+</li>
+<li><p>都不满足的话，在链表中往下遍历查找。</p>
+</li>
+</ol>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124249047.png" alt="image-20210925124249047"></p>
+<h1 id="硬件同步原语-CAS"><a href="#硬件同步原语-CAS" class="headerlink" title="硬件同步原语 CAS"></a>硬件同步原语 CAS</h1><p>硬件同步原语是由计算机硬件提供的一组原子操作，具体来说就是 CPU 提供的实现，可以保证指令操作的原子性。</p>
+<p>CAS（Compare and Swap）的意思是，先获取某个想要修改的旧值，然后在修改的时候，比较当前的值和旧值，如果一致，就更新为新的，返回 true。否则就不改变，返回 false。</p>
+<p>还有一个常用的 FAA（Fetch and Add），的作用是获取某个变量的值，然后将变量的值增加，然后返回旧值。</p>
+<p>在各种高级编程语言中，这些原语一般都有相应的实现。</p>
+<p>比如 JDK 中提供的 CAS 。</p>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124311450.png"></p>
+<p>Java 中的 FAA 好像是通过 CAS 实现的。</p>
+<h3 id><a href="#" class="headerlink" title></a><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124327406.png" alt="image-20210925124327406"></h3><h3 id="CAS-的-ABA-问题"><a href="#CAS-的-ABA-问题" class="headerlink" title="CAS 的 ABA 问题"></a>CAS 的 ABA 问题</h3><p>CAS 在写入时仅仅判断当前值和旧值，期间值可能改变过，但是无法判断。Java 提供了<a href="http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html?fileGuid=Hxch6t3HxHCRkVqG">AtomicStampedReference</a>工具类，通过版本号的方式来完善这个问题。</p>
+<h3 id="CAS-的开销和优点"><a href="#CAS-的开销和优点" class="headerlink" title="CAS 的开销和优点"></a>CAS 的开销和优点</h3><p>使用 CAS 可以避免使用锁，减小开销。但是 CAS 面对频繁的资源竞争的话，一直反复采用 CAS 尝试更新失败概率高，CPU 的开销也随之变大。</p>
+<p>CAS 像是乐观锁的思路，总认为修改成功的概率很高。悲观锁的思路就是共享资源的竞争可能很频繁，就采用独占的方式操作，比如  synchronized 关键字。</p>
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><p>ConcurrentHashMap 是高性能的线程安全的容器，但并不意味着使用它就没有安全问题。比如其 size() ，putALL() 等方法在并发情况下只能反映中间情况。</p>
+<p>使用 ConcurrentHashMap 的时候，对其的多个操作之间仍然不是原子性的，如果需要的话可以对 map 加锁操作。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>ConcurrentHashMap 在 1.7 之前采用分段锁的形式，默认并发 16，取决于 Segment。1.8 之后的存储结构和 HashMap 类似，且采用 CAS + synchronized 来保证原子性的读写操作。</p>
+<p>使用 ConcurrentHashMap 、CopyOnWriteArrayList 等线程安全的工具类，并不意味着就没有线程安全问题，有关并发安全的知识则需要自己学习运用。</p>
+<h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ol>
+<li><a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentHashMap.html?fileGuid=Hxch6t3HxHCRkVqG">https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentHashMap.html</a>，ConcurrentHashMap 官方文档</li>
+<li><a href="http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html?fileGuid=Hxch6t3HxHCRkVqG">http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html</a>，AtomicStampedReference 使用教程</li>
+<li><a href="https://en.wikipedia.org/wiki/Compare-and-swap?fileGuid=Hxch6t3HxHCRkVqG">https://en.wikipedia.org/wiki/Compare-and-swap</a>，CAS 原语</li>
+</ol>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
+        <tag>java 集合</tag>
+        <tag>源码分析</tag>
       </tags>
   </entry>
   <entry>
@@ -1286,52 +1345,6 @@
       </tags>
   </entry>
   <entry>
-    <title>FastDFS Clinet Java 源码分析</title>
-    <url>/2021/08/01/fastdfs-record/</url>
-    <content><![CDATA[<h2 id="什么是-FastDFS"><a href="#什么是-FastDFS" class="headerlink" title="什么是 FastDFS"></a>什么是 FastDFS</h2><blockquote>
-<p><a href="https://github.com/happyfish100/fastdfs">FastDFS</a></p>
-</blockquote>
-<p>根据项目的描述，FastDFS 是一个开源的高性能分布式文件系统。 它的主要功能包括：文件存储，文件同步和文件访问，以及高容量和负载平衡。<span id="more"></span></p>
-<h2 id="FastDFS-框架设计思路"><a href="#FastDFS-框架设计思路" class="headerlink" title="FastDFS 框架设计思路"></a>FastDFS 框架设计思路</h2><p><img src="/2021/08/01/fastdfs-record/image(4)-2663185.png" alt="image(4)"></p>
-<p>FastDFS 文件系统总体上划分为三个部分，Client，Tracker Server 和 Storage Server。</p>
-<ol>
-<li>Storage Server ，存储服务器，负责存储数据。Storage Server 以组 （group）为单位组织，一个 group 可以有多台 Storage，数据互为冗余备份。</li>
-<li>Tracker Server，负责管理 Storage Server。客户端在操作时统一通过 Tracker Server 来访问服务。</li>
-<li>Client 选择 Tracker Server 进行操作。</li>
-</ol>
-<p>客户端上传文件，Tracker Server 选择存储的 group，在 group 中选择一个 Storage。当文件存储后，会为该文件生成一个特定的文件名，后续客户端需要通过该文件名来访问文件。</p>
-<h2 id="FastDFS-Client-Java"><a href="#FastDFS-Client-Java" class="headerlink" title="FastDFS-Client-Java"></a>FastDFS-Client-Java</h2><blockquote>
-<p><a href="https://github.com/happyfish100/fastdfs-client-java">FastDFS-Client-Java</a></p>
-</blockquote>
-<p>引入依赖，中心仓库没有的话可以手动下载源码 install。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">      &lt;dependency&gt;</span><br><span class="line">          &lt;groupId&gt;org.csource&lt;/groupId&gt;</span><br><span class="line">          &lt;artifactId&gt;fastdfs-client-java&lt;/artifactId&gt;</span><br><span class="line">          &lt;version&gt;1.29-SNAPSHOT&lt;/version&gt;</span><br><span class="line">      &lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
-
-<p>ClientGlobal 加载配置，有多种方式，.conf，.properties ，Properties 对象注入均可，具体看官方链接说明（上面链接）</p>
-<p>ClientGlobal 中的 TrackerGroup g_tracker_group; 字段用来保存配置的地址等信息。</p>
-<p>初始化客户端，通过 StorageClient  提供的 API 操作文件。</p>
-<p><img src="/2021/08/01/fastdfs-record/image(5).png" alt="image(5)"></p>
-<p>以文件上传为例：</p>
-<p>客户端调用 StorageClient 提供的<strong>upload_file</strong>(… args)  方法。</p>
-<p><img src="/2021/08/01/fastdfs-record/image(6).png" alt="image(6)"></p>
-<p>所有暴露出来的接口，最终都由 <strong>do_upload_file()</strong> 执行。</p>
-<p><strong>do_upload_file(）</strong>先保证当前 Client 有可用的 storageServer 连接，通过 <strong>newxxxxStorageConnection()</strong> 保证。</p>
-<p><img src="/2021/08/01/fastdfs-record/image(7).png" alt="image(7)"></p>
-<p>后通过 storageServer 获取 Connection。</p>
-<p><img src="/2021/08/01/fastdfs-record/image(8).png" alt="image(8)"></p>
-<p>上传成功后，返回 group 和根据内部规则生成的 remote_file_name（后续访问文件则需要根据这个信息进行访问）。</p>
-<p><img src="/2021/08/01/fastdfs-record/image(9).png" alt="image(9)"></p>
-<p>最后根据是否开启了连接池配置，返回连接或者关闭连接。</p>
-<p><img src="/2021/08/01/fastdfs-record/image(10).png" alt="image(10)"></p>
-]]></content>
-      <categories>
-        <category>FastDFS</category>
-      </categories>
-      <tags>
-        <tag>源码分析</tag>
-        <tag>fastdfs</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>GC 策略结合日志分析</title>
     <url>/2021/07/09/gc-algo-in-action/</url>
     <content><![CDATA[<h2 id="Java-8-默认-GC-策略，并行-GC"><a href="#Java-8-默认-GC-策略，并行-GC" class="headerlink" title="Java 8 默认 GC 策略，并行 GC"></a>Java 8 默认 GC 策略，并行 GC</h2><p>java -Xloggc:gc.java_8_default.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xms512m -Xmx512m week02.work01.GCLogAnalysis  <span id="more"></span></p>
@@ -1411,6 +1424,52 @@
         <tag>jvm</tag>
         <tag>java</tag>
         <tag>gc</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>FastDFS Clinet Java 源码分析</title>
+    <url>/2021/08/01/fastdfs-record/</url>
+    <content><![CDATA[<h2 id="什么是-FastDFS"><a href="#什么是-FastDFS" class="headerlink" title="什么是 FastDFS"></a>什么是 FastDFS</h2><blockquote>
+<p><a href="https://github.com/happyfish100/fastdfs">FastDFS</a></p>
+</blockquote>
+<p>根据项目的描述，FastDFS 是一个开源的高性能分布式文件系统。 它的主要功能包括：文件存储，文件同步和文件访问，以及高容量和负载平衡。<span id="more"></span></p>
+<h2 id="FastDFS-框架设计思路"><a href="#FastDFS-框架设计思路" class="headerlink" title="FastDFS 框架设计思路"></a>FastDFS 框架设计思路</h2><p><img src="/2021/08/01/fastdfs-record/image(4)-2663185.png" alt="image(4)"></p>
+<p>FastDFS 文件系统总体上划分为三个部分，Client，Tracker Server 和 Storage Server。</p>
+<ol>
+<li>Storage Server ，存储服务器，负责存储数据。Storage Server 以组 （group）为单位组织，一个 group 可以有多台 Storage，数据互为冗余备份。</li>
+<li>Tracker Server，负责管理 Storage Server。客户端在操作时统一通过 Tracker Server 来访问服务。</li>
+<li>Client 选择 Tracker Server 进行操作。</li>
+</ol>
+<p>客户端上传文件，Tracker Server 选择存储的 group，在 group 中选择一个 Storage。当文件存储后，会为该文件生成一个特定的文件名，后续客户端需要通过该文件名来访问文件。</p>
+<h2 id="FastDFS-Client-Java"><a href="#FastDFS-Client-Java" class="headerlink" title="FastDFS-Client-Java"></a>FastDFS-Client-Java</h2><blockquote>
+<p><a href="https://github.com/happyfish100/fastdfs-client-java">FastDFS-Client-Java</a></p>
+</blockquote>
+<p>引入依赖，中心仓库没有的话可以手动下载源码 install。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">      &lt;dependency&gt;</span><br><span class="line">          &lt;groupId&gt;org.csource&lt;/groupId&gt;</span><br><span class="line">          &lt;artifactId&gt;fastdfs-client-java&lt;/artifactId&gt;</span><br><span class="line">          &lt;version&gt;1.29-SNAPSHOT&lt;/version&gt;</span><br><span class="line">      &lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+
+<p>ClientGlobal 加载配置，有多种方式，.conf，.properties ，Properties 对象注入均可，具体看官方链接说明（上面链接）</p>
+<p>ClientGlobal 中的 TrackerGroup g_tracker_group; 字段用来保存配置的地址等信息。</p>
+<p>初始化客户端，通过 StorageClient  提供的 API 操作文件。</p>
+<p><img src="/2021/08/01/fastdfs-record/image(5).png" alt="image(5)"></p>
+<p>以文件上传为例：</p>
+<p>客户端调用 StorageClient 提供的<strong>upload_file</strong>(… args)  方法。</p>
+<p><img src="/2021/08/01/fastdfs-record/image(6).png" alt="image(6)"></p>
+<p>所有暴露出来的接口，最终都由 <strong>do_upload_file()</strong> 执行。</p>
+<p><strong>do_upload_file(）</strong>先保证当前 Client 有可用的 storageServer 连接，通过 <strong>newxxxxStorageConnection()</strong> 保证。</p>
+<p><img src="/2021/08/01/fastdfs-record/image(7).png" alt="image(7)"></p>
+<p>后通过 storageServer 获取 Connection。</p>
+<p><img src="/2021/08/01/fastdfs-record/image(8).png" alt="image(8)"></p>
+<p>上传成功后，返回 group 和根据内部规则生成的 remote_file_name（后续访问文件则需要根据这个信息进行访问）。</p>
+<p><img src="/2021/08/01/fastdfs-record/image(9).png" alt="image(9)"></p>
+<p>最后根据是否开启了连接池配置，返回连接或者关闭连接。</p>
+<p><img src="/2021/08/01/fastdfs-record/image(10).png" alt="image(10)"></p>
+]]></content>
+      <categories>
+        <category>FastDFS</category>
+      </categories>
+      <tags>
+        <tag>源码分析</tag>
+        <tag>fastdfs</tag>
       </tags>
   </entry>
   <entry>
@@ -2316,14 +2375,82 @@
       </tags>
   </entry>
   <entry>
-    <title>test</title>
-    <url>/2022/01/08/test/</url>
-    <content><![CDATA[<h1 id="士大夫撒地方"><a href="#士大夫撒地方" class="headerlink" title="士大夫撒地方"></a>士大夫撒地方</h1><p>sadfsadf as</p>
-<p>fas</p>
-<p>放d<img src="/2022/01/08/test/NBA-score-map.jpg" alt="NBA score map"></p>
+    <title>TCP 学习记录</title>
+    <url>/2021/02/01/tcp-related/</url>
+    <content><![CDATA[<p>首先了解 TCP 在 OSI 的七层模型中的第四层 - 传输层（来自《图解 TCP/IP》）<span id="more"></span></p>
+<p><img src="/2021/02/01/tcp-related/image(1).png" alt="image(1)"></p>
+<p>再简单的看一下 客户端 和 服务端之间的数据传输</p>
+<p><img src="/2021/02/01/tcp-related/image(2).png" alt="image(2)"></p>
+<p>数据发送时经过每一层都会加上对应的协议头，接收端则会一层层解析头，交给高层的协议处理。</p>
+<h1 id="TCP-首部"><a href="#TCP-首部" class="headerlink" title="TCP 首部"></a>TCP 首部</h1><p><img src="/2021/02/01/tcp-related/image(3).png" alt="image(3)"></p>
+<p>其中我觉得比较重要的几个内容是</p>
+<ul>
+<li><strong>序号</strong>。为包编上号，解决包的乱序问题。</li>
+<li><strong>确认序号，<strong><strong>A</strong></strong>cknowledgement Number。</strong>也就是我们常说的确认应答号 ACK ，可以解决丢包的问题。</li>
+<li><strong>Window</strong>。也就是我们常说的<strong>滑动窗口。</strong></li>
+<li><strong>TCP Flags，状态位。</strong></li>
+<li><strong>Port，</strong>应用监听的端口号。</li>
+</ul>
+<h1 id="TCP-的状态机"><a href="#TCP-的状态机" class="headerlink" title="TCP 的状态机"></a>TCP 的状态机</h1><p>TCP 就是靠改变，维持通讯双方的<strong>状态</strong>来保证他们之间的“连接”的。</p>
+<p><img src="/2021/02/01/tcp-related/image(4).png" alt="image(4)"></p>
+<p>上图中，客户端发送 SYN ，就是期待发起连接，客户端就切换为 SYN-SENT 状态。服务端被动监听端口，处于 LISTEN 状态。Server 接收到 SYN 包后，也向 client 发送 SYN，以及对接收到的 SYN 的 ACK，此时 server 处于 SYN-RECEIVED 状态。 client 收到 server 的 SYN 以及对于自己之前 SYN 的 ACK 后，也要针对 server 的 SYN 发送 ACK，就变成 ESTABLISHED 状态。若此刻 server 成功收到最后这个 ACK ，也进入 ESTABLISHED 状态。</p>
+<p>刚才描述的过程就是我们常说的<strong>建立连接时的三次握手。</strong></p>
+<p><img src="/2021/02/01/tcp-related/image(5).png" alt="image(5)"></p>
+<p>对于三次握手，重要的点在于：</p>
+<ul>
+<li><strong>Synchronize Sequence Numbers，SYN。</strong>SYN seq = x seq = y，主要就是双方去确定 <strong>Sequence Numbers</strong>的值。****这个号就是以后通信要用到的包的序号。</li>
+</ul>
+<p><img src="/2021/02/01/tcp-related/image(6)-2560545.png" alt="image(6)"></p>
+<p>对于<strong>四次挥手断开连接</strong>，因为TCP连接是全双工（两方可以互相同时传输数据）的，所以当任何一方想要断开连接时，都不能那么任性。你可以保证自己没有数据要发送了，但是你不知道对方还有没有数据要继续发送。所以我理解为什么是四次，因为双方都需要像对方提出断开连接并收一下 ACK。</p>
+<p>在建立连接和断开连接时会有各种复杂情况，以下说明一些常见的</p>
+<ul>
+<li>建立连接时，客户端发送 SYN 后，直接掉线。server 就收不到 client 对于自己 SYN 的 ACK。当然 server 会一直尝试发送 SYN-ACK。 在Linux下，默认重试次数为5次，重试的间隔时间从1s开始每次都翻售，5次的重试时间间隔为1s, 2s, 4s, 8s, 16s，总共31s，第5次发出后还要等32s都知道第5次也超时了，所以，总共需要 1s + 2s + 4s+ 8s+ 16s + 32s = 2^6 -1 = 63s，TCP才会把断开这个连接。</li>
+<li>断开连接时的 time-wait 到 close 状态中间等待的一段 2MSL 时间，（Maximum Segment Lifetime）。因为双方在最后收到对方的 FIN 报文时，要给对方一个 ACK，让对方知道自己知道你要也要断开连接了。而不是发了 ACK 直接跑路，这样 B 就一直收不到自己 FIN 的 ACK。</li>
+<li>这个 MSL ，<strong>报文最大生存时间</strong>。可以理解成报文在网络中可以存活的最长时间，超过这个时间还没到达目的地，就会被丢弃。所有 A B 等待的 2MSL 时间还有一个原因就是，避免下一个占用了此端口的应用收到上次与自己无关连接的包。等那么久还没有收到包也就被丢弃了。</li>
+</ul>
+<h1 id="TCP-重传机制"><a href="#TCP-重传机制" class="headerlink" title="TCP 重传机制"></a>TCP 重传机制</h1><p>TCP 保证可靠，稳定的传输，保证包全部顺利到达对方。但是网络世界很复杂，各种意外情况如何去保证呢？</p>
+<p>其中一种就是前面提到的 ACK 机制。比如接收端收到 4000 的包，ACK 回去要 4001 之后的包，发送端就知道 4000 包成功到达了。</p>
+<p>其中的意外情况有，1）接收端没收到 4000 的包，就一直 ACK 3999，发送端就知道要重发 4000 的包了。2）发送端没收到 ACK，就以为接收端没收到（实际上收到了），也重发 4000 的包。</p>
+<h2 id="累计应答"><a href="#累计应答" class="headerlink" title="累计应答"></a>累计应答</h2><p>相比于一个一个包的发送，确认。实际上，接收端只会给发送端 ACK 收到的连续包的最后一个序号。比如发送端发送了 1-5 个包，接收端 ACK 一个 3 （x + 1,3这个包还没收到）给发送端。说明收到了 1,2 两个包。也就是<strong>累计应答</strong>。</p>
+<p>需要注意的是，seq 和 ACK 是以字节数来计算的，故不能跳着 ack。<strong>只能确认最大的连续收到的包。</strong></p>
+<h2 id="引入窗口"><a href="#引入窗口" class="headerlink" title="引入窗口"></a>引入窗口</h2><p>简单的重传机制就是发一个等一个，效率低。</p>
+<p>引入窗口的目的就是减少等待，在没有收到部分包 ACK 的情况下，允许发送最大的段。比如窗口被定义为 5，就允许最多连续发送 5 个段，而不是一个个等待。</p>
+<h2 id="重发控制"><a href="#重发控制" class="headerlink" title="重发控制"></a>重发控制</h2><p><img src="/2021/02/01/tcp-related/image(7).png" alt="image(7)"></p>
+<p><img src="/2021/02/01/tcp-related/image(8).png" alt="image(8)"></p>
+<p>还有一种需要重发的情况是，发送端一直接收不到 ACK。TCP 就会等待一段时间，如果超过就重发。这个等待时间不宜超过 RTT（数据包往返的时间），否则可能进行不必要的重传。</p>
+<p>重发的时候就涉及到一个问题，当发送端一直接收不到 3001 的 ACK 时（接收端确实没有收到 3000 的数据），而接收端收到了到 5001 的数据（放在缓冲区）。那么发送端到底是选择重发 3000 的数据，还是把 3001 ，4001, 5001 全部重发呢？</p>
+<h2 id="SACK"><a href="#SACK" class="headerlink" title="SACK"></a>SACK</h2><p>**Selective Acknowledgment (SACK)**（参看<a href="http://tools.ietf.org/html/rfc2018">RFC 2018</a>），这种方式需要在TCP头里加一个SACK的东西，ACK还是Fast Retransmit的ACK，SACK则是汇报收到的数据碎版。参看下图：</p>
+<p><img src="/2021/02/01/tcp-related/image(9).png" alt="image(9)"></p>
+<p>接收端不仅发送 ACK，还发送一个 SACK 向发送端说明自己缓冲区已经收到了 5000 的数据（只是还无法想你发送 5001 的 ACK ，因为在前面断了一截儿）。</p>
+<p>但是，发送端不能把 SACK 作为真正意义上的 ACK 看待，因为接收端对于 SACK 的数据是可能放弃掉的。后续发送端如果检测到 ACK 没有实际性的增长，仍然需要重发该部分的数据。</p>
+<h1 id="滑动窗口，窗口控制"><a href="#滑动窗口，窗口控制" class="headerlink" title="滑动窗口，窗口控制"></a>滑动窗口，窗口控制</h1><p>TCP 头中有一个 window 字段，又叫 Advertised-Window，这个字段的作用是接收端会告诉发送端自己能接受处理的最大数据，发送端会根据这个值调整发送的数据多少，避免接收端压力太大。</p>
+<p>且这个 window 是有可能到 0 的。也就是说，发送端不再发送数据。</p>
+<p>当 window 变成 0 的时候，发送方会定时发送窗口探测数据包，看看有没有增加 window 值的可能。一般这个值会设置成3次，第次大约30-60秒（不同的实现可能会不一样）。如果3次过后还是0的话，有的TCP实现就会发RST把链接断了。</p>
+<h1 id="TCP-拥塞控制"><a href="#TCP-拥塞控制" class="headerlink" title="TCP 拥塞控制"></a>TCP 拥塞控制</h1><p>前面讨论的窗口，关注的点是接收端的处理能力。这里的拥塞控制也有一个窗口的概念，但是关注的点是对于整个网络的影响。</p>
+<p>我们知道，TCP 有超时重发机制，如果每个 TCP 不顾及整个网络的情况，不断的重发数据，网络状况因此可能更差，形成恶性循环。</p>
+<h2 id="慢启动"><a href="#慢启动" class="headerlink" title="慢启动"></a><strong>慢启动</strong></h2><p>Congestion Window，cwnd。MSS（maximum segment size最大分段长度）</p>
+<p>算法如下</p>
+<ol>
+<li>连接建立，初始化 cwnd 为 1，说明可以传输一个 MSS 大小</li>
+<li>每收到一个 ACK，cwnd++，线性增长</li>
+<li>每过一个 RTT，cwnd = cwnd * 2，指数增长</li>
+<li>ssthresh（slow start threshold），当 cwnd &gt;= ssthresh 时，进入“拥塞避免算法”</li>
+</ol>
+<p>从算法过程可以判断，当网络状况良好的时候，ACK 的快，RTT 也快，这个慢启动也不算非常慢。网络状况差的话，那就是缓慢增长，到定义的阈值。</p>
+<h2 id="拥塞避免算法-–-Congestion-Avoidance"><a href="#拥塞避免算法-–-Congestion-Avoidance" class="headerlink" title="拥塞避免算法 – Congestion Avoidance"></a>拥塞避免算法 – Congestion Avoidance</h2><p>前面说过，还有一个ssthresh（slow start threshold），是一个上限，当cwnd &gt;= ssthresh时，就会进入“拥塞避免算法”。一般来说ssthresh的值是65535，单位是字节，当cwnd达到这个值时后，算法如下：</p>
+<p>1）收到一个ACK时，cwnd = cwnd + 1/cwnd</p>
+<p>2）当每过一个RTT时，cwnd = cwnd + 1</p>
+<p>这样就可以避免增长过快导致网络拥塞，慢慢的增加调整到网络的最佳值。很明显，是一个线性上升的算法。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ul>
+<li><a href="https://coolshell.cn/articles/11564.html">TCP 的那些事儿</a> </li>
+<li><a href="https://time.geekbang.org/column/intro/85">趣谈网络协议</a></li>
+</ul>
 ]]></content>
+      <categories>
+        <category>网络协议</category>
+      </categories>
       <tags>
-        <tag>水电费</tag>
+        <tag>tcp</tag>
       </tags>
   </entry>
   <entry>
@@ -2732,85 +2859,6 @@
       <tags>
         <tag>翻译</tag>
         <tag>redis</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>TCP 学习记录</title>
-    <url>/2021/02/01/tcp-related/</url>
-    <content><![CDATA[<p>首先了解 TCP 在 OSI 的七层模型中的第四层 - 传输层（来自《图解 TCP/IP》）<span id="more"></span></p>
-<p><img src="/2021/02/01/tcp-related/image(1).png" alt="image(1)"></p>
-<p>再简单的看一下 客户端 和 服务端之间的数据传输</p>
-<p><img src="/2021/02/01/tcp-related/image(2).png" alt="image(2)"></p>
-<p>数据发送时经过每一层都会加上对应的协议头，接收端则会一层层解析头，交给高层的协议处理。</p>
-<h1 id="TCP-首部"><a href="#TCP-首部" class="headerlink" title="TCP 首部"></a>TCP 首部</h1><p><img src="/2021/02/01/tcp-related/image(3).png" alt="image(3)"></p>
-<p>其中我觉得比较重要的几个内容是</p>
-<ul>
-<li><strong>序号</strong>。为包编上号，解决包的乱序问题。</li>
-<li><strong>确认序号，<strong><strong>A</strong></strong>cknowledgement Number。</strong>也就是我们常说的确认应答号 ACK ，可以解决丢包的问题。</li>
-<li><strong>Window</strong>。也就是我们常说的<strong>滑动窗口。</strong></li>
-<li><strong>TCP Flags，状态位。</strong></li>
-<li><strong>Port，</strong>应用监听的端口号。</li>
-</ul>
-<h1 id="TCP-的状态机"><a href="#TCP-的状态机" class="headerlink" title="TCP 的状态机"></a>TCP 的状态机</h1><p>TCP 就是靠改变，维持通讯双方的<strong>状态</strong>来保证他们之间的“连接”的。</p>
-<p><img src="/2021/02/01/tcp-related/image(4).png" alt="image(4)"></p>
-<p>上图中，客户端发送 SYN ，就是期待发起连接，客户端就切换为 SYN-SENT 状态。服务端被动监听端口，处于 LISTEN 状态。Server 接收到 SYN 包后，也向 client 发送 SYN，以及对接收到的 SYN 的 ACK，此时 server 处于 SYN-RECEIVED 状态。 client 收到 server 的 SYN 以及对于自己之前 SYN 的 ACK 后，也要针对 server 的 SYN 发送 ACK，就变成 ESTABLISHED 状态。若此刻 server 成功收到最后这个 ACK ，也进入 ESTABLISHED 状态。</p>
-<p>刚才描述的过程就是我们常说的<strong>建立连接时的三次握手。</strong></p>
-<p><img src="/2021/02/01/tcp-related/image(5).png" alt="image(5)"></p>
-<p>对于三次握手，重要的点在于：</p>
-<ul>
-<li><strong>Synchronize Sequence Numbers，SYN。</strong>SYN seq = x seq = y，主要就是双方去确定 <strong>Sequence Numbers</strong>的值。****这个号就是以后通信要用到的包的序号。</li>
-</ul>
-<p><img src="/2021/02/01/tcp-related/image(6)-2560545.png" alt="image(6)"></p>
-<p>对于<strong>四次挥手断开连接</strong>，因为TCP连接是全双工（两方可以互相同时传输数据）的，所以当任何一方想要断开连接时，都不能那么任性。你可以保证自己没有数据要发送了，但是你不知道对方还有没有数据要继续发送。所以我理解为什么是四次，因为双方都需要像对方提出断开连接并收一下 ACK。</p>
-<p>在建立连接和断开连接时会有各种复杂情况，以下说明一些常见的</p>
-<ul>
-<li>建立连接时，客户端发送 SYN 后，直接掉线。server 就收不到 client 对于自己 SYN 的 ACK。当然 server 会一直尝试发送 SYN-ACK。 在Linux下，默认重试次数为5次，重试的间隔时间从1s开始每次都翻售，5次的重试时间间隔为1s, 2s, 4s, 8s, 16s，总共31s，第5次发出后还要等32s都知道第5次也超时了，所以，总共需要 1s + 2s + 4s+ 8s+ 16s + 32s = 2^6 -1 = 63s，TCP才会把断开这个连接。</li>
-<li>断开连接时的 time-wait 到 close 状态中间等待的一段 2MSL 时间，（Maximum Segment Lifetime）。因为双方在最后收到对方的 FIN 报文时，要给对方一个 ACK，让对方知道自己知道你要也要断开连接了。而不是发了 ACK 直接跑路，这样 B 就一直收不到自己 FIN 的 ACK。</li>
-<li>这个 MSL ，<strong>报文最大生存时间</strong>。可以理解成报文在网络中可以存活的最长时间，超过这个时间还没到达目的地，就会被丢弃。所有 A B 等待的 2MSL 时间还有一个原因就是，避免下一个占用了此端口的应用收到上次与自己无关连接的包。等那么久还没有收到包也就被丢弃了。</li>
-</ul>
-<h1 id="TCP-重传机制"><a href="#TCP-重传机制" class="headerlink" title="TCP 重传机制"></a>TCP 重传机制</h1><p>TCP 保证可靠，稳定的传输，保证包全部顺利到达对方。但是网络世界很复杂，各种意外情况如何去保证呢？</p>
-<p>其中一种就是前面提到的 ACK 机制。比如接收端收到 4000 的包，ACK 回去要 4001 之后的包，发送端就知道 4000 包成功到达了。</p>
-<p>其中的意外情况有，1）接收端没收到 4000 的包，就一直 ACK 3999，发送端就知道要重发 4000 的包了。2）发送端没收到 ACK，就以为接收端没收到（实际上收到了），也重发 4000 的包。</p>
-<h2 id="累计应答"><a href="#累计应答" class="headerlink" title="累计应答"></a>累计应答</h2><p>相比于一个一个包的发送，确认。实际上，接收端只会给发送端 ACK 收到的连续包的最后一个序号。比如发送端发送了 1-5 个包，接收端 ACK 一个 3 （x + 1,3这个包还没收到）给发送端。说明收到了 1,2 两个包。也就是<strong>累计应答</strong>。</p>
-<p>需要注意的是，seq 和 ACK 是以字节数来计算的，故不能跳着 ack。<strong>只能确认最大的连续收到的包。</strong></p>
-<h2 id="引入窗口"><a href="#引入窗口" class="headerlink" title="引入窗口"></a>引入窗口</h2><p>简单的重传机制就是发一个等一个，效率低。</p>
-<p>引入窗口的目的就是减少等待，在没有收到部分包 ACK 的情况下，允许发送最大的段。比如窗口被定义为 5，就允许最多连续发送 5 个段，而不是一个个等待。</p>
-<h2 id="重发控制"><a href="#重发控制" class="headerlink" title="重发控制"></a>重发控制</h2><p><img src="/2021/02/01/tcp-related/image(7).png" alt="image(7)"></p>
-<p><img src="/2021/02/01/tcp-related/image(8).png" alt="image(8)"></p>
-<p>还有一种需要重发的情况是，发送端一直接收不到 ACK。TCP 就会等待一段时间，如果超过就重发。这个等待时间不宜超过 RTT（数据包往返的时间），否则可能进行不必要的重传。</p>
-<p>重发的时候就涉及到一个问题，当发送端一直接收不到 3001 的 ACK 时（接收端确实没有收到 3000 的数据），而接收端收到了到 5001 的数据（放在缓冲区）。那么发送端到底是选择重发 3000 的数据，还是把 3001 ，4001, 5001 全部重发呢？</p>
-<h2 id="SACK"><a href="#SACK" class="headerlink" title="SACK"></a>SACK</h2><p>**Selective Acknowledgment (SACK)**（参看<a href="http://tools.ietf.org/html/rfc2018">RFC 2018</a>），这种方式需要在TCP头里加一个SACK的东西，ACK还是Fast Retransmit的ACK，SACK则是汇报收到的数据碎版。参看下图：</p>
-<p><img src="/2021/02/01/tcp-related/image(9).png" alt="image(9)"></p>
-<p>接收端不仅发送 ACK，还发送一个 SACK 向发送端说明自己缓冲区已经收到了 5000 的数据（只是还无法想你发送 5001 的 ACK ，因为在前面断了一截儿）。</p>
-<p>但是，发送端不能把 SACK 作为真正意义上的 ACK 看待，因为接收端对于 SACK 的数据是可能放弃掉的。后续发送端如果检测到 ACK 没有实际性的增长，仍然需要重发该部分的数据。</p>
-<h1 id="滑动窗口，窗口控制"><a href="#滑动窗口，窗口控制" class="headerlink" title="滑动窗口，窗口控制"></a>滑动窗口，窗口控制</h1><p>TCP 头中有一个 window 字段，又叫 Advertised-Window，这个字段的作用是接收端会告诉发送端自己能接受处理的最大数据，发送端会根据这个值调整发送的数据多少，避免接收端压力太大。</p>
-<p>且这个 window 是有可能到 0 的。也就是说，发送端不再发送数据。</p>
-<p>当 window 变成 0 的时候，发送方会定时发送窗口探测数据包，看看有没有增加 window 值的可能。一般这个值会设置成3次，第次大约30-60秒（不同的实现可能会不一样）。如果3次过后还是0的话，有的TCP实现就会发RST把链接断了。</p>
-<h1 id="TCP-拥塞控制"><a href="#TCP-拥塞控制" class="headerlink" title="TCP 拥塞控制"></a>TCP 拥塞控制</h1><p>前面讨论的窗口，关注的点是接收端的处理能力。这里的拥塞控制也有一个窗口的概念，但是关注的点是对于整个网络的影响。</p>
-<p>我们知道，TCP 有超时重发机制，如果每个 TCP 不顾及整个网络的情况，不断的重发数据，网络状况因此可能更差，形成恶性循环。</p>
-<h2 id="慢启动"><a href="#慢启动" class="headerlink" title="慢启动"></a><strong>慢启动</strong></h2><p>Congestion Window，cwnd。MSS（maximum segment size最大分段长度）</p>
-<p>算法如下</p>
-<ol>
-<li>连接建立，初始化 cwnd 为 1，说明可以传输一个 MSS 大小</li>
-<li>每收到一个 ACK，cwnd++，线性增长</li>
-<li>每过一个 RTT，cwnd = cwnd * 2，指数增长</li>
-<li>ssthresh（slow start threshold），当 cwnd &gt;= ssthresh 时，进入“拥塞避免算法”</li>
-</ol>
-<p>从算法过程可以判断，当网络状况良好的时候，ACK 的快，RTT 也快，这个慢启动也不算非常慢。网络状况差的话，那就是缓慢增长，到定义的阈值。</p>
-<h2 id="拥塞避免算法-–-Congestion-Avoidance"><a href="#拥塞避免算法-–-Congestion-Avoidance" class="headerlink" title="拥塞避免算法 – Congestion Avoidance"></a>拥塞避免算法 – Congestion Avoidance</h2><p>前面说过，还有一个ssthresh（slow start threshold），是一个上限，当cwnd &gt;= ssthresh时，就会进入“拥塞避免算法”。一般来说ssthresh的值是65535，单位是字节，当cwnd达到这个值时后，算法如下：</p>
-<p>1）收到一个ACK时，cwnd = cwnd + 1/cwnd</p>
-<p>2）当每过一个RTT时，cwnd = cwnd + 1</p>
-<p>这样就可以避免增长过快导致网络拥塞，慢慢的增加调整到网络的最佳值。很明显，是一个线性上升的算法。</p>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ul>
-<li><a href="https://coolshell.cn/articles/11564.html">TCP 的那些事儿</a> </li>
-<li><a href="https://time.geekbang.org/column/intro/85">趣谈网络协议</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>网络协议</category>
-      </categories>
-      <tags>
-        <tag>tcp</tag>
       </tags>
   </entry>
 </search>

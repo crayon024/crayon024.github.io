@@ -23,29 +23,34 @@
   <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
-<meta name="description" content="GC 算法 标记-复制。 优点：存活的对象越少，复制需要的空间就越小；而且复制后的对象们内存空间排布紧凑，避免空间碎片的问题。 缺点：有一部分空间被浪费。如果存活对象大且多的话复制成本比较高。">
+<meta name="description" content="2021 总结 我的 21 年关键字是 ‘纠结’。 2021 年中工作经验满 1 年。从毕业前后拖拉的在不多的应届生岗位中寻找工作。入职后，虽然工作可以胜任，但是对于自己能力的猜疑让自己一直在纠结中度过，回头看来其实纠结的点都是没有必要。 2021 从英文世界获取信息的能力大幅提升。自己从头翻译了 Redis 5.0.8 的配置文件 redis.conf，心理上不抗拒加上感受到获取到的信息质量确实">
 <meta property="og:type" content="article">
-<meta property="og:title" content="GC 策略总结">
-<meta property="og:url" content="http://example.com/2021/07/20/GC-Algo/index.html">
+<meta property="og:title" content="2021-&gt; 2022 总结和计划">
+<meta property="og:url" content="http://example.com/2022/01/13/2021-2022/index.html">
 <meta property="og:site_name" content="Crayon">
-<meta property="og:description" content="GC 算法 标记-复制。 优点：存活的对象越少，复制需要的空间就越小；而且复制后的对象们内存空间排布紧凑，避免空间碎片的问题。 缺点：有一部分空间被浪费。如果存活对象大且多的话复制成本比较高。">
+<meta property="og:description" content="2021 总结 我的 21 年关键字是 ‘纠结’。 2021 年中工作经验满 1 年。从毕业前后拖拉的在不多的应届生岗位中寻找工作。入职后，虽然工作可以胜任，但是对于自己能力的猜疑让自己一直在纠结中度过，回头看来其实纠结的点都是没有必要。 2021 从英文世界获取信息的能力大幅提升。自己从头翻译了 Redis 5.0.8 的配置文件 redis.conf，心理上不抗拒加上感受到获取到的信息质量确实">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2021-07-20T10:54:14.000Z">
-<meta property="article:modified_time" content="2021-07-20T10:54:14.000Z">
+<meta property="og:image" content="http://example.com/2022/01/13/2021-2022/image-20220113173401456.png">
+<meta property="og:image" content="http://example.com/2022/01/13/2021-2022/image-20220113173717713.png">
+<meta property="og:image" content="http://example.com/2022/01/13/2021-2022/image-20220113201324042.png">
+<meta property="og:image" content="http://example.com/2022/01/13/2021-2022/image-20220113201656902.png">
+<meta property="article:published_time" content="2022-01-13T12:43:09.000Z">
+<meta property="article:modified_time" content="2022-01-13T12:22:28.655Z">
 <meta property="article:author" content="Hexin Fang">
-<meta property="article:tag" content="jvm">
-<meta property="article:tag" content="gc">
+<meta property="article:tag" content="日常">
+<meta property="article:tag" content="记录">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2022/01/13/2021-2022/image-20220113173401456.png">
 
 
-<link rel="canonical" href="http://example.com/2021/07/20/GC-Algo/">
+<link rel="canonical" href="http://example.com/2022/01/13/2021-2022/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2021/07/20/GC-Algo/","path":"2021/07/20/GC-Algo/","title":"GC 策略总结"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2022/01/13/2021-2022/","path":"2022/01/13/2021-2022/","title":"2021-> 2022 总结和计划"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>GC 策略总结 | Crayon</title>
+<title>2021-> 2022 总结和计划 | Crayon</title>
   
 
 
@@ -151,7 +156,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#GC-%E7%AE%97%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">GC 算法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Serial-GC"><span class="nav-number">2.</span> <span class="nav-text">Serial GC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#XX-UseParNewGC"><span class="nav-number">2.1.</span> <span class="nav-text">-XX:+UseParNewGC</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Parallel-GC"><span class="nav-number">3.</span> <span class="nav-text">Parallel GC</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CMS-GC"><span class="nav-number">4.</span> <span class="nav-text">CMS GC</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#G1-GC"><span class="nav-number">5.</span> <span class="nav-text">G1 GC</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81%E6%80%BB%E7%BB%93"><span class="nav-number">6.</span> <span class="nav-text">验证总结</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#2021-%E6%80%BB%E7%BB%93"><span class="nav-number">1.</span> <span class="nav-text">2021 总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2022-%E8%AE%A1%E5%88%92"><span class="nav-number">2.</span> <span class="nav-text">2022 计划</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -216,7 +221,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/20/GC-Algo/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/01/13/2021-2022/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar_2.JPG">
@@ -229,7 +234,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          GC 策略总结
+          2021-> 2022 总结和计划
         </h1>
 
         <div class="post-meta-container">
@@ -239,8 +244,9 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
+      
 
-      <time title="创建时间：2021-07-20 18:54:14" itemprop="dateCreated datePublished" datetime="2021-07-20T18:54:14+08:00">2021-07-20</time>
+      <time title="创建时间：2022-01-13 20:43:09 / 修改时间：20:22:28" itemprop="dateCreated datePublished" datetime="2022-01-13T20:43:09+08:00">2022-01-13</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -248,7 +254,7 @@
       </span>
       <span class="post-meta-item-text">分类于</span>
         <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+          <a href="/categories/%E8%AE%B0%E5%BD%95/" itemprop="url" rel="index"><span itemprop="name">记录</span></a>
         </span>
     </span>
 
@@ -262,47 +268,53 @@
     
     
     <div class="post-body" itemprop="articleBody">
-        <h1 id="GC-算法"><a href="#GC-算法" class="headerlink" title="GC 算法"></a>GC 算法</h1><ul>
-<li>标记-复制。<ul>
-<li>优点：存活的对象越少，复制需要的空间就越小；而且复制后的对象们内存空间排布紧凑，避免空间碎片的问题。</li>
-<li>缺点：有一部分空间被浪费。如果存活对象大且多的话复制成本比较高。<span id="more"></span></li>
-<li><strong>适用每次 GC 存活对象小而美的情况。年轻代</strong></li>
-</ul>
+        <h2 id="2021-总结"><a href="#2021-总结" class="headerlink" title="2021 总结"></a>2021 总结</h2><ol>
+<li><p>我的 21 年关键字是 ‘纠结’。</p>
+<p>2021 年中工作经验满 1 年。从毕业前后拖拉的在不多的应届生岗位中寻找工作。入职后，虽然工作可以胜任，但是对于自己能力的猜疑让自己一直在纠结中度过，回头看来其实纠结的点都是没有必要。</p>
+<p>2021 从英文世界获取信息的能力大幅提升。自己从头翻译了 Redis 5.0.8 的配置文件 redis.conf，心理上不抗拒加上感受到获取到的信息质量确实有差异后，正反馈明显。</p>
 </li>
-<li>标记-清除。直接清除可回收对象，不进行内存整理。，<ul>
-<li>优点：单次 STW 的时间可能要短一些。</li>
-<li>缺点：但是产生的内存碎片，可能导致内存总空间足够，但是没一块连续的空间存放对象的问题，内存利用率降低；对象放不下，可能触发额外的 GC。</li>
-<li><strong>适用对象存活率高的情况。老年代</strong></li>
-</ul>
+<li><p>参加 Java 训练营。</p>
+<p>技术上的收获是从更高的维度完善了技术体系的认知；其次是见识到了社群中更多优秀的同学也在不断进步。</p>
 </li>
-<li>标记-清除-整理。STW 时间可能会稍长一些，内存碎片问题得到解决。适用对象存活率高的情况。</li>
-</ul>
-<h1 id="Serial-GC"><a href="#Serial-GC" class="headerlink" title="Serial GC"></a>Serial GC</h1><p>-XX:+UseSerialGC</p>
-<p>串行 GC 单线程执行，在 GC 期间其他业务线程均暂停，暂停的时间长。</p>
-<p>串行 GC 对年轻代采用标记复制算法。对老年代使用标记-清除-整理算法。</p>
-<p>串行 GC 简单直接，在单核 CPU 环境下比较适用。</p>
-<h2 id="XX-UseParNewGC"><a href="#XX-UseParNewGC" class="headerlink" title="-XX:+UseParNewGC"></a>-XX:+UseParNewGC</h2><p>ParNew 收集器，多线程版本的 Serial。配合 CMS 使用。</p>
-<h1 id="Parallel-GC"><a href="#Parallel-GC" class="headerlink" title="Parallel GC"></a>Parallel GC</h1><p>-XX:UseParallelGC -XX:UseParallelOldGC</p>
-<p>使用的 GC 算法和串行的一样。</p>
-<p>默认的 GC 线程数是 CPU core 数，该收集器的目标更倾向于<strong>提高系统吞吐量</strong>，有时候单次的 GC 暂停时间较长。</p>
-<h1 id="CMS-GC"><a href="#CMS-GC" class="headerlink" title="CMS GC"></a>CMS GC</h1><p>-XX:UseConcMarkSweepGC</p>
-<p>对老年代没有整理操作，使用 free-list 进行内存空间的管理。默认的核心线程数 CPU 核数 / 4。</p>
-<p>可以和业务线程并发执行，GC 暂停时间少。</p>
-<h1 id="G1-GC"><a href="#G1-GC" class="headerlink" title="G1 GC"></a>G1 GC</h1><p>打破整个分区的理论，把内存划分成多个小块进行管理。对每个小块的垃圾数量进行预估，优先回收垃圾多的 Region。可预期的垃圾停顿时间。</p>
-<h1 id="验证总结"><a href="#验证总结" class="headerlink" title="验证总结"></a>验证总结</h1><p>首先需要提到的一点是 GC 的时间和存活的对象数量有关，和堆内存的大小关系没有那么大。</p>
-<p>配置堆内存 512M，YGC 后年轻代存活对象大概 20M。</p>
-<ul>
-<li>串行 GC 利用单线程执行，GC 暂停的时间明显会比较长。在实际的测试下，在小堆内存空间的情况下，YGC 和并行 GC 的 YGC 差不多。FGC 使用的时间明显较长，<strong>大概是并行 GC 的一倍（存活对象 300M 左右）</strong>。老年代存活对象占用的空间大，整理移动的时间就长。</li>
-<li>CMS GC 的老年代清理明显的暂停时间降低。在 GC 日志中有发现 concurrent mode failure 的情况。查询资料后明白，CMS 在 cleanup 是并发执行的，这时的对象引用关系发生改变，也可能有新的对象需要分配空间。如果没有预留足够的空间内存分配就会导致并发失败。可能重新 CMS ，或者 GC 退化成 Serial。</li>
-<li>G1 GC 出现了 Humongous Allocation 因为大对象分配失败，触发了 initial-mark。也是重新标记，或者 GC 退化的问题。</li>
-</ul>
-<p>堆内存越大，内存中可容纳的对象越多，GC 的次数随之减少，单次 GC 的暂停时间可能更长（取决于存活对象的数量）。</p>
-<p>总的来说，注意不同 GC 策略采用的算法，以及设计的目的。比如 CMS 在于并发执行，提高系统响应。Parallel 更倾向于提高吞吐量；G1 GC 倾向于可配置可预估的暂停时间。</p>
-<p>CMS - 老年代 没有整理，使用 free-list 管理回收内存；真正的 STW 时间小，但是步骤多，还有浮动垃圾，GC 退化问题。G1 GC 也存在 GC 退化问题。</p>
-<p>配置堆内存的时候，注意 JVM 自身需要的内存和系统需要的内存，预留一定的空间。</p>
-<p>-Xms -Xmx 直接一步到位，扩容的时候有性能的抖动。</p>
-<p>年轻代和老年代的比例默认 1:2，新生代:from:to = 8：1：1，根据情况来调整。</p>
-<p>根据对象晋升回收速率的计算，进行空间，晋升年龄的配置。</p>
+<li><p>拖延。<br>关于这篇总结文章，可以看做是 2022 摆脱拖延的开始。此前内心总有许多想法，但都没有真正去执行。比如为自己的职业生涯，技能提升做一个明确的规划并为之努力。</p>
+<p>比如一直想搞定算法，但是都是有一阵没一阵，并没有系统的提高算法能力。能够应付大部分面试的算法部分。内心的想法很多 - 摄影 （极客时间买了摄影课程）、视频（安装过达芬奇 等等剪辑软件）都不了了之。</p>
+<p>LeetCode:</p>
+<p><img src="/2022/01/13/2021-2022/image-20220113173401456.png" alt="leetcode提交记录"></p>
+<p>GitHub:</p>
+<p><img src="/2022/01/13/2021-2022/image-20220113173717713.png" alt="GitHub提交记录"></p>
+</li>
+<li><p>收获。<br>GitHub + Hexo 搭建了博客，整理了平时的学习笔记发布。</p>
+<p>英文的听读能力有了客观进步。</p>
+</li>
+<li><p>书籍。</p>
+<p>技术：《Java 8 实战》《Netty 实战》《Java 并发编程的艺术》《Java 并发编程实战》《深入理解 Java 虚拟机 JVM》《第一本 Docker 书》<br>其他：《俗世奇人》《软技能：代码之外的生存指南》《你是你吃出来的》《一往无前》《我们唱》《掌控：开启不疲惫、不焦虑的人生》《睡眠革命》《科比：黄金年代》</p>
+</li>
+<li><p>娱乐。</p>
+<ol>
+<li>推荐剧集：《绝命毒师》1-5 季。</li>
+<li>推荐游戏：《巫师 3 狂猎》。</li>
+</ol>
+</li>
+</ol>
+<h2 id="2022-计划"><a href="#2022-计划" class="headerlink" title="2022 计划"></a>2022 计划</h2><p>希望 2022 可以比 2021 更加从容，生活工作上都能如此。</p>
+<ol>
+<li>Object 1：提高技术能力<ol>
+<li>KR1：丰富博客站内容，增加 30 篇内容。</li>
+<li>KR2：完成 5 篇高质量的技术博客。</li>
+<li>KR3：参与开源项目，为开源项目提交代码。</li>
+</ol>
+</li>
+<li>Object 2：搞定算法，能够应付大部分面试的算法部分。<ol>
+<li>KR1：分模块进行刷题训练。DP，搜索，贪心 …</li>
+<li>KR2：LeetCode 剑指 Offer 系列题目刷完。</li>
+</ol>
+</li>
+</ol>
+<p>有了大致的目标后，如何分配自己的时间去做也是重点的部分。我目前的做法基于番茄工作法，从《软技能：代码之外的生存指南》中为自己指定了一天 7 个番茄时钟的做法去实践。</p>
+<p><a target="_blank" rel="noopener" href="https://draveness.me/few-words-time-management/">如何管理自己的时间资产</a></p>
+<p><img src="/2022/01/13/2021-2022/image-20220113201324042.png" alt="image-20220113201324042"></p>
+<p><a target="_blank" rel="noopener" href="https://book.douban.com/subject/26835090/">软技能：代码之外的生存指南</a></p>
+<p><img src="/2022/01/13/2021-2022/image-20220113201656902.png" alt="image-20220113201656902"></p>
 
     </div>
 
@@ -312,22 +324,19 @@
 
     <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/jvm/" rel="tag"># jvm</a>
-              <a href="/tags/gc/" rel="tag"># gc</a>
+              <a href="/tags/%E6%97%A5%E5%B8%B8/" rel="tag"># 日常</a>
+              <a href="/tags/%E8%AE%B0%E5%BD%95/" rel="tag"># 记录</a>
           </div>
 
         
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2021/07/10/Mysql-geektime-study-record/" rel="prev" title="MySQL 学习记录">
-                  <i class="fa fa-chevron-left"></i> MySQL 学习记录
+                <a href="/2021/09/15/ClassLoader-And-Tomact-isolation/" rel="prev" title="类加载器机制 学习笔记">
+                  <i class="fa fa-chevron-left"></i> 类加载器机制 学习笔记
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2021/08/01/fastdfs-record/" rel="next" title="FastDFS Clinet Java 源码分析">
-                  FastDFS Clinet Java 源码分析 <i class="fa fa-chevron-right"></i>
-                </a>
             </div>
           </div>
     </footer>
