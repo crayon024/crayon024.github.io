@@ -272,80 +272,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ConcurrentHashMap 源码分析</title>
-    <url>/2021/05/05/ConcurrentHashMap-Analyse/</url>
-    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>ConcurrentHashMap 是高性能的线程安全的哈希容器。</p>
-<p>值得一提的是 ConcurrentHashMap 的 key 和 value 不允许 null 值。</p>
-<p>Doug Lea 和 Josh Bloch 对 HashMap，ConcurrentHashMap key 允不允许 null 值的讨论。</p>
-<ul>
-<li><p><a href="http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002485.html?fileGuid=Hxch6t3HxHCRkVqG">http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002485.html</a></p>
-</li>
-<li><p><a href="http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002486.html?fileGuid=Hxch6t3HxHCRkVqG">http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002486.html</a></p>
-<span id="more"></span></li>
-</ul>
-<p>邮件里大致的内容说明是因为 null 值有二义性。在并发环境下，如果你通过 get(key) 得到了一个 null 值，无法判断是因为 map 中不存在这个 key 还是因为 key 对应的 value 是 null。在并发环境下，你无法通过调用 containsKey() 来确定。</p>
-<p>因为不允许 null 值，所以在 ConcurrentHashMap 中，可以通过 get() 是否为 null 来直接判断是否 contains 一个 key。</p>
-<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><h2 id="存储结构"><a href="#存储结构" class="headerlink" title="存储结构"></a>存储结构</h2><p>JDK 1.8 之后，采用的存储结构与 HashMap 一样，Node&lt;K,V&gt;[] table。不同的是 Node 中的 val 和 next 用<strong>volatile</strong>来修饰，用于保证可见性。</p>
-<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124000740.png" alt="image-20210925124000740"></p>
-<h2 id="put-方法"><a href="#put-方法" class="headerlink" title="put() 方法"></a>put() 方法</h2><ol>
-<li><p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124058747.png" alt="image-20210925124058747">rehash，保证均匀分布</p>
-</li>
-<li><p>索引定位后，如果该槽上没有值，通过 CAS 更新。这里的 tabAt，casTabAt 需要利用到 volatile 的可见性来保证正确。</p>
-</li>
-<li><p>表正在扩容</p>
-</li>
-<li><p>都不满足，对索引定位到的槽加锁操作。</p>
-</li>
-<li><p>槽节点的 hash 值大等 0，说明该槽上不是红黑树。按照拉链法的方式来插入值。</p>
-</li>
-<li><p>槽根节点的 hash 值小于 0，说明是树节点，走红黑树的插入逻辑。</p>
-</li>
-<li><p>插入后，判断阈值来进行树化。</p>
-<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124118357.png" alt="image-20210925124118357"></p>
-</li>
-</ol>
-<p>JDK 1.8 之后，利用了 CAS+synchronized，相比于 1.7 的锁定 Segment 的方式，取消了ReentrantLock 使用synchronized（看来 1.8 对于 synchronized 的优化很可观。网上的资源提到 synchronized 的锁升级，其实在 1.6 就已经引入），优化了锁的粒度和使用。</p>
-<h2 id="get-方法"><a href="#get-方法" class="headerlink" title="get() 方法"></a>get() 方法</h2><p>get 方法相对比较简单，因为使用了<strong>volatile</strong>修饰 val 和 next 变量，get 的时候可以无锁操作。</p>
-<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124156045.png" alt="image-20210925124156045"></p>
-<ol>
-<li><p>索引定位哈希槽的位置上是否有值，没有的话直接返回 null。有的话，比较哈希槽上根节点的 key ，一致的话直接返回 val 值。</p>
-</li>
-<li><p>哈希槽根节点的 hash 值小于 0 ，说明是红黑树，走红黑树的查找方法。</p>
-</li>
-<li><p>都不满足的话，在链表中往下遍历查找。</p>
-</li>
-</ol>
-<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124249047.png" alt="image-20210925124249047"></p>
-<h1 id="硬件同步原语-CAS"><a href="#硬件同步原语-CAS" class="headerlink" title="硬件同步原语 CAS"></a>硬件同步原语 CAS</h1><p>硬件同步原语是由计算机硬件提供的一组原子操作，具体来说就是 CPU 提供的实现，可以保证指令操作的原子性。</p>
-<p>CAS（Compare and Swap）的意思是，先获取某个想要修改的旧值，然后在修改的时候，比较当前的值和旧值，如果一致，就更新为新的，返回 true。否则就不改变，返回 false。</p>
-<p>还有一个常用的 FAA（Fetch and Add），的作用是获取某个变量的值，然后将变量的值增加，然后返回旧值。</p>
-<p>在各种高级编程语言中，这些原语一般都有相应的实现。</p>
-<p>比如 JDK 中提供的 CAS 。</p>
-<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124311450.png"></p>
-<p>Java 中的 FAA 好像是通过 CAS 实现的。</p>
-<h3 id><a href="#" class="headerlink" title></a><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124327406.png" alt="image-20210925124327406"></h3><h3 id="CAS-的-ABA-问题"><a href="#CAS-的-ABA-问题" class="headerlink" title="CAS 的 ABA 问题"></a>CAS 的 ABA 问题</h3><p>CAS 在写入时仅仅判断当前值和旧值，期间值可能改变过，但是无法判断。Java 提供了<a href="http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html?fileGuid=Hxch6t3HxHCRkVqG">AtomicStampedReference</a>工具类，通过版本号的方式来完善这个问题。</p>
-<h3 id="CAS-的开销和优点"><a href="#CAS-的开销和优点" class="headerlink" title="CAS 的开销和优点"></a>CAS 的开销和优点</h3><p>使用 CAS 可以避免使用锁，减小开销。但是 CAS 面对频繁的资源竞争的话，一直反复采用 CAS 尝试更新失败概率高，CPU 的开销也随之变大。</p>
-<p>CAS 像是乐观锁的思路，总认为修改成功的概率很高。悲观锁的思路就是共享资源的竞争可能很频繁，就采用独占的方式操作，比如  synchronized 关键字。</p>
-<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><p>ConcurrentHashMap 是高性能的线程安全的容器，但并不意味着使用它就没有安全问题。比如其 size() ，putALL() 等方法在并发情况下只能反映中间情况。</p>
-<p>使用 ConcurrentHashMap 的时候，对其的多个操作之间仍然不是原子性的，如果需要的话可以对 map 加锁操作。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>ConcurrentHashMap 在 1.7 之前采用分段锁的形式，默认并发 16，取决于 Segment。1.8 之后的存储结构和 HashMap 类似，且采用 CAS + synchronized 来保证原子性的读写操作。</p>
-<p>使用 ConcurrentHashMap 、CopyOnWriteArrayList 等线程安全的工具类，并不意味着就没有线程安全问题，有关并发安全的知识则需要自己学习运用。</p>
-<h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ol>
-<li><a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentHashMap.html?fileGuid=Hxch6t3HxHCRkVqG">https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentHashMap.html</a>，ConcurrentHashMap 官方文档</li>
-<li><a href="http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html?fileGuid=Hxch6t3HxHCRkVqG">http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html</a>，AtomicStampedReference 使用教程</li>
-<li><a href="https://en.wikipedia.org/wiki/Compare-and-swap?fileGuid=Hxch6t3HxHCRkVqG">https://en.wikipedia.org/wiki/Compare-and-swap</a>，CAS 原语</li>
-</ol>
-]]></content>
-      <categories>
-        <category>Java</category>
-      </categories>
-      <tags>
-        <tag>java</tag>
-        <tag>java 集合</tag>
-        <tag>源码分析</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Java 并发编程（一）</title>
     <url>/2021/08/11/Concurrent-Programming/</url>
     <content><![CDATA[<h1 id="可见性、有序性和原子性"><a href="#可见性、有序性和原子性" class="headerlink" title="可见性、有序性和原子性"></a>可见性、有序性和原子性</h1><h2 id="可见性"><a href="#可见性" class="headerlink" title="可见性"></a>可见性</h2><p>多核 CPU ，每个 CPU 都有属于自己的多层缓存可以提高访问数据的速度以及减少共享内存的竞争。多核 CPU，每个线程对共享变量都可能通过缓存来访问，<strong>不同线程之间对共享变量的修改是否立即可见（刷新到主存并且更新缓存），一般称为可见性。</strong><span id="more"></span></p>
@@ -494,56 +420,77 @@
       </tags>
   </entry>
   <entry>
-    <title>GC 策略总结</title>
-    <url>/2021/07/20/GC-Algo/</url>
-    <content><![CDATA[<h1 id="GC-算法"><a href="#GC-算法" class="headerlink" title="GC 算法"></a>GC 算法</h1><ul>
-<li>标记-复制。<ul>
-<li>优点：存活的对象越少，复制需要的空间就越小；而且复制后的对象们内存空间排布紧凑，避免空间碎片的问题。</li>
-<li>缺点：有一部分空间被浪费。如果存活对象大且多的话复制成本比较高。<span id="more"></span></li>
-<li><strong>适用每次 GC 存活对象小而美的情况。年轻代</strong></li>
-</ul>
-</li>
-<li>标记-清除。直接清除可回收对象，不进行内存整理。，<ul>
-<li>优点：单次 STW 的时间可能要短一些。</li>
-<li>缺点：但是产生的内存碎片，可能导致内存总空间足够，但是没一块连续的空间存放对象的问题，内存利用率降低；对象放不下，可能触发额外的 GC。</li>
-<li><strong>适用对象存活率高的情况。老年代</strong></li>
-</ul>
-</li>
-<li>标记-清除-整理。STW 时间可能会稍长一些，内存碎片问题得到解决。适用对象存活率高的情况。</li>
-</ul>
-<h1 id="Serial-GC"><a href="#Serial-GC" class="headerlink" title="Serial GC"></a>Serial GC</h1><p>-XX:+UseSerialGC</p>
-<p>串行 GC 单线程执行，在 GC 期间其他业务线程均暂停，暂停的时间长。</p>
-<p>串行 GC 对年轻代采用标记复制算法。对老年代使用标记-清除-整理算法。</p>
-<p>串行 GC 简单直接，在单核 CPU 环境下比较适用。</p>
-<h2 id="XX-UseParNewGC"><a href="#XX-UseParNewGC" class="headerlink" title="-XX:+UseParNewGC"></a>-XX:+UseParNewGC</h2><p>ParNew 收集器，多线程版本的 Serial。配合 CMS 使用。</p>
-<h1 id="Parallel-GC"><a href="#Parallel-GC" class="headerlink" title="Parallel GC"></a>Parallel GC</h1><p>-XX:UseParallelGC -XX:UseParallelOldGC</p>
-<p>使用的 GC 算法和串行的一样。</p>
-<p>默认的 GC 线程数是 CPU core 数，该收集器的目标更倾向于<strong>提高系统吞吐量</strong>，有时候单次的 GC 暂停时间较长。</p>
-<h1 id="CMS-GC"><a href="#CMS-GC" class="headerlink" title="CMS GC"></a>CMS GC</h1><p>-XX:UseConcMarkSweepGC</p>
-<p>对老年代没有整理操作，使用 free-list 进行内存空间的管理。默认的核心线程数 CPU 核数 / 4。</p>
-<p>可以和业务线程并发执行，GC 暂停时间少。</p>
-<h1 id="G1-GC"><a href="#G1-GC" class="headerlink" title="G1 GC"></a>G1 GC</h1><p>打破整个分区的理论，把内存划分成多个小块进行管理。对每个小块的垃圾数量进行预估，优先回收垃圾多的 Region。可预期的垃圾停顿时间。</p>
-<h1 id="验证总结"><a href="#验证总结" class="headerlink" title="验证总结"></a>验证总结</h1><p>首先需要提到的一点是 GC 的时间和存活的对象数量有关，和堆内存的大小关系没有那么大。</p>
-<p>配置堆内存 512M，YGC 后年轻代存活对象大概 20M。</p>
+    <title>ConcurrentHashMap 源码分析</title>
+    <url>/2021/05/05/ConcurrentHashMap-Analyse/</url>
+    <content><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>ConcurrentHashMap 是高性能的线程安全的哈希容器。</p>
+<p>值得一提的是 ConcurrentHashMap 的 key 和 value 不允许 null 值。</p>
+<p>Doug Lea 和 Josh Bloch 对 HashMap，ConcurrentHashMap key 允不允许 null 值的讨论。</p>
 <ul>
-<li>串行 GC 利用单线程执行，GC 暂停的时间明显会比较长。在实际的测试下，在小堆内存空间的情况下，YGC 和并行 GC 的 YGC 差不多。FGC 使用的时间明显较长，<strong>大概是并行 GC 的一倍（存活对象 300M 左右）</strong>。老年代存活对象占用的空间大，整理移动的时间就长。</li>
-<li>CMS GC 的老年代清理明显的暂停时间降低。在 GC 日志中有发现 concurrent mode failure 的情况。查询资料后明白，CMS 在 cleanup 是并发执行的，这时的对象引用关系发生改变，也可能有新的对象需要分配空间。如果没有预留足够的空间内存分配就会导致并发失败。可能重新 CMS ，或者 GC 退化成 Serial。</li>
-<li>G1 GC 出现了 Humongous Allocation 因为大对象分配失败，触发了 initial-mark。也是重新标记，或者 GC 退化的问题。</li>
+<li><p><a href="http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002485.html?fileGuid=Hxch6t3HxHCRkVqG">http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002485.html</a></p>
+</li>
+<li><p><a href="http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002486.html?fileGuid=Hxch6t3HxHCRkVqG">http://cs.oswego.edu/pipermail/concurrency-interest/2006-May/002486.html</a></p>
+<span id="more"></span></li>
 </ul>
-<p>堆内存越大，内存中可容纳的对象越多，GC 的次数随之减少，单次 GC 的暂停时间可能更长（取决于存活对象的数量）。</p>
-<p>总的来说，注意不同 GC 策略采用的算法，以及设计的目的。比如 CMS 在于并发执行，提高系统响应。Parallel 更倾向于提高吞吐量；G1 GC 倾向于可配置可预估的暂停时间。</p>
-<p>CMS - 老年代 没有整理，使用 free-list 管理回收内存；真正的 STW 时间小，但是步骤多，还有浮动垃圾，GC 退化问题。G1 GC 也存在 GC 退化问题。</p>
-<p>配置堆内存的时候，注意 JVM 自身需要的内存和系统需要的内存，预留一定的空间。</p>
-<p>-Xms -Xmx 直接一步到位，扩容的时候有性能的抖动。</p>
-<p>年轻代和老年代的比例默认 1:2，新生代:from:to = 8：1：1，根据情况来调整。</p>
-<p>根据对象晋升回收速率的计算，进行空间，晋升年龄的配置。</p>
+<p>邮件里大致的内容说明是因为 null 值有二义性。在并发环境下，如果你通过 get(key) 得到了一个 null 值，无法判断是因为 map 中不存在这个 key 还是因为 key 对应的 value 是 null。在并发环境下，你无法通过调用 containsKey() 来确定。</p>
+<p>因为不允许 null 值，所以在 ConcurrentHashMap 中，可以通过 get() 是否为 null 来直接判断是否 contains 一个 key。</p>
+<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><h2 id="存储结构"><a href="#存储结构" class="headerlink" title="存储结构"></a>存储结构</h2><p>JDK 1.8 之后，采用的存储结构与 HashMap 一样，Node&lt;K,V&gt;[] table。不同的是 Node 中的 val 和 next 用<strong>volatile</strong>来修饰，用于保证可见性。</p>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124000740.png" alt="image-20210925124000740"></p>
+<h2 id="put-方法"><a href="#put-方法" class="headerlink" title="put() 方法"></a>put() 方法</h2><ol>
+<li><p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124058747.png" alt="image-20210925124058747">rehash，保证均匀分布</p>
+</li>
+<li><p>索引定位后，如果该槽上没有值，通过 CAS 更新。这里的 tabAt，casTabAt 需要利用到 volatile 的可见性来保证正确。</p>
+</li>
+<li><p>表正在扩容</p>
+</li>
+<li><p>都不满足，对索引定位到的槽加锁操作。</p>
+</li>
+<li><p>槽节点的 hash 值大等 0，说明该槽上不是红黑树。按照拉链法的方式来插入值。</p>
+</li>
+<li><p>槽根节点的 hash 值小于 0，说明是树节点，走红黑树的插入逻辑。</p>
+</li>
+<li><p>插入后，判断阈值来进行树化。</p>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124118357.png" alt="image-20210925124118357"></p>
+</li>
+</ol>
+<p>JDK 1.8 之后，利用了 CAS+synchronized，相比于 1.7 的锁定 Segment 的方式，取消了ReentrantLock 使用synchronized（看来 1.8 对于 synchronized 的优化很可观。网上的资源提到 synchronized 的锁升级，其实在 1.6 就已经引入），优化了锁的粒度和使用。</p>
+<h2 id="get-方法"><a href="#get-方法" class="headerlink" title="get() 方法"></a>get() 方法</h2><p>get 方法相对比较简单，因为使用了<strong>volatile</strong>修饰 val 和 next 变量，get 的时候可以无锁操作。</p>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124156045.png" alt="image-20210925124156045"></p>
+<ol>
+<li><p>索引定位哈希槽的位置上是否有值，没有的话直接返回 null。有的话，比较哈希槽上根节点的 key ，一致的话直接返回 val 值。</p>
+</li>
+<li><p>哈希槽根节点的 hash 值小于 0 ，说明是红黑树，走红黑树的查找方法。</p>
+</li>
+<li><p>都不满足的话，在链表中往下遍历查找。</p>
+</li>
+</ol>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124249047.png" alt="image-20210925124249047"></p>
+<h1 id="硬件同步原语-CAS"><a href="#硬件同步原语-CAS" class="headerlink" title="硬件同步原语 CAS"></a>硬件同步原语 CAS</h1><p>硬件同步原语是由计算机硬件提供的一组原子操作，具体来说就是 CPU 提供的实现，可以保证指令操作的原子性。</p>
+<p>CAS（Compare and Swap）的意思是，先获取某个想要修改的旧值，然后在修改的时候，比较当前的值和旧值，如果一致，就更新为新的，返回 true。否则就不改变，返回 false。</p>
+<p>还有一个常用的 FAA（Fetch and Add），的作用是获取某个变量的值，然后将变量的值增加，然后返回旧值。</p>
+<p>在各种高级编程语言中，这些原语一般都有相应的实现。</p>
+<p>比如 JDK 中提供的 CAS 。</p>
+<p><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124311450.png"></p>
+<p>Java 中的 FAA 好像是通过 CAS 实现的。</p>
+<h3 id><a href="#" class="headerlink" title></a><img src="/2021/05/05/ConcurrentHashMap-Analyse/image-20210925124327406.png" alt="image-20210925124327406"></h3><h3 id="CAS-的-ABA-问题"><a href="#CAS-的-ABA-问题" class="headerlink" title="CAS 的 ABA 问题"></a>CAS 的 ABA 问题</h3><p>CAS 在写入时仅仅判断当前值和旧值，期间值可能改变过，但是无法判断。Java 提供了<a href="http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html?fileGuid=Hxch6t3HxHCRkVqG">AtomicStampedReference</a>工具类，通过版本号的方式来完善这个问题。</p>
+<h3 id="CAS-的开销和优点"><a href="#CAS-的开销和优点" class="headerlink" title="CAS 的开销和优点"></a>CAS 的开销和优点</h3><p>使用 CAS 可以避免使用锁，减小开销。但是 CAS 面对频繁的资源竞争的话，一直反复采用 CAS 尝试更新失败概率高，CPU 的开销也随之变大。</p>
+<p>CAS 像是乐观锁的思路，总认为修改成功的概率很高。悲观锁的思路就是共享资源的竞争可能很频繁，就采用独占的方式操作，比如  synchronized 关键字。</p>
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><p>ConcurrentHashMap 是高性能的线程安全的容器，但并不意味着使用它就没有安全问题。比如其 size() ，putALL() 等方法在并发情况下只能反映中间情况。</p>
+<p>使用 ConcurrentHashMap 的时候，对其的多个操作之间仍然不是原子性的，如果需要的话可以对 map 加锁操作。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>ConcurrentHashMap 在 1.7 之前采用分段锁的形式，默认并发 16，取决于 Segment。1.8 之后的存储结构和 HashMap 类似，且采用 CAS + synchronized 来保证原子性的读写操作。</p>
+<p>使用 ConcurrentHashMap 、CopyOnWriteArrayList 等线程安全的工具类，并不意味着就没有线程安全问题，有关并发安全的知识则需要自己学习运用。</p>
+<h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ol>
+<li><a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentHashMap.html?fileGuid=Hxch6t3HxHCRkVqG">https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ConcurrentHashMap.html</a>，ConcurrentHashMap 官方文档</li>
+<li><a href="http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html?fileGuid=Hxch6t3HxHCRkVqG">http://tutorials.jenkov.com/java-util-concurrent/atomicstampedreference.html</a>，AtomicStampedReference 使用教程</li>
+<li><a href="https://en.wikipedia.org/wiki/Compare-and-swap?fileGuid=Hxch6t3HxHCRkVqG">https://en.wikipedia.org/wiki/Compare-and-swap</a>，CAS 原语</li>
+</ol>
 ]]></content>
       <categories>
-        <category>JVM</category>
+        <category>Java</category>
       </categories>
       <tags>
-        <tag>jvm</tag>
-        <tag>gc</tag>
+        <tag>java</tag>
+        <tag>java 集合</tag>
+        <tag>源码分析</tag>
       </tags>
   </entry>
   <entry>
@@ -613,6 +560,59 @@
         <tag>java</tag>
         <tag>java 集合</tag>
         <tag>源码分析</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>GC 策略总结</title>
+    <url>/2021/07/20/GC-Algo/</url>
+    <content><![CDATA[<h1 id="GC-算法"><a href="#GC-算法" class="headerlink" title="GC 算法"></a>GC 算法</h1><ul>
+<li>标记-复制。<ul>
+<li>优点：存活的对象越少，复制需要的空间就越小；而且复制后的对象们内存空间排布紧凑，避免空间碎片的问题。</li>
+<li>缺点：有一部分空间被浪费。如果存活对象大且多的话复制成本比较高。<span id="more"></span></li>
+<li><strong>适用每次 GC 存活对象小而美的情况。年轻代</strong></li>
+</ul>
+</li>
+<li>标记-清除。直接清除可回收对象，不进行内存整理。，<ul>
+<li>优点：单次 STW 的时间可能要短一些。</li>
+<li>缺点：但是产生的内存碎片，可能导致内存总空间足够，但是没一块连续的空间存放对象的问题，内存利用率降低；对象放不下，可能触发额外的 GC。</li>
+<li><strong>适用对象存活率高的情况。老年代</strong></li>
+</ul>
+</li>
+<li>标记-清除-整理。STW 时间可能会稍长一些，内存碎片问题得到解决。适用对象存活率高的情况。</li>
+</ul>
+<h1 id="Serial-GC"><a href="#Serial-GC" class="headerlink" title="Serial GC"></a>Serial GC</h1><p>-XX:+UseSerialGC</p>
+<p>串行 GC 单线程执行，在 GC 期间其他业务线程均暂停，暂停的时间长。</p>
+<p>串行 GC 对年轻代采用标记复制算法。对老年代使用标记-清除-整理算法。</p>
+<p>串行 GC 简单直接，在单核 CPU 环境下比较适用。</p>
+<h2 id="XX-UseParNewGC"><a href="#XX-UseParNewGC" class="headerlink" title="-XX:+UseParNewGC"></a>-XX:+UseParNewGC</h2><p>ParNew 收集器，多线程版本的 Serial。配合 CMS 使用。</p>
+<h1 id="Parallel-GC"><a href="#Parallel-GC" class="headerlink" title="Parallel GC"></a>Parallel GC</h1><p>-XX:UseParallelGC -XX:UseParallelOldGC</p>
+<p>使用的 GC 算法和串行的一样。</p>
+<p>默认的 GC 线程数是 CPU core 数，该收集器的目标更倾向于<strong>提高系统吞吐量</strong>，有时候单次的 GC 暂停时间较长。</p>
+<h1 id="CMS-GC"><a href="#CMS-GC" class="headerlink" title="CMS GC"></a>CMS GC</h1><p>-XX:UseConcMarkSweepGC</p>
+<p>对老年代没有整理操作，使用 free-list 进行内存空间的管理。默认的核心线程数 CPU 核数 / 4。</p>
+<p>可以和业务线程并发执行，GC 暂停时间少。</p>
+<h1 id="G1-GC"><a href="#G1-GC" class="headerlink" title="G1 GC"></a>G1 GC</h1><p>打破整个分区的理论，把内存划分成多个小块进行管理。对每个小块的垃圾数量进行预估，优先回收垃圾多的 Region。可预期的垃圾停顿时间。</p>
+<h1 id="验证总结"><a href="#验证总结" class="headerlink" title="验证总结"></a>验证总结</h1><p>首先需要提到的一点是 GC 的时间和存活的对象数量有关，和堆内存的大小关系没有那么大。</p>
+<p>配置堆内存 512M，YGC 后年轻代存活对象大概 20M。</p>
+<ul>
+<li>串行 GC 利用单线程执行，GC 暂停的时间明显会比较长。在实际的测试下，在小堆内存空间的情况下，YGC 和并行 GC 的 YGC 差不多。FGC 使用的时间明显较长，<strong>大概是并行 GC 的一倍（存活对象 300M 左右）</strong>。老年代存活对象占用的空间大，整理移动的时间就长。</li>
+<li>CMS GC 的老年代清理明显的暂停时间降低。在 GC 日志中有发现 concurrent mode failure 的情况。查询资料后明白，CMS 在 cleanup 是并发执行的，这时的对象引用关系发生改变，也可能有新的对象需要分配空间。如果没有预留足够的空间内存分配就会导致并发失败。可能重新 CMS ，或者 GC 退化成 Serial。</li>
+<li>G1 GC 出现了 Humongous Allocation 因为大对象分配失败，触发了 initial-mark。也是重新标记，或者 GC 退化的问题。</li>
+</ul>
+<p>堆内存越大，内存中可容纳的对象越多，GC 的次数随之减少，单次 GC 的暂停时间可能更长（取决于存活对象的数量）。</p>
+<p>总的来说，注意不同 GC 策略采用的算法，以及设计的目的。比如 CMS 在于并发执行，提高系统响应。Parallel 更倾向于提高吞吐量；G1 GC 倾向于可配置可预估的暂停时间。</p>
+<p>CMS - 老年代 没有整理，使用 free-list 管理回收内存；真正的 STW 时间小，但是步骤多，还有浮动垃圾，GC 退化问题。G1 GC 也存在 GC 退化问题。</p>
+<p>配置堆内存的时候，注意 JVM 自身需要的内存和系统需要的内存，预留一定的空间。</p>
+<p>-Xms -Xmx 直接一步到位，扩容的时候有性能的抖动。</p>
+<p>年轻代和老年代的比例默认 1:2，新生代:from:to = 8：1：1，根据情况来调整。</p>
+<p>根据对象晋升回收速率的计算，进行空间，晋升年龄的配置。</p>
+]]></content>
+      <categories>
+        <category>JVM</category>
+      </categories>
+      <tags>
+        <tag>jvm</tag>
+        <tag>gc</tag>
       </tags>
   </entry>
   <entry>
@@ -877,6 +877,76 @@
       </tags>
   </entry>
   <entry>
+    <title>Redis IO多路复用</title>
+    <url>/2021/04/14/Redis-Multi-IO-Model/</url>
+    <content><![CDATA[<p>常说 Redis 利用 I/O 多路复用，单线程处理来自许多客户端的网络请求。本文简单的从网络通信、I/O 模型、Redis 大致如何利用 I/O 多路复用模型了解下相关知识。</p>
+<span id="more"></span>
+
+<h2 id="什么是-socket-？"><a href="#什么是-socket-？" class="headerlink" title="什么是 socket ？"></a>什么是 socket ？</h2><ul>
+<li><a href="https://en.wikipedia.org/wiki/Network_socket">https://en.wikipedia.org/wiki/Network_socket</a></li>
+<li><a href="https://docs.oracle.com/javase/tutorial/networking/sockets/definition.html">https://docs.oracle.com/javase/tutorial/networking/sockets/definition.html</a></li>
+<li><a href="https://man7.org/linux/man-pages/man2/socket.2.html">https://man7.org/linux/man-pages/man2/socket.2.html</a></li>
+<li><a href="https://www.geeksforgeeks.org/socket-programming-cc/#:~:text=Socket%20programming%20is%20a%20way,other%20to%20form%20a%20connection.">https://www.geeksforgeeks.org/socket-programming-cc/#:~:text=Socket%20programming%20is%20a%20way,other%20to%20form%20a%20connection.</a></li>
+</ul>
+<h2 id="socket-网络模型的基本函数"><a href="#socket-网络模型的基本函数" class="headerlink" title="socket 网络模型的基本函数"></a>socket 网络模型的基本函数</h2><ul>
+<li><a href="https://man7.org/linux/man-pages/man2/socket.2.html">socket()</a>，为了进行网络 I/O 通信，<strong>进程必须做的第一件事情就是调用 socket() 函数</strong>，指定期望的通信协议类型等。socket() 调用成功会返回一个非负整数值，称为 sockfd，一般称作特指 socket 的<a href="https://en.wikipedia.org/wiki/File_descriptor">文件描述符</a>。</li>
+<li><a href="https://man7.org/linux/man-pages/man2/connect.2.html">connect()</a>，客户端通过调用 connect() 函数来请求连接。</li>
+<li>bind()，绑定 socket 和给定的地址和端口。如果服务端或者客户端没有调用 bind() 进行绑定，当调用 connect() 或 listen() 时，内核会为相应的 socket 选择一个临时端口。对于服务端来说，<strong>因为需要对外提供服务，所以服务端一般会主动调用 bind() 指定特定的端口和 socket 绑定来对外提供服务。</strong></li>
+<li><a href="https://stackoverflow.com/questions/4696812/passive-and-active-sockets">listen()</a>，当通过 socket() 创建一个新的 socket 时，一般这个 socket 被称为<strong>主动套接字，也就是说该套接字被看作可能调用 connect() 函数发起连接请求的。</strong>在向一个未连接的套接字调用 listen() 函数后，<strong>套接字转换为被动套接字，</strong>内核就知道应该接受指向该套接字的连接请求。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">int listen(int sockfd, int backlog);</span><br></pre></td></tr></table></figure>
+
+<p>其中的第二个参数 backlog 定义了可以为当前套接字进行连接的最大队列数。也就是说，如果客户端连接请求到达时，该套接字的处理队列长度达到 backlog 时，返回 error。</p>
+<ul>
+<li><a href="https://man7.org/linux/man-pages/man2/accept.2.html">accept()</a>，accept() 会从待处理连接队列头中取出连接请求，并在传入的第一个参数 sockfd 指向的监听套接字（或者说被动套接字）上创建一个<strong>新的已连接套接字，返回的 int 就是指向生成新套接字的 sockfd。</strong>原本的监听套接字不受影响。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);</span><br></pre></td></tr></table></figure>
+
+<p><strong>内核会为服务器对每个客户端的连接创建一个已连接套接字，</strong>且当服务结束后，相应的已连接套接字会被关闭（服务端的监听套接字一般持续存在）。</p>
+<h2 id="5-种-I-O-模型"><a href="#5-种-I-O-模型" class="headerlink" title="5 种 I/O 模型"></a>5 种 I/O 模型</h2><blockquote>
+<p><a href="https://notes.shichao.io/unp/ch6/#io-models">https://notes.shichao.io/unp/ch6/#io-models</a></p>
+</blockquote>
+<ul>
+<li>阻塞 I/O</li>
+<li>非阻塞 I/O</li>
+<li>I/O 复用</li>
+<li>信号驱动 I/O</li>
+<li>异步 I/O</li>
+</ul>
+<h3 id="阻塞-I-O-模型"><a href="#阻塞-I-O-模型" class="headerlink" title="阻塞 I/O 模型"></a>阻塞 I/O 模型</h3><p><img src="/2021/04/14/Redis-Multi-IO-Model/image-20210925114649571.png" alt="image-20210925114649571"></p>
+<h3 id="I-O-多路复用模型"><a href="#I-O-多路复用模型" class="headerlink" title="I/O 多路复用模型"></a>I/O 多路复用模型</h3><p><img src="/2021/04/14/Redis-Multi-IO-Model/image-20210925114705214.png" alt="image-20210925114705214"></p>
+<p>在这个模型里，程序会阻塞在 select 调用上。select 函数允许程序<strong>同时监听多个 fd</strong>的就绪状态。</p>
+<h2 id="select-poll-epoll-kqueue-等调用"><a href="#select-poll-epoll-kqueue-等调用" class="headerlink" title="select/poll/epoll, kqueue 等调用"></a>select/poll/epoll, kqueue 等调用</h2><ul>
+<li><a href="https://man7.org/linux/man-pages/man2/select.2.html">https://man7.org/linux/man-pages/man2/select.2.html</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Select_(Unix)">https://en.wikipedia.org/wiki/Select_(Unix)</a></li>
+<li>……</li>
+</ul>
+<h2 id="Redis-与-I-O-多路复用模型"><a href="#Redis-与-I-O-多路复用模型" class="headerlink" title="Redis 与 I/O 多路复用模型"></a>Redis 与 I/O 多路复用模型</h2><p>通常我们说 Redis 采用单线程架构且提供高并发访问。<strong>这里说的单线程其实是指 Redis 对于命令执行和网络 I/O 处理采用单个主线程</strong>。但是像 bgsave 等功能其实会使用到其他进程。</p>
+<p>（<em>在 Redis 6.0 中，Redis 对</em><em><strong>网络请求</strong></em><em>模块采用了多线程处理</em>）</p>
+<p>Redis 采用 Client/Server 访问架构，需要同时处理许多来自外部客户端的请求，也就意味着 Redis Server 会为每个客户端在本地维护一个对应的 socket。Redis 通过统一封装不同支持 I/O 多路复用的系统函数供上层使用，比如 select/epoll，kqueue 等系统调用，在不同平台上提供服务。即 Redis 不阻塞在单一的 sockfd 读写等待上，而是同时监听多个 sockfd 的就绪状态，不断处理就绪可处理的 sockfd。</p>
+<p>具体来说，Redis 通过提供自己的文件事件处理器来实现相关的功能。</p>
+<ul>
+<li>I/O 多路复用程序同时监听多个 sockfd，当其中有 sockfd 准备就绪(产生对应的事件)，I/O 多路复用程序将就绪的 sockfd 放入准备好的队列，同步有序地一个一个将套接字给 file event dispatcher。</li>
+<li>file event dispatcher 根据传来的对应事件分配给对应的事件处理器进行处理。</li>
+</ul>
+<p><img src="/2021/04/14/Redis-Multi-IO-Model/image-20210925114735701.png" alt="image-20210925114735701"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Redis 通过利用 I/O 多路复用模型，结合简洁的模块设置，让 Redis 在单线程架构的基础上同时为多个客户端提供服务。</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul>
+<li><a href="https://draveness.me/redis-io-multiplexing/">Redis 和 I/O 多路复用 - 面向信仰编程</a></li>
+<li><a href="https://notes.shichao.io/unp/ch6/#io-models">https://notes.shichao.io/unp/ch6/#io-models</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/63179839">epoll的本质 知乎</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Redis</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+        <tag>io</tag>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>MySQL 学习记录</title>
     <url>/2021/07/10/Mysql-geektime-study-record/</url>
     <content><![CDATA[<h1 id="基础架构"><a href="#基础架构" class="headerlink" title="基础架构"></a>基础架构</h1><span id="more"></span>
@@ -1087,76 +1157,6 @@
       <tags>
         <tag>mysql</tag>
         <tag>专栏学习</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Redis IO多路复用</title>
-    <url>/2021/04/14/Redis-Multi-IO-Model/</url>
-    <content><![CDATA[<p>常说 Redis 利用 I/O 多路复用，单线程处理来自许多客户端的网络请求。本文简单的从网络通信、I/O 模型、Redis 大致如何利用 I/O 多路复用模型了解下相关知识。</p>
-<span id="more"></span>
-
-<h2 id="什么是-socket-？"><a href="#什么是-socket-？" class="headerlink" title="什么是 socket ？"></a>什么是 socket ？</h2><ul>
-<li><a href="https://en.wikipedia.org/wiki/Network_socket">https://en.wikipedia.org/wiki/Network_socket</a></li>
-<li><a href="https://docs.oracle.com/javase/tutorial/networking/sockets/definition.html">https://docs.oracle.com/javase/tutorial/networking/sockets/definition.html</a></li>
-<li><a href="https://man7.org/linux/man-pages/man2/socket.2.html">https://man7.org/linux/man-pages/man2/socket.2.html</a></li>
-<li><a href="https://www.geeksforgeeks.org/socket-programming-cc/#:~:text=Socket%20programming%20is%20a%20way,other%20to%20form%20a%20connection.">https://www.geeksforgeeks.org/socket-programming-cc/#:~:text=Socket%20programming%20is%20a%20way,other%20to%20form%20a%20connection.</a></li>
-</ul>
-<h2 id="socket-网络模型的基本函数"><a href="#socket-网络模型的基本函数" class="headerlink" title="socket 网络模型的基本函数"></a>socket 网络模型的基本函数</h2><ul>
-<li><a href="https://man7.org/linux/man-pages/man2/socket.2.html">socket()</a>，为了进行网络 I/O 通信，<strong>进程必须做的第一件事情就是调用 socket() 函数</strong>，指定期望的通信协议类型等。socket() 调用成功会返回一个非负整数值，称为 sockfd，一般称作特指 socket 的<a href="https://en.wikipedia.org/wiki/File_descriptor">文件描述符</a>。</li>
-<li><a href="https://man7.org/linux/man-pages/man2/connect.2.html">connect()</a>，客户端通过调用 connect() 函数来请求连接。</li>
-<li>bind()，绑定 socket 和给定的地址和端口。如果服务端或者客户端没有调用 bind() 进行绑定，当调用 connect() 或 listen() 时，内核会为相应的 socket 选择一个临时端口。对于服务端来说，<strong>因为需要对外提供服务，所以服务端一般会主动调用 bind() 指定特定的端口和 socket 绑定来对外提供服务。</strong></li>
-<li><a href="https://stackoverflow.com/questions/4696812/passive-and-active-sockets">listen()</a>，当通过 socket() 创建一个新的 socket 时，一般这个 socket 被称为<strong>主动套接字，也就是说该套接字被看作可能调用 connect() 函数发起连接请求的。</strong>在向一个未连接的套接字调用 listen() 函数后，<strong>套接字转换为被动套接字，</strong>内核就知道应该接受指向该套接字的连接请求。</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">int listen(int sockfd, int backlog);</span><br></pre></td></tr></table></figure>
-
-<p>其中的第二个参数 backlog 定义了可以为当前套接字进行连接的最大队列数。也就是说，如果客户端连接请求到达时，该套接字的处理队列长度达到 backlog 时，返回 error。</p>
-<ul>
-<li><a href="https://man7.org/linux/man-pages/man2/accept.2.html">accept()</a>，accept() 会从待处理连接队列头中取出连接请求，并在传入的第一个参数 sockfd 指向的监听套接字（或者说被动套接字）上创建一个<strong>新的已连接套接字，返回的 int 就是指向生成新套接字的 sockfd。</strong>原本的监听套接字不受影响。</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);</span><br></pre></td></tr></table></figure>
-
-<p><strong>内核会为服务器对每个客户端的连接创建一个已连接套接字，</strong>且当服务结束后，相应的已连接套接字会被关闭（服务端的监听套接字一般持续存在）。</p>
-<h2 id="5-种-I-O-模型"><a href="#5-种-I-O-模型" class="headerlink" title="5 种 I/O 模型"></a>5 种 I/O 模型</h2><blockquote>
-<p><a href="https://notes.shichao.io/unp/ch6/#io-models">https://notes.shichao.io/unp/ch6/#io-models</a></p>
-</blockquote>
-<ul>
-<li>阻塞 I/O</li>
-<li>非阻塞 I/O</li>
-<li>I/O 复用</li>
-<li>信号驱动 I/O</li>
-<li>异步 I/O</li>
-</ul>
-<h3 id="阻塞-I-O-模型"><a href="#阻塞-I-O-模型" class="headerlink" title="阻塞 I/O 模型"></a>阻塞 I/O 模型</h3><p><img src="/2021/04/14/Redis-Multi-IO-Model/image-20210925114649571.png" alt="image-20210925114649571"></p>
-<h3 id="I-O-多路复用模型"><a href="#I-O-多路复用模型" class="headerlink" title="I/O 多路复用模型"></a>I/O 多路复用模型</h3><p><img src="/2021/04/14/Redis-Multi-IO-Model/image-20210925114705214.png" alt="image-20210925114705214"></p>
-<p>在这个模型里，程序会阻塞在 select 调用上。select 函数允许程序<strong>同时监听多个 fd</strong>的就绪状态。</p>
-<h2 id="select-poll-epoll-kqueue-等调用"><a href="#select-poll-epoll-kqueue-等调用" class="headerlink" title="select/poll/epoll, kqueue 等调用"></a>select/poll/epoll, kqueue 等调用</h2><ul>
-<li><a href="https://man7.org/linux/man-pages/man2/select.2.html">https://man7.org/linux/man-pages/man2/select.2.html</a></li>
-<li><a href="https://en.wikipedia.org/wiki/Select_(Unix)">https://en.wikipedia.org/wiki/Select_(Unix)</a></li>
-<li>……</li>
-</ul>
-<h2 id="Redis-与-I-O-多路复用模型"><a href="#Redis-与-I-O-多路复用模型" class="headerlink" title="Redis 与 I/O 多路复用模型"></a>Redis 与 I/O 多路复用模型</h2><p>通常我们说 Redis 采用单线程架构且提供高并发访问。<strong>这里说的单线程其实是指 Redis 对于命令执行和网络 I/O 处理采用单个主线程</strong>。但是像 bgsave 等功能其实会使用到其他进程。</p>
-<p>（<em>在 Redis 6.0 中，Redis 对</em><em><strong>网络请求</strong></em><em>模块采用了多线程处理</em>）</p>
-<p>Redis 采用 Client/Server 访问架构，需要同时处理许多来自外部客户端的请求，也就意味着 Redis Server 会为每个客户端在本地维护一个对应的 socket。Redis 通过统一封装不同支持 I/O 多路复用的系统函数供上层使用，比如 select/epoll，kqueue 等系统调用，在不同平台上提供服务。即 Redis 不阻塞在单一的 sockfd 读写等待上，而是同时监听多个 sockfd 的就绪状态，不断处理就绪可处理的 sockfd。</p>
-<p>具体来说，Redis 通过提供自己的文件事件处理器来实现相关的功能。</p>
-<ul>
-<li>I/O 多路复用程序同时监听多个 sockfd，当其中有 sockfd 准备就绪(产生对应的事件)，I/O 多路复用程序将就绪的 sockfd 放入准备好的队列，同步有序地一个一个将套接字给 file event dispatcher。</li>
-<li>file event dispatcher 根据传来的对应事件分配给对应的事件处理器进行处理。</li>
-</ul>
-<p><img src="/2021/04/14/Redis-Multi-IO-Model/image-20210925114735701.png" alt="image-20210925114735701"></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Redis 通过利用 I/O 多路复用模型，结合简洁的模块设置，让 Redis 在单线程架构的基础上同时为多个客户端提供服务。</p>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul>
-<li><a href="https://draveness.me/redis-io-multiplexing/">Redis 和 I/O 多路复用 - 面向信仰编程</a></li>
-<li><a href="https://notes.shichao.io/unp/ch6/#io-models">https://notes.shichao.io/unp/ch6/#io-models</a></li>
-<li><a href="https://zhuanlan.zhihu.com/p/63179839">epoll的本质 知乎</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>Redis</category>
-      </categories>
-      <tags>
-        <tag>linux</tag>
-        <tag>io</tag>
-        <tag>redis</tag>
       </tags>
   </entry>
   <entry>
@@ -1912,6 +1912,67 @@
       </tags>
   </entry>
   <entry>
+    <title>Spring 事务传播机制</title>
+    <url>/2021/03/09/spring-transaction-spread/</url>
+    <content><![CDATA[<h1 id="事务传播机制"><a href="#事务传播机制" class="headerlink" title="事务传播机制"></a>事务传播机制</h1><p>首先我们看 <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/TransactionDefinition.html">TransactionDefinition</a> 接口的注释。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/**Interface that defines Spring-compliant transaction properties.</span><br><span class="line">* Based on the propagation behavior definitions analogous to EJB CMT attributes.</span><br><span class="line"></span><br><span class="line">大概说这个接口定义了 Spring 兼容的事务属性。基于类似于EJB CMT属性的传播行为定义。</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>那什么是 EJB CMT 呢？参考[维基百科](https://en.wikipedia.org/wiki/Enterprise_JavaBeans)的解释，EJB 容器必须支持 Container-managed transaction（CMT）来管理 ACID 特性的事务和 Bean managed transaction（BMT）。
+
+<p>对应到 Spring 框架就是我们常说的 Spring 事务的传播机制以及隔离级别。</p>
+<p>这两个容器的目的就是不需要显式复杂的配置，事务管理可以通过简单的注解进行。</p>
+<p>Spring 通过 Spring AOP 来进行事务的管理，比如我们常用的 @Transactional 注解。</p>
+<p>那当我们在方法中互相调用开启了事务功能的方法时，方法之间定义的事务是怎么起作用的呢？</p>
+<p>比如 A 方法开启了事务，A 方法中调用了 B 方法，B 方法也开启了事务，那么这时候 A 和 B 之间的事务是独立进行的还是一起作用的？</p>
+<p>Spring 在这方面为我们提供了管理的方法，也就是今天我们讨论的 Spring 的事务传播机制。</p>
+<p>相关的定义在 Spring 的 TransactionDefinition 接口文件中。Spring 定义了 6 中传播行为。</p>
+<h2 id="REQUIRED"><a href="#REQUIRED" class="headerlink" title="REQUIRED"></a><strong>REQUIRED</strong></h2><p>支持当前的事务；如果当前没有，那么创建一个新的。这也是 Spring 默认的传播行为。</p>
+<p>比如，方法 A 调用了方法 B，A B都开启 REQUIRED 级别的事务。那么，B 方法会发现有了当前事务 A，那么 B 就会加入到 A 的事务中。</p>
+<p>如果 A 没有开启事务，B 仍旧开启自己的事务。</p>
+<h2 id="SUPPORTS"><a href="#SUPPORTS" class="headerlink" title="SUPPORTS"></a><strong>SUPPORTS</strong></h2><p>支持当前事务；如果没有当前事务以非事务的方式运行。</p>
+<p>也可以从字面上理解，supports 看起来就没有 required 那么强势。如果没有当前事务就非事务运行好了。</p>
+<h2 id="MANDATORY（强制性）"><a href="#MANDATORY（强制性）" class="headerlink" title="MANDATORY（强制性）"></a><strong>MANDATORY（强制性）</strong></h2><p>支持当前事务；如果没有会抛出异常；</p>
+<h2 id="REQUIRES-NEW"><a href="#REQUIRES-NEW" class="headerlink" title="REQUIRES_NEW"></a><strong>REQUIRES_NEW</strong></h2><p>始终创建一个新的事务；如果有当前事务，会把当前事务挂起；</p>
+<h2 id="NOT-SUPPORTED"><a href="#NOT-SUPPORTED" class="headerlink" title="NOT_SUPPORTED"></a><strong>NOT_SUPPORTED</strong></h2><p>不支持当前事务；总是以非事务方式执行。</p>
+<h2 id="NEVER"><a href="#NEVER" class="headerlink" title="NEVER"></a>NEVER</h2><p>不支持当前事务；如果有当前事务会抛出异常。</p>
+<h2 id="NESTED（嵌套）"><a href="#NESTED（嵌套）" class="headerlink" title="NESTED（嵌套）"></a>NESTED（嵌套）</h2><p>如果当前事务存在，就以嵌套的方式运行。行为和 REQUIRED 很像。</p>
+<h2 id="自调用的问题"><a href="#自调用的问题" class="headerlink" title="自调用的问题"></a>自调用的问题</h2><p>Stackover Flow 上有一个相关的<a href="https://stackoverflow.com/questions/37217075/spring-nested-transactions">问答</a>，大意是在方法中调用了同一个 service 的方法，比如方法 A （<strong>REQUIRED</strong>）调用了方法 B，即使 B 声明了 <strong>REQUIRS_NEW</strong>的传播行为（始终创建一个新事务执行），但在 A 方法抛出异常的时候，B 方法还是会回滚。</p>
+<p>这个问题需要从 Spring AOP 中动态代理的角度来分析。</p>
+<p>Spring AOP 使用 JDK / Cglib 进行动态代理，它会通过代理，织入增强代码。比如调用带 @Transactional 注解的方法，会通过调用<strong>代理对象（增强后）</strong>的该方法进行。</p>
+<p>但当进行自调用的时候，方法内部调用的方法还是使用原对象进行。也就是说，Spring AOP 的代理对象只会在不同的 bean 之间相互调用的时候使用。</p>
+<p>一般遇到自调用的问题时，一个解决办法是新建一个帮助类，然后去调用它。</p>
+<p>大家也可以看看 <a href="https://docs.spring.io/spring-framework/docs/current/spring-framework-reference/data-access.html#transaction-declarative-annotations">Spring doc</a> 中的 1.4.6 节，有关自调用方面的说明。</p>
+<p>Spring 官方还建议把 @Transactional 注解使用在具体的类上，不建议用在 接口 上。</p>
+<p>原因是，当你使用了基于 类 的代理方式时，使用在 接口 上的注解就失效了。</p>
+<h1 id="事务隔离级别"><a href="#事务隔离级别" class="headerlink" title="事务隔离级别"></a>事务隔离级别</h1><p>Spring 的事务隔离级别和数据库的没有什么区别。</p>
+<ul>
+<li>读未提交</li>
+<li>读提交</li>
+<li>可重复读</li>
+<li>串行化</li>
+</ul>
+<p>Spring 有一个 ISOLATION_DEFAULT 级别，作用是采用和 数据库 一致的隔离级别。</p>
+<h1 id="异常回滚"><a href="#异常回滚" class="headerlink" title="异常回滚"></a>异常回滚</h1><p>@Transactional 还有一个 rollbackFor() 属性。</p>
+<p>接口上的注释大意是，这个属性定义了发生什么类型的异常会触发事务的回滚。</p>
+<p>By default，事务会因为发生非受检异常回滚，受检异常发生了不会回滚。</p>
+<p>你可以这么用，来定义自己的异常回滚策略。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)</span><br></pre></td></tr></table></figure>
+
+<p>最后做一个总结，Spring 利用 Spring AOP 提供了方便的事务管理功能。在此基础上，通过配置事务的传播机制，进一步解决实际上使用事务时可能存在的问题。</p>
+<p>因为 Spring AOP 动态代理的特性，在自调用的时候会出现事务失效的问题。除了刚才提到的使用帮助类来调用，还有一种方法是使用 AspectJ ，这是另一种 AOP 方案，其原理是通过在编译期在字节码层面织入代码实现增强功能。</p>
+<p>最后就是事务的隔离级别。隔离级别这方面需要了解比如脏读，幻读等问题。</p>
+<p>笔者也是一位初学者，如若文章有错误和疑惑的地方，也希望您可以指出，我们共同讨论和进步.</p>
+<p>‍(=・ω・=)</p>
+]]></content>
+      <categories>
+        <category>Spring Framework</category>
+      </categories>
+      <tags>
+        <tag>spring</tag>
+        <tag>事务</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Redis 学习记录</title>
     <url>/2021/04/01/redis-gee-study-record/</url>
     <content><![CDATA[<h1 id="第一部分"><a href="#第一部分" class="headerlink" title="第一部分"></a>第一部分</h1><h2 id="基础数据类型的用法"><a href="#基础数据类型的用法" class="headerlink" title="基础数据类型的用法"></a>基础数据类型的用法</h2><p>在学习操作具体数据类型前，先来学习可以应用在所有 key 上的常用命令。多多利用 Tab 键补全可以使用的 Redis 命令。<span id="more"></span></p>
@@ -2309,148 +2370,8 @@
         <category>Redis</category>
       </categories>
       <tags>
-        <tag>专栏学习</tag>
         <tag>redis</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Spring 事务传播机制</title>
-    <url>/2021/03/09/spring-transaction-spread/</url>
-    <content><![CDATA[<h1 id="事务传播机制"><a href="#事务传播机制" class="headerlink" title="事务传播机制"></a>事务传播机制</h1><p>首先我们看 <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/TransactionDefinition.html">TransactionDefinition</a> 接口的注释。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/**Interface that defines Spring-compliant transaction properties.</span><br><span class="line">* Based on the propagation behavior definitions analogous to EJB CMT attributes.</span><br><span class="line"></span><br><span class="line">大概说这个接口定义了 Spring 兼容的事务属性。基于类似于EJB CMT属性的传播行为定义。</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
-
-<span id="more"></span>那什么是 EJB CMT 呢？参考[维基百科](https://en.wikipedia.org/wiki/Enterprise_JavaBeans)的解释，EJB 容器必须支持 Container-managed transaction（CMT）来管理 ACID 特性的事务和 Bean managed transaction（BMT）。
-
-<p>对应到 Spring 框架就是我们常说的 Spring 事务的传播机制以及隔离级别。</p>
-<p>这两个容器的目的就是不需要显式复杂的配置，事务管理可以通过简单的注解进行。</p>
-<p>Spring 通过 Spring AOP 来进行事务的管理，比如我们常用的 @Transactional 注解。</p>
-<p>那当我们在方法中互相调用开启了事务功能的方法时，方法之间定义的事务是怎么起作用的呢？</p>
-<p>比如 A 方法开启了事务，A 方法中调用了 B 方法，B 方法也开启了事务，那么这时候 A 和 B 之间的事务是独立进行的还是一起作用的？</p>
-<p>Spring 在这方面为我们提供了管理的方法，也就是今天我们讨论的 Spring 的事务传播机制。</p>
-<p>相关的定义在 Spring 的 TransactionDefinition 接口文件中。Spring 定义了 6 中传播行为。</p>
-<h2 id="REQUIRED"><a href="#REQUIRED" class="headerlink" title="REQUIRED"></a><strong>REQUIRED</strong></h2><p>支持当前的事务；如果当前没有，那么创建一个新的。这也是 Spring 默认的传播行为。</p>
-<p>比如，方法 A 调用了方法 B，A B都开启 REQUIRED 级别的事务。那么，B 方法会发现有了当前事务 A，那么 B 就会加入到 A 的事务中。</p>
-<p>如果 A 没有开启事务，B 仍旧开启自己的事务。</p>
-<h2 id="SUPPORTS"><a href="#SUPPORTS" class="headerlink" title="SUPPORTS"></a><strong>SUPPORTS</strong></h2><p>支持当前事务；如果没有当前事务以非事务的方式运行。</p>
-<p>也可以从字面上理解，supports 看起来就没有 required 那么强势。如果没有当前事务就非事务运行好了。</p>
-<h2 id="MANDATORY（强制性）"><a href="#MANDATORY（强制性）" class="headerlink" title="MANDATORY（强制性）"></a><strong>MANDATORY（强制性）</strong></h2><p>支持当前事务；如果没有会抛出异常；</p>
-<h2 id="REQUIRES-NEW"><a href="#REQUIRES-NEW" class="headerlink" title="REQUIRES_NEW"></a><strong>REQUIRES_NEW</strong></h2><p>始终创建一个新的事务；如果有当前事务，会把当前事务挂起；</p>
-<h2 id="NOT-SUPPORTED"><a href="#NOT-SUPPORTED" class="headerlink" title="NOT_SUPPORTED"></a><strong>NOT_SUPPORTED</strong></h2><p>不支持当前事务；总是以非事务方式执行。</p>
-<h2 id="NEVER"><a href="#NEVER" class="headerlink" title="NEVER"></a>NEVER</h2><p>不支持当前事务；如果有当前事务会抛出异常。</p>
-<h2 id="NESTED（嵌套）"><a href="#NESTED（嵌套）" class="headerlink" title="NESTED（嵌套）"></a>NESTED（嵌套）</h2><p>如果当前事务存在，就以嵌套的方式运行。行为和 REQUIRED 很像。</p>
-<h2 id="自调用的问题"><a href="#自调用的问题" class="headerlink" title="自调用的问题"></a>自调用的问题</h2><p>Stackover Flow 上有一个相关的<a href="https://stackoverflow.com/questions/37217075/spring-nested-transactions">问答</a>，大意是在方法中调用了同一个 service 的方法，比如方法 A （<strong>REQUIRED</strong>）调用了方法 B，即使 B 声明了 <strong>REQUIRS_NEW</strong>的传播行为（始终创建一个新事务执行），但在 A 方法抛出异常的时候，B 方法还是会回滚。</p>
-<p>这个问题需要从 Spring AOP 中动态代理的角度来分析。</p>
-<p>Spring AOP 使用 JDK / Cglib 进行动态代理，它会通过代理，织入增强代码。比如调用带 @Transactional 注解的方法，会通过调用<strong>代理对象（增强后）</strong>的该方法进行。</p>
-<p>但当进行自调用的时候，方法内部调用的方法还是使用原对象进行。也就是说，Spring AOP 的代理对象只会在不同的 bean 之间相互调用的时候使用。</p>
-<p>一般遇到自调用的问题时，一个解决办法是新建一个帮助类，然后去调用它。</p>
-<p>大家也可以看看 <a href="https://docs.spring.io/spring-framework/docs/current/spring-framework-reference/data-access.html#transaction-declarative-annotations">Spring doc</a> 中的 1.4.6 节，有关自调用方面的说明。</p>
-<p>Spring 官方还建议把 @Transactional 注解使用在具体的类上，不建议用在 接口 上。</p>
-<p>原因是，当你使用了基于 类 的代理方式时，使用在 接口 上的注解就失效了。</p>
-<h1 id="事务隔离级别"><a href="#事务隔离级别" class="headerlink" title="事务隔离级别"></a>事务隔离级别</h1><p>Spring 的事务隔离级别和数据库的没有什么区别。</p>
-<ul>
-<li>读未提交</li>
-<li>读提交</li>
-<li>可重复读</li>
-<li>串行化</li>
-</ul>
-<p>Spring 有一个 ISOLATION_DEFAULT 级别，作用是采用和 数据库 一致的隔离级别。</p>
-<h1 id="异常回滚"><a href="#异常回滚" class="headerlink" title="异常回滚"></a>异常回滚</h1><p>@Transactional 还有一个 rollbackFor() 属性。</p>
-<p>接口上的注释大意是，这个属性定义了发生什么类型的异常会触发事务的回滚。</p>
-<p>By default，事务会因为发生非受检异常回滚，受检异常发生了不会回滚。</p>
-<p>你可以这么用，来定义自己的异常回滚策略。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">@Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)</span><br></pre></td></tr></table></figure>
-
-<p>最后做一个总结，Spring 利用 Spring AOP 提供了方便的事务管理功能。在此基础上，通过配置事务的传播机制，进一步解决实际上使用事务时可能存在的问题。</p>
-<p>因为 Spring AOP 动态代理的特性，在自调用的时候会出现事务失效的问题。除了刚才提到的使用帮助类来调用，还有一种方法是使用 AspectJ ，这是另一种 AOP 方案，其原理是通过在编译期在字节码层面织入代码实现增强功能。</p>
-<p>最后就是事务的隔离级别。隔离级别这方面需要了解比如脏读，幻读等问题。</p>
-<p>笔者也是一位初学者，如若文章有错误和疑惑的地方，也希望您可以指出，我们共同讨论和进步.</p>
-<p>‍(=・ω・=)</p>
-]]></content>
-      <categories>
-        <category>Spring Framework</category>
-      </categories>
-      <tags>
-        <tag>spring</tag>
-        <tag>事务</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>TCP 学习记录</title>
-    <url>/2021/02/01/tcp-related/</url>
-    <content><![CDATA[<p>首先了解 TCP 在 OSI 的七层模型中的第四层 - 传输层（来自《图解 TCP/IP》）<span id="more"></span></p>
-<p><img src="/2021/02/01/tcp-related/image(1).png" alt="image(1)"></p>
-<p>再简单的看一下 客户端 和 服务端之间的数据传输</p>
-<p><img src="/2021/02/01/tcp-related/image(2).png" alt="image(2)"></p>
-<p>数据发送时经过每一层都会加上对应的协议头，接收端则会一层层解析头，交给高层的协议处理。</p>
-<h1 id="TCP-首部"><a href="#TCP-首部" class="headerlink" title="TCP 首部"></a>TCP 首部</h1><p><img src="/2021/02/01/tcp-related/image(3).png" alt="image(3)"></p>
-<p>其中我觉得比较重要的几个内容是</p>
-<ul>
-<li><strong>序号</strong>。为包编上号，解决包的乱序问题。</li>
-<li><strong>确认序号，<strong><strong>A</strong></strong>cknowledgement Number。</strong>也就是我们常说的确认应答号 ACK ，可以解决丢包的问题。</li>
-<li><strong>Window</strong>。也就是我们常说的<strong>滑动窗口。</strong></li>
-<li><strong>TCP Flags，状态位。</strong></li>
-<li><strong>Port，</strong>应用监听的端口号。</li>
-</ul>
-<h1 id="TCP-的状态机"><a href="#TCP-的状态机" class="headerlink" title="TCP 的状态机"></a>TCP 的状态机</h1><p>TCP 就是靠改变，维持通讯双方的<strong>状态</strong>来保证他们之间的“连接”的。</p>
-<p><img src="/2021/02/01/tcp-related/image(4).png" alt="image(4)"></p>
-<p>上图中，客户端发送 SYN ，就是期待发起连接，客户端就切换为 SYN-SENT 状态。服务端被动监听端口，处于 LISTEN 状态。Server 接收到 SYN 包后，也向 client 发送 SYN，以及对接收到的 SYN 的 ACK，此时 server 处于 SYN-RECEIVED 状态。 client 收到 server 的 SYN 以及对于自己之前 SYN 的 ACK 后，也要针对 server 的 SYN 发送 ACK，就变成 ESTABLISHED 状态。若此刻 server 成功收到最后这个 ACK ，也进入 ESTABLISHED 状态。</p>
-<p>刚才描述的过程就是我们常说的<strong>建立连接时的三次握手。</strong></p>
-<p><img src="/2021/02/01/tcp-related/image(5).png" alt="image(5)"></p>
-<p>对于三次握手，重要的点在于：</p>
-<ul>
-<li><strong>Synchronize Sequence Numbers，SYN。</strong>SYN seq = x seq = y，主要就是双方去确定 <strong>Sequence Numbers</strong>的值。****这个号就是以后通信要用到的包的序号。</li>
-</ul>
-<p><img src="/2021/02/01/tcp-related/image(6)-2560545.png" alt="image(6)"></p>
-<p>对于<strong>四次挥手断开连接</strong>，因为TCP连接是全双工（两方可以互相同时传输数据）的，所以当任何一方想要断开连接时，都不能那么任性。你可以保证自己没有数据要发送了，但是你不知道对方还有没有数据要继续发送。所以我理解为什么是四次，因为双方都需要像对方提出断开连接并收一下 ACK。</p>
-<p>在建立连接和断开连接时会有各种复杂情况，以下说明一些常见的</p>
-<ul>
-<li>建立连接时，客户端发送 SYN 后，直接掉线。server 就收不到 client 对于自己 SYN 的 ACK。当然 server 会一直尝试发送 SYN-ACK。 在Linux下，默认重试次数为5次，重试的间隔时间从1s开始每次都翻售，5次的重试时间间隔为1s, 2s, 4s, 8s, 16s，总共31s，第5次发出后还要等32s都知道第5次也超时了，所以，总共需要 1s + 2s + 4s+ 8s+ 16s + 32s = 2^6 -1 = 63s，TCP才会把断开这个连接。</li>
-<li>断开连接时的 time-wait 到 close 状态中间等待的一段 2MSL 时间，（Maximum Segment Lifetime）。因为双方在最后收到对方的 FIN 报文时，要给对方一个 ACK，让对方知道自己知道你要也要断开连接了。而不是发了 ACK 直接跑路，这样 B 就一直收不到自己 FIN 的 ACK。</li>
-<li>这个 MSL ，<strong>报文最大生存时间</strong>。可以理解成报文在网络中可以存活的最长时间，超过这个时间还没到达目的地，就会被丢弃。所有 A B 等待的 2MSL 时间还有一个原因就是，避免下一个占用了此端口的应用收到上次与自己无关连接的包。等那么久还没有收到包也就被丢弃了。</li>
-</ul>
-<h1 id="TCP-重传机制"><a href="#TCP-重传机制" class="headerlink" title="TCP 重传机制"></a>TCP 重传机制</h1><p>TCP 保证可靠，稳定的传输，保证包全部顺利到达对方。但是网络世界很复杂，各种意外情况如何去保证呢？</p>
-<p>其中一种就是前面提到的 ACK 机制。比如接收端收到 4000 的包，ACK 回去要 4001 之后的包，发送端就知道 4000 包成功到达了。</p>
-<p>其中的意外情况有，1）接收端没收到 4000 的包，就一直 ACK 3999，发送端就知道要重发 4000 的包了。2）发送端没收到 ACK，就以为接收端没收到（实际上收到了），也重发 4000 的包。</p>
-<h2 id="累计应答"><a href="#累计应答" class="headerlink" title="累计应答"></a>累计应答</h2><p>相比于一个一个包的发送，确认。实际上，接收端只会给发送端 ACK 收到的连续包的最后一个序号。比如发送端发送了 1-5 个包，接收端 ACK 一个 3 （x + 1,3这个包还没收到）给发送端。说明收到了 1,2 两个包。也就是<strong>累计应答</strong>。</p>
-<p>需要注意的是，seq 和 ACK 是以字节数来计算的，故不能跳着 ack。<strong>只能确认最大的连续收到的包。</strong></p>
-<h2 id="引入窗口"><a href="#引入窗口" class="headerlink" title="引入窗口"></a>引入窗口</h2><p>简单的重传机制就是发一个等一个，效率低。</p>
-<p>引入窗口的目的就是减少等待，在没有收到部分包 ACK 的情况下，允许发送最大的段。比如窗口被定义为 5，就允许最多连续发送 5 个段，而不是一个个等待。</p>
-<h2 id="重发控制"><a href="#重发控制" class="headerlink" title="重发控制"></a>重发控制</h2><p><img src="/2021/02/01/tcp-related/image(7).png" alt="image(7)"></p>
-<p><img src="/2021/02/01/tcp-related/image(8).png" alt="image(8)"></p>
-<p>还有一种需要重发的情况是，发送端一直接收不到 ACK。TCP 就会等待一段时间，如果超过就重发。这个等待时间不宜超过 RTT（数据包往返的时间），否则可能进行不必要的重传。</p>
-<p>重发的时候就涉及到一个问题，当发送端一直接收不到 3001 的 ACK 时（接收端确实没有收到 3000 的数据），而接收端收到了到 5001 的数据（放在缓冲区）。那么发送端到底是选择重发 3000 的数据，还是把 3001 ，4001, 5001 全部重发呢？</p>
-<h2 id="SACK"><a href="#SACK" class="headerlink" title="SACK"></a>SACK</h2><p>**Selective Acknowledgment (SACK)**（参看<a href="http://tools.ietf.org/html/rfc2018">RFC 2018</a>），这种方式需要在TCP头里加一个SACK的东西，ACK还是Fast Retransmit的ACK，SACK则是汇报收到的数据碎版。参看下图：</p>
-<p><img src="/2021/02/01/tcp-related/image(9).png" alt="image(9)"></p>
-<p>接收端不仅发送 ACK，还发送一个 SACK 向发送端说明自己缓冲区已经收到了 5000 的数据（只是还无法想你发送 5001 的 ACK ，因为在前面断了一截儿）。</p>
-<p>但是，发送端不能把 SACK 作为真正意义上的 ACK 看待，因为接收端对于 SACK 的数据是可能放弃掉的。后续发送端如果检测到 ACK 没有实际性的增长，仍然需要重发该部分的数据。</p>
-<h1 id="滑动窗口，窗口控制"><a href="#滑动窗口，窗口控制" class="headerlink" title="滑动窗口，窗口控制"></a>滑动窗口，窗口控制</h1><p>TCP 头中有一个 window 字段，又叫 Advertised-Window，这个字段的作用是接收端会告诉发送端自己能接受处理的最大数据，发送端会根据这个值调整发送的数据多少，避免接收端压力太大。</p>
-<p>且这个 window 是有可能到 0 的。也就是说，发送端不再发送数据。</p>
-<p>当 window 变成 0 的时候，发送方会定时发送窗口探测数据包，看看有没有增加 window 值的可能。一般这个值会设置成3次，第次大约30-60秒（不同的实现可能会不一样）。如果3次过后还是0的话，有的TCP实现就会发RST把链接断了。</p>
-<h1 id="TCP-拥塞控制"><a href="#TCP-拥塞控制" class="headerlink" title="TCP 拥塞控制"></a>TCP 拥塞控制</h1><p>前面讨论的窗口，关注的点是接收端的处理能力。这里的拥塞控制也有一个窗口的概念，但是关注的点是对于整个网络的影响。</p>
-<p>我们知道，TCP 有超时重发机制，如果每个 TCP 不顾及整个网络的情况，不断的重发数据，网络状况因此可能更差，形成恶性循环。</p>
-<h2 id="慢启动"><a href="#慢启动" class="headerlink" title="慢启动"></a><strong>慢启动</strong></h2><p>Congestion Window，cwnd。MSS（maximum segment size最大分段长度）</p>
-<p>算法如下</p>
-<ol>
-<li>连接建立，初始化 cwnd 为 1，说明可以传输一个 MSS 大小</li>
-<li>每收到一个 ACK，cwnd++，线性增长</li>
-<li>每过一个 RTT，cwnd = cwnd * 2，指数增长</li>
-<li>ssthresh（slow start threshold），当 cwnd &gt;= ssthresh 时，进入“拥塞避免算法”</li>
-</ol>
-<p>从算法过程可以判断，当网络状况良好的时候，ACK 的快，RTT 也快，这个慢启动也不算非常慢。网络状况差的话，那就是缓慢增长，到定义的阈值。</p>
-<h2 id="拥塞避免算法-–-Congestion-Avoidance"><a href="#拥塞避免算法-–-Congestion-Avoidance" class="headerlink" title="拥塞避免算法 – Congestion Avoidance"></a>拥塞避免算法 – Congestion Avoidance</h2><p>前面说过，还有一个ssthresh（slow start threshold），是一个上限，当cwnd &gt;= ssthresh时，就会进入“拥塞避免算法”。一般来说ssthresh的值是65535，单位是字节，当cwnd达到这个值时后，算法如下：</p>
-<p>1）收到一个ACK时，cwnd = cwnd + 1/cwnd</p>
-<p>2）当每过一个RTT时，cwnd = cwnd + 1</p>
-<p>这样就可以避免增长过快导致网络拥塞，慢慢的增加调整到网络的最佳值。很明显，是一个线性上升的算法。</p>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ul>
-<li><a href="https://coolshell.cn/articles/11564.html">TCP 的那些事儿</a> </li>
-<li><a href="https://time.geekbang.org/column/intro/85">趣谈网络协议</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>网络协议</category>
-      </categories>
-      <tags>
-        <tag>tcp</tag>
+        <tag>专栏学习</tag>
       </tags>
   </entry>
   <entry>
@@ -2859,6 +2780,85 @@
       <tags>
         <tag>翻译</tag>
         <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>TCP 学习记录</title>
+    <url>/2021/02/01/tcp-related/</url>
+    <content><![CDATA[<p>首先了解 TCP 在 OSI 的七层模型中的第四层 - 传输层（来自《图解 TCP/IP》）<span id="more"></span></p>
+<p><img src="/2021/02/01/tcp-related/image(1).png" alt="image(1)"></p>
+<p>再简单的看一下 客户端 和 服务端之间的数据传输</p>
+<p><img src="/2021/02/01/tcp-related/image(2).png" alt="image(2)"></p>
+<p>数据发送时经过每一层都会加上对应的协议头，接收端则会一层层解析头，交给高层的协议处理。</p>
+<h1 id="TCP-首部"><a href="#TCP-首部" class="headerlink" title="TCP 首部"></a>TCP 首部</h1><p><img src="/2021/02/01/tcp-related/image(3).png" alt="image(3)"></p>
+<p>其中我觉得比较重要的几个内容是</p>
+<ul>
+<li><strong>序号</strong>。为包编上号，解决包的乱序问题。</li>
+<li><strong>确认序号，<strong><strong>A</strong></strong>cknowledgement Number。</strong>也就是我们常说的确认应答号 ACK ，可以解决丢包的问题。</li>
+<li><strong>Window</strong>。也就是我们常说的<strong>滑动窗口。</strong></li>
+<li><strong>TCP Flags，状态位。</strong></li>
+<li><strong>Port，</strong>应用监听的端口号。</li>
+</ul>
+<h1 id="TCP-的状态机"><a href="#TCP-的状态机" class="headerlink" title="TCP 的状态机"></a>TCP 的状态机</h1><p>TCP 就是靠改变，维持通讯双方的<strong>状态</strong>来保证他们之间的“连接”的。</p>
+<p><img src="/2021/02/01/tcp-related/image(4).png" alt="image(4)"></p>
+<p>上图中，客户端发送 SYN ，就是期待发起连接，客户端就切换为 SYN-SENT 状态。服务端被动监听端口，处于 LISTEN 状态。Server 接收到 SYN 包后，也向 client 发送 SYN，以及对接收到的 SYN 的 ACK，此时 server 处于 SYN-RECEIVED 状态。 client 收到 server 的 SYN 以及对于自己之前 SYN 的 ACK 后，也要针对 server 的 SYN 发送 ACK，就变成 ESTABLISHED 状态。若此刻 server 成功收到最后这个 ACK ，也进入 ESTABLISHED 状态。</p>
+<p>刚才描述的过程就是我们常说的<strong>建立连接时的三次握手。</strong></p>
+<p><img src="/2021/02/01/tcp-related/image(5).png" alt="image(5)"></p>
+<p>对于三次握手，重要的点在于：</p>
+<ul>
+<li><strong>Synchronize Sequence Numbers，SYN。</strong>SYN seq = x seq = y，主要就是双方去确定 <strong>Sequence Numbers</strong>的值。****这个号就是以后通信要用到的包的序号。</li>
+</ul>
+<p><img src="/2021/02/01/tcp-related/image(6)-2560545.png" alt="image(6)"></p>
+<p>对于<strong>四次挥手断开连接</strong>，因为TCP连接是全双工（两方可以互相同时传输数据）的，所以当任何一方想要断开连接时，都不能那么任性。你可以保证自己没有数据要发送了，但是你不知道对方还有没有数据要继续发送。所以我理解为什么是四次，因为双方都需要像对方提出断开连接并收一下 ACK。</p>
+<p>在建立连接和断开连接时会有各种复杂情况，以下说明一些常见的</p>
+<ul>
+<li>建立连接时，客户端发送 SYN 后，直接掉线。server 就收不到 client 对于自己 SYN 的 ACK。当然 server 会一直尝试发送 SYN-ACK。 在Linux下，默认重试次数为5次，重试的间隔时间从1s开始每次都翻售，5次的重试时间间隔为1s, 2s, 4s, 8s, 16s，总共31s，第5次发出后还要等32s都知道第5次也超时了，所以，总共需要 1s + 2s + 4s+ 8s+ 16s + 32s = 2^6 -1 = 63s，TCP才会把断开这个连接。</li>
+<li>断开连接时的 time-wait 到 close 状态中间等待的一段 2MSL 时间，（Maximum Segment Lifetime）。因为双方在最后收到对方的 FIN 报文时，要给对方一个 ACK，让对方知道自己知道你要也要断开连接了。而不是发了 ACK 直接跑路，这样 B 就一直收不到自己 FIN 的 ACK。</li>
+<li>这个 MSL ，<strong>报文最大生存时间</strong>。可以理解成报文在网络中可以存活的最长时间，超过这个时间还没到达目的地，就会被丢弃。所有 A B 等待的 2MSL 时间还有一个原因就是，避免下一个占用了此端口的应用收到上次与自己无关连接的包。等那么久还没有收到包也就被丢弃了。</li>
+</ul>
+<h1 id="TCP-重传机制"><a href="#TCP-重传机制" class="headerlink" title="TCP 重传机制"></a>TCP 重传机制</h1><p>TCP 保证可靠，稳定的传输，保证包全部顺利到达对方。但是网络世界很复杂，各种意外情况如何去保证呢？</p>
+<p>其中一种就是前面提到的 ACK 机制。比如接收端收到 4000 的包，ACK 回去要 4001 之后的包，发送端就知道 4000 包成功到达了。</p>
+<p>其中的意外情况有，1）接收端没收到 4000 的包，就一直 ACK 3999，发送端就知道要重发 4000 的包了。2）发送端没收到 ACK，就以为接收端没收到（实际上收到了），也重发 4000 的包。</p>
+<h2 id="累计应答"><a href="#累计应答" class="headerlink" title="累计应答"></a>累计应答</h2><p>相比于一个一个包的发送，确认。实际上，接收端只会给发送端 ACK 收到的连续包的最后一个序号。比如发送端发送了 1-5 个包，接收端 ACK 一个 3 （x + 1,3这个包还没收到）给发送端。说明收到了 1,2 两个包。也就是<strong>累计应答</strong>。</p>
+<p>需要注意的是，seq 和 ACK 是以字节数来计算的，故不能跳着 ack。<strong>只能确认最大的连续收到的包。</strong></p>
+<h2 id="引入窗口"><a href="#引入窗口" class="headerlink" title="引入窗口"></a>引入窗口</h2><p>简单的重传机制就是发一个等一个，效率低。</p>
+<p>引入窗口的目的就是减少等待，在没有收到部分包 ACK 的情况下，允许发送最大的段。比如窗口被定义为 5，就允许最多连续发送 5 个段，而不是一个个等待。</p>
+<h2 id="重发控制"><a href="#重发控制" class="headerlink" title="重发控制"></a>重发控制</h2><p><img src="/2021/02/01/tcp-related/image(7).png" alt="image(7)"></p>
+<p><img src="/2021/02/01/tcp-related/image(8).png" alt="image(8)"></p>
+<p>还有一种需要重发的情况是，发送端一直接收不到 ACK。TCP 就会等待一段时间，如果超过就重发。这个等待时间不宜超过 RTT（数据包往返的时间），否则可能进行不必要的重传。</p>
+<p>重发的时候就涉及到一个问题，当发送端一直接收不到 3001 的 ACK 时（接收端确实没有收到 3000 的数据），而接收端收到了到 5001 的数据（放在缓冲区）。那么发送端到底是选择重发 3000 的数据，还是把 3001 ，4001, 5001 全部重发呢？</p>
+<h2 id="SACK"><a href="#SACK" class="headerlink" title="SACK"></a>SACK</h2><p>**Selective Acknowledgment (SACK)**（参看<a href="http://tools.ietf.org/html/rfc2018">RFC 2018</a>），这种方式需要在TCP头里加一个SACK的东西，ACK还是Fast Retransmit的ACK，SACK则是汇报收到的数据碎版。参看下图：</p>
+<p><img src="/2021/02/01/tcp-related/image(9).png" alt="image(9)"></p>
+<p>接收端不仅发送 ACK，还发送一个 SACK 向发送端说明自己缓冲区已经收到了 5000 的数据（只是还无法想你发送 5001 的 ACK ，因为在前面断了一截儿）。</p>
+<p>但是，发送端不能把 SACK 作为真正意义上的 ACK 看待，因为接收端对于 SACK 的数据是可能放弃掉的。后续发送端如果检测到 ACK 没有实际性的增长，仍然需要重发该部分的数据。</p>
+<h1 id="滑动窗口，窗口控制"><a href="#滑动窗口，窗口控制" class="headerlink" title="滑动窗口，窗口控制"></a>滑动窗口，窗口控制</h1><p>TCP 头中有一个 window 字段，又叫 Advertised-Window，这个字段的作用是接收端会告诉发送端自己能接受处理的最大数据，发送端会根据这个值调整发送的数据多少，避免接收端压力太大。</p>
+<p>且这个 window 是有可能到 0 的。也就是说，发送端不再发送数据。</p>
+<p>当 window 变成 0 的时候，发送方会定时发送窗口探测数据包，看看有没有增加 window 值的可能。一般这个值会设置成3次，第次大约30-60秒（不同的实现可能会不一样）。如果3次过后还是0的话，有的TCP实现就会发RST把链接断了。</p>
+<h1 id="TCP-拥塞控制"><a href="#TCP-拥塞控制" class="headerlink" title="TCP 拥塞控制"></a>TCP 拥塞控制</h1><p>前面讨论的窗口，关注的点是接收端的处理能力。这里的拥塞控制也有一个窗口的概念，但是关注的点是对于整个网络的影响。</p>
+<p>我们知道，TCP 有超时重发机制，如果每个 TCP 不顾及整个网络的情况，不断的重发数据，网络状况因此可能更差，形成恶性循环。</p>
+<h2 id="慢启动"><a href="#慢启动" class="headerlink" title="慢启动"></a><strong>慢启动</strong></h2><p>Congestion Window，cwnd。MSS（maximum segment size最大分段长度）</p>
+<p>算法如下</p>
+<ol>
+<li>连接建立，初始化 cwnd 为 1，说明可以传输一个 MSS 大小</li>
+<li>每收到一个 ACK，cwnd++，线性增长</li>
+<li>每过一个 RTT，cwnd = cwnd * 2，指数增长</li>
+<li>ssthresh（slow start threshold），当 cwnd &gt;= ssthresh 时，进入“拥塞避免算法”</li>
+</ol>
+<p>从算法过程可以判断，当网络状况良好的时候，ACK 的快，RTT 也快，这个慢启动也不算非常慢。网络状况差的话，那就是缓慢增长，到定义的阈值。</p>
+<h2 id="拥塞避免算法-–-Congestion-Avoidance"><a href="#拥塞避免算法-–-Congestion-Avoidance" class="headerlink" title="拥塞避免算法 – Congestion Avoidance"></a>拥塞避免算法 – Congestion Avoidance</h2><p>前面说过，还有一个ssthresh（slow start threshold），是一个上限，当cwnd &gt;= ssthresh时，就会进入“拥塞避免算法”。一般来说ssthresh的值是65535，单位是字节，当cwnd达到这个值时后，算法如下：</p>
+<p>1）收到一个ACK时，cwnd = cwnd + 1/cwnd</p>
+<p>2）当每过一个RTT时，cwnd = cwnd + 1</p>
+<p>这样就可以避免增长过快导致网络拥塞，慢慢的增加调整到网络的最佳值。很明显，是一个线性上升的算法。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ul>
+<li><a href="https://coolshell.cn/articles/11564.html">TCP 的那些事儿</a> </li>
+<li><a href="https://time.geekbang.org/column/intro/85">趣谈网络协议</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>网络协议</category>
+      </categories>
+      <tags>
+        <tag>tcp</tag>
       </tags>
   </entry>
 </search>
