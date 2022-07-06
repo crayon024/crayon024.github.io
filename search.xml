@@ -2863,30 +2863,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Java 单元测试</title>
-    <url>/2022/01/13/JavaUnitTest/</url>
-    <content><![CDATA[<p><a href="https://time.geekbang.org/column/article/10275">https://time.geekbang.org/column/article/10275</a></p>
-<p><a href="https://martinfowler.com/articles/mocksArentStubs.html">https://martinfowler.com/articles/mocksArentStubs.html</a></p>
-<p>概览：</p>
-<ol>
-<li>单元测试</li>
-<li>集成测试 - 模块测试</li>
-<li>系统测试 - 预发布版本测试</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">单元测试通常由开发工程师完成，一般会伴随开发代码一起递交至代码库。单元测试属于最严格的软件测试手段，是最接近代码底层实现的验证手段，可以在软件开发的早期以最小的成本保证局部代码的质量。</span><br><span class="line"></span><br><span class="line">另外，单元测试都是以自动化的方式执行，所以在大量回归测试的场景下更能带来高收益。</span><br><span class="line"></span><br><span class="line">同时，你还会发现，单元测试的实施过程还可以帮助开发工程师改善代码的设计与实现，并能在单元测试代码里提供函数的使用示例，因为单元测试的具体表现形式就是对函数以各种不同输入参数组合进行调用，这些调用方法构成了函数的使用说明。</span><br></pre></td></tr></table></figure>
-
-<p>单元测试的<strong>输入与输出数据</strong>不止是输入参数和返回接口。输入数据可能还包括需要读取的成员变量、全局变量… 。输出数据还包括被函数改变的全局变量，成员变量…</p>
-<p>Mock 对象后就不要去思考原本的函数实现了。</p>
-]]></content>
-      <categories>
-        <category>测试</category>
-      </categories>
-      <tags>
-        <tag>java</tag>
-        <tag>单元测试</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>2022 计划进度追踪</title>
     <url>/2022/03/09/2022-plan-trace/</url>
     <content><![CDATA[<h2 id="2022-计划"><a href="#2022-计划" class="headerlink" title="2022 计划"></a>2022 计划</h2><ol>
