@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico">
+  <link rel="mask-icon" href="/images/favicon.ico" color="#222">
+  <link rel="manifest" href="/manifest.json">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-bounce.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<meta name="description" content="Java 8 默认 GC 策略，并行 GCjava -Xloggc:gc.java_8_default.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xms512m -Xmx512m week02.work01.GCLogAnalysis">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GC 策略结合日志分析">
+<meta property="og:url" content="http://example.com/2022/01/05/gc-algo-in-action/index.html">
+<meta property="og:site_name" content="Crayon">
+<meta property="og:description" content="Java 8 默认 GC 策略，并行 GCjava -Xloggc:gc.java_8_default.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xms512m -Xmx512m week02.work01.GCLogAnalysis">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-01-05T10:54:14.000Z">
+<meta property="article:modified_time" content="2022-01-05T10:54:14.000Z">
+<meta property="article:author" content="Hexin Fang">
+<meta property="article:tag" content="jvm">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="gc">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2022/01/05/gc-algo-in-action/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2022/01/05/gc-algo-in-action/","path":"2022/01/05/gc-algo-in-action/","title":"GC 策略结合日志分析"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>GC 策略结合日志分析 | Crayon</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Crayon</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">Keep going</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-8-%E9%BB%98%E8%AE%A4-GC-%E7%AD%96%E7%95%A5%EF%BC%8C%E5%B9%B6%E8%A1%8C-GC"><span class="nav-number">1.</span> <span class="nav-text">Java 8 默认 GC 策略，并行 GC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%B2%E8%A1%8C-GC"><span class="nav-number">2.</span> <span class="nav-text">串行 GC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CMS-GC"><span class="nav-number">3.</span> <span class="nav-text">CMS GC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#G1-GC"><span class="nav-number">4.</span> <span class="nav-text">G1 GC</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Hexin Fang"
+      src="/images/avatar_2.JPG">
+  <p class="site-author-name" itemprop="name">Hexin Fang</p>
+  <div class="site-description" itemprop="description">Keep going.</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/01/05/gc-algo-in-action/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar_2.JPG">
+      <meta itemprop="name" content="Hexin Fang">
+      <meta itemprop="description" content="Keep going.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Crayon">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          GC 策略结合日志分析
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-01-05 18:54:14" itemprop="dateCreated datePublished" datetime="2022-01-05T18:54:14+08:00">2022-01-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="Java-8-默认-GC-策略，并行-GC"><a href="#Java-8-默认-GC-策略，并行-GC" class="headerlink" title="Java 8 默认 GC 策略，并行 GC"></a>Java 8 默认 GC 策略，并行 GC</h2><p>java -Xloggc:gc.java_8_default.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xms512m -Xmx512m week02.work01.GCLogAnalysis  <span id="more"></span></p>
+<p>共生成对象次数：10277 次</p>
+<p>因为Java 8 默认采用 ParallelGC 策略，而策略默认会打开 AdaptiveSizePolicy 自适应大小策略。</p>
+<p>添加参数关闭 -XX:-UseAdaptiveSizePolicy 后，可以看到 Y 和 O 按照默认的 1：2 分配。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CommandLine flags: -XX:InitialHeapSize=536870912 -XX:MaxHeapSize=536870912 -XX:+PrintGC -XX:+PrintGCDateStamps -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:-UseAdaptiveSizePolicy -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseParallelGC </span><br></pre></td></tr></table></figure>
+
+<p>首先日志打印了部分相关的启动参数配置，可以看到默认使用了 ParallelGC，开启了压缩指针。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0.231: [GC (Allocation Failure) [PSYoungGen: 131501K-&gt;21491K(153088K)] 131501K-&gt;47291K(502784K), 0.0243533 secs] [Times: user=0.02 sys=0.08, real=0.02 secs] </span><br></pre></td></tr></table></figure>
+
+<p>第一次 GC 发生在 Y 区，原因是 Allocation Failure，Eden 区没有足够的空间分配对象触发的。 此次 GC 后 Y 区占用空间少了了大概 110 M，总空间占用大概少了 80 M。大概晋升了 30M 到老年代中。用时 24 ms。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0.497: [Full GC (Ergonomics) [PSYoungGen: 21495K-&gt;0K(153088K)] [ParOldGen: 315331K-&gt;232451K(349696K)] 336826K-&gt;232451K(502784K), [Metaspace: 2575K-&gt;2575K(1056768K)], 0.1176023 secs] [Times: user=0.07 sys=0.35, real=0.11 secs] </span><br></pre></td></tr></table></figure>
+
+<p>大概 8 次 YGC 后，发生第一次 FGC。这次的 FGC ，Y 区被清空，释放大概 20 M空间，O 区释放了大概 80 M 。总空间大概释放了 100 M，暂停时间 117 ms。<br>发生 FGC 的原因： <a target="_blank" rel="noopener" href="https://www.zhihu.com/question/41922036/answer/93079526">Major GC和Full GC的区别是什么？触发条件呢？ - 知乎</a>。</p>
+<p>不同的 GC 策略有着不同的触发条件，Full GC 的执行方式也可能不一样。</p>
+<p>并行 GC 默认启用 CPU 核心数的 GC 线程，**-XX:ParallelGCThreads=N** 控制。也是就说并行 GC 时 CPU 资源倾力去 GC。<strong>使用并行 GC 策略目标更倾向于提高系统整体的吞吐量，单次的 GC 暂停时间有时可能会比较长</strong>，业务线程的响应可能比较慢。</p>
+<h2 id="串行-GC"><a href="#串行-GC" class="headerlink" title="串行 GC"></a>串行 GC</h2><p>java -Xloggc:gc.serialGC.log -XX:+UseSerialGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xms512m -Xmx512m week02.work01.GCLogAnalysis </p>
+<p>共生成对象次数:11672</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0.245: [GC (Allocation Failure) 2021-08-10T22:00:12.680-0800: 0.245: [DefNew: 139776K-&gt;17472K(157248K), 0.0273220 secs] 139776K-&gt;46776K(506816K), 0.0275854 secs] [Times: user=0.00 sys=0.02, real=0.02 secs] </span><br></pre></td></tr></table></figure>
+
+<p>YGC 和 并行 GC 的 log 日志大概是一样，DefNew -年轻代释放了大概 120 M 的空间，总空间减少了大概 90 M。可以知道此次 YGC 大概有 30M 跑到了老年代。用时 27 ms。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1.054: [Full GC (Allocation Failure) 2021-08-10T22:00:13.490-0800: 1.054: [Tenured: 349521K-&gt;341013K(349568K), 0.0228613 secs] 506738K-&gt;341013K(506816K), [Metaspace: 2575K-&gt;2575K(1056768K)], 0.0229624 secs] [Times: user=0.02 sys=0.00, real=0.03 secs] </span><br></pre></td></tr></table></figure>
+
+<p>大概发生 10 次 YGC 后，触发了一次 FGC。Tenured - 老年代释放了 10 M 的对象，总空间少了大概 160。也可以看出 DefNew 被清空了。用时 230 ms。<strong>相比并行 GC 大概慢了一倍。</strong></p>
+<h2 id="CMS-GC"><a href="#CMS-GC" class="headerlink" title="CMS GC"></a>CMS GC</h2><p>java -Xloggc:gc.CMSGC.log -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xms512m -Xmx512m week02.work01.GCLogAnalysis </p>
+<p>共生成对象次数:12707</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CommandLine flags: -XX:InitialHeapSize=536870912 -XX:MaxHeapSize=536870912 -XX:MaxNewSize=178958336 -XX:MaxTenuringThreshold=6 -XX:NewSize=178958336 -XX:OldPLABSize=16 -XX:OldSize=357912576 </span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>-XX:MaxTenuringThreshold=6，对象年龄，控制晋升速率。本身由 JVM 自动调整，6 设置一个最大的限制值。</strong></li>
+<li>free-list，老年代采用<strong>标记-清除，不整理</strong>，通过维护 free-list 分配空间。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">2021-08-10T22:26:09.781-0800: 0.273: [GC (Allocation Failure) 2021-08-10T22:26:09.781-0800: 0.273: [ParNew: 139776K-&gt;17471K(157248K), 0.0223003 secs] 139776K-&gt;46040K(506816K), 0.0225398 secs] [Times: user=0.02 sys=0.07, real=0.02 secs] </span><br></pre></td></tr></table></figure>
+
+<p><strong>ParNew</strong>**<del>新生代</del>**<strong>（区分新生代（Eden 区）和年轻代）并行回收</strong>，释放了大概 120 M 空间，GC 暂停 22ms。总空间释放了大概 90 M，大概也是晋升了 30 M 的内存。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">0.472: [GC (CMS Initial Mark) [1 CMS-initial-mark: 212269K(349568K)] 229884K(506816K), 0.0009085 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] </span><br><span class="line">0.474: [CMS-concurrent-mark-start]</span><br><span class="line">0.477: [CMS-concurrent-mark: 0.003/0.003 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] </span><br><span class="line">0.477: [CMS-concurrent-preclean-start]</span><br><span class="line">0.478: [CMS-concurrent-preclean: 0.000/0.000 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] </span><br><span class="line">0.478: [CMS-concurrent-abortable-preclean-start]</span><br></pre></td></tr></table></figure>
+
+<p>针对老年代的回收，触发了 CMS 的 6 个处理阶段。可以看到</p>
+<ol>
+<li><strong>初始标记</strong>：<strong>STW</strong>  0.9 ms。标记所有的 Root 对象，Root 引用的对象，年轻代存活对象引用的对象。（跨代引用）</li>
+<li>并发标记：遍历老年代，标记存活对象。</li>
+<li>并发预清理：因为并发执行，业务线程还在执行，引用关系一直在发生改变，这一步通过卡表的概念，标记脏表。</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">0.581: [GC (CMS Final Remark) [YG occupancy: 18010 K (157248 K)]</span><br><span class="line">0.581: [Rescan (parallel) , 0.0002754 secs]</span><br><span class="line">0.581: [weak refs processing, 0.0000085 secs]</span><br><span class="line">0.581: [class unloading, 0.0003406 secs]</span><br><span class="line">0.582: [scrub symbol table, 0.0001719 secs]</span><br><span class="line">0.582: [scrub string table, 0.0000610 secs][1 CMS-remark: 343397K(349568K)] 361407K(506816K), 0.0011452 secs] [Times: user=0.00 sys=0.00, real=0.01 secs] </span><br><span class="line">0.582: [CMS-concurrent-sweep-start]</span><br><span class="line">0.583: [CMS-concurrent-sweep: 0.001/0.001 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] </span><br><span class="line">0.583: [CMS-concurrent-reset-start]</span><br><span class="line">0.584: [CMS-concurrent-reset: 0.001/0.001 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] </span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li><strong>最终标记：STW</strong>来准确的标记对象，为接下来的删除对象做准备。</li>
+<li>并发清除：回收不使用的对象占用的空间</li>
+<li>并发重置：重置 CMS 算法为了回收内部维护的相关数据，为下一次做准备。</li>
+</ol>
+<p>CMS 默认使用 CPU 核心数 / 4 的 GC 线程进行回收。<strong>CMS 的目的在于降低系统的延迟，保证业务响应，用户体验更好些</strong>。</p>
+<p>在吞吐量方面，相比并行 GC 投入所有的核来GC，会差一些。</p>
+<p><strong>（假设并行GC自定义线程数和 CMS 一样，并行 GC 的吞吐量的优势还在吗？</strong></p>
+<p>个人理解：应该还是有的。CMS 的并发清除步骤多，分配到的 GC 线程次数多的话，业务线程分配不到资源，并发执行的优势没有了；采用的算法（没有整理，用 free-list）内存空间的利用率也是个问题。相当于分配了那么多资源，但是没发挥出来。</p>
+<p>CMS 的存在的问题：</p>
+<ul>
+<li>浮动垃圾：最终标记后，并发清除的操作不需要 STW，在清除的过程中可能要分配新的对象内存等等，所以需要预留一定的内存空间给业务线程使用。如果没有足够的空间就会导致并发失败。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">0.647: [CMS-concurrent-abortable-preclean-start]</span><br><span class="line">0.660: [GC (Allocation Failure) 2021-08-10T22:26:10.168-0800: 0.660: [ParNew: 157246K-&gt;17471K(157248K), 0.0154900 secs] 437850K-&gt;342263K(506816K), 0.0155564 secs] [Times: user=0.09 sys=0.01, real=0.02 secs] </span><br><span class="line">0.690: [GC (Allocation Failure) 2021-08-10T22:26:10.198-0800: 0.690: [ParNew: 157247K-&gt;157247K(157248K), 0.0000176 secs]2021-08-10T22:26:10.198-0800: 0.690: [0.690: [CMS-concurrent-abortable-preclean: 0.001/0.043 secs] [Times: user=0.11 sys=0.01, real=0.04 secs] </span><br><span class="line"> (concurrent mode failure): 324792K-&gt;289452K(349568K), 0.0785084 secs] 482039K-&gt;289452K(506816K), [Metaspace: 2575K-&gt;2575K(1056768K)], 0.0785991 secs] [Times: user=0.03 sys=0.04, real=0.08 secs] </span><br><span class="line">0.782: [GC (Allocation Failure) 2021-08-10T22:26:10.290-0800: 0.782: [ParNew: 139542K-&gt;17470K(157248K), 0.0045904 secs] 428995K-&gt;335339K(506816K), 0.0046549 secs] [Times: user=0.03 sys=0.00, real=0.00 secs] </span><br><span class="line">0.787: [GC (CMS Initial Mark) [1 CMS-initial-mark: 317869K(349568K)] 335860K(506816K), 0.0001277 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] </span><br><span class="line">0.787: [CMS-concurrent-mark-start]</span><br></pre></td></tr></table></figure>
+
+<p>可以看到在 pre-clean-start 后，日志出现了 concurrent mode failure 字样后，经历几次 Minor GC 后，重新从 Inital Mark 开始进行 CMS 操作。</p>
+<p><strong>这里有个疑问，从日志看没有退化 GC 的情况，而是重新进行了 CMS。从《深入理解 Java 虚拟机 第 3 版》说会直接退化成 Serial Old GC，不知该如何验证？</strong></p>
+<h2 id="G1-GC"><a href="#G1-GC" class="headerlink" title="G1 GC"></a>G1 GC</h2><p>java -Xloggc:gc.G1GC-30ms-clean.log -XX:+UseG1GC -XX:MaxGCPauseMillis=30  -XX:+PrintGCDateStamps -Xms512m -Xmx512m week02.work01.GCLogAnalysis</p>
+<p>共生成对象次数：5910</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">CommandLine flags: -XX:InitialHeapSize=536870912 -XX:MaxGCPauseMillis=30 -XX:MaxHeapSize=536870912 -XX:+PrintGC -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseG1GC -XX:-UseLargePagesIndividualAllocation </span><br><span class="line"></span><br><span class="line">6.629: [GC pause (G1 Evacuation Pause) (young) 264M-&gt;210M(512M), 0.0096778 secs]</span><br><span class="line">[GC pause (G1 Humongous Allocation) (young) (initial-mark) 234M-&gt;222M(512M), 0.0039857 secs]</span><br></pre></td></tr></table></figure>
+
+<p>看到 G1 Humongous Allocation 因为大对象分配失败，触发了 initial-mark。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">6.650: [GC concurrent-root-region-scan-start]</span><br><span class="line">6.650: [GC concurrent-root-region-scan-end, 0.0003724 secs]</span><br><span class="line">6.650: [GC concurrent-mark-start]</span><br><span class="line">6.685: [GC concurrent-mark-end, 0.0347063 secs]</span><br><span class="line">6.698: [GC remark, 0.0030734 secs]</span><br><span class="line">6.709: [GC cleanup 319M-&gt;307M(512M), 0.0005021 secs]</span><br><span class="line">6.709: [GC concurrent-cleanup-start]</span><br><span class="line">6.709: [GC concurrent-cleanup-end, 0.0000177 secs]</span><br><span class="line">6.959: [GC pause (G1 Evacuation Pause) (young)-- 431M-&gt;394M(512M), 0.0097375 secs]</span><br><span class="line">6.978: [GC pause (G1 Evacuation Pause) (mixed) 398M-&gt;383M(512M), 0.0051953 secs]</span><br></pre></td></tr></table></figure>
+
+<p>后开始 region 的扫描，标记，重标记，cleanup 日志都有体现。<br>mix 模式类似 FGC。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/jvm/" rel="tag"># jvm</a>
+              <a href="/tags/java/" rel="tag"># java</a>
+              <a href="/tags/gc/" rel="tag"># gc</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/12/16/reactor-project/" rel="prev" title="Project Reactor 响应式编程分享">
+                  <i class="fa fa-chevron-left"></i> Project Reactor 响应式编程分享
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2022/01/09/GC-Algo/" rel="next" title="GC 策略总结">
+                  GC 策略总结 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hexin Fang</span>
+</div><script color="0,0,255" opacity="1.0" zIndex="-1" count="111" src="https://cdn.jsdelivr.net/npm/canvas-nest.js@1/dist/canvas-nest.js"></script>
+
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+
+
+
+
+
+</body>
+</html>
