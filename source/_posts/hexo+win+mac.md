@@ -1,7 +1,7 @@
 ---
 title: Hexo+GithubPages+Mac+Win 部署问题记录
-date: 2021-01-01 21:54:14
-updated: 2021-01-01 21:54:14
+date: 2021-06-01 21:54:14
+updated: 2021-06-01 21:54:14
 categories: hexo
 tags: 
   - blog
@@ -80,4 +80,6 @@ hexo clean，hexo generate 正常，hexo d 部署的时候报错
 [mac和windows协同写hexo博客](https://wandouduoduo.github.io/articles/902dbefe.html)
 
 [hexo 图片显示+typora](https://www.caoayu.xyz/post/hexo/)
+
+[hexo 官方手册](https://hexo.io/zh-cn/docs/writing)
 
