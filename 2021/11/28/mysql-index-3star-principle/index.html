@@ -25,7 +25,7 @@
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
 <meta name="description" content="磁盘 I&#x2F;O 《数据库索引设计与优化》第二章  随机 I&#x2F;O每次数据库从磁盘随机读取一个页大约会花费10 ms左右，10 ms 是根据磁盘活动等情况大致估算出来的。我们只要意识到每次随机 I&#x2F;O 的成本是很高的即可。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="MySQL 索引概要">
+<meta property="og:title" content="MySQL 索引简析与 3star 设计原则">
 <meta property="og:url" content="http://example.com/2021/11/28/mysql-index-3star-principle/index.html">
 <meta property="og:site_name" content="Crayon">
 <meta property="og:description" content="磁盘 I&#x2F;O 《数据库索引设计与优化》第二章  随机 I&#x2F;O每次数据库从磁盘随机读取一个页大约会花费10 ms左右，10 ms 是根据磁盘活动等情况大致估算出来的。我们只要意识到每次随机 I&#x2F;O 的成本是很高的即可。">
@@ -44,10 +44,10 @@
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2021/11/28/mysql-index-3star-principle/","path":"2021/11/28/mysql-index-3star-principle/","title":"MySQL 索引概要"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2021/11/28/mysql-index-3star-principle/","path":"2021/11/28/mysql-index-3star-principle/","title":"MySQL 索引简析与 3star 设计原则"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>MySQL 索引概要 | Crayon</title>
+<title>MySQL 索引简析与 3star 设计原则 | Crayon</title>
   
 
 
@@ -231,7 +231,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          MySQL 索引概要
+          MySQL 索引简析与 3star 设计原则
         </h1>
 
         <div class="post-meta-container">

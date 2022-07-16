@@ -1518,7 +1518,7 @@
       </tags>
   </entry>
   <entry>
-    <title>MySQL 索引概要</title>
+    <title>MySQL 索引简析与 3star 设计原则</title>
     <url>/2021/11/28/mysql-index-3star-principle/</url>
     <content><![CDATA[<h1 id="磁盘-I-O"><a href="#磁盘-I-O" class="headerlink" title="磁盘 I/O"></a>磁盘 I/O</h1><blockquote>
 <p>《数据库索引设计与优化》第二章</p>
