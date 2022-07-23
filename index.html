@@ -210,7 +210,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/03/28/ClassLoader-And-Tomact-isolation/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/07/epoll/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar_2.JPG">
@@ -223,7 +223,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/03/28/ClassLoader-And-Tomact-isolation/" class="post-title-link" itemprop="url">类加载器机制 学习笔记</a>
+          <a href="/2022/05/07/epoll/" class="post-title-link" itemprop="url">select 到 epoll 的多路复用</a>
         </h2>
 
         <div class="post-meta-container">
@@ -234,7 +234,250 @@
       </span>
       <span class="post-meta-item-text">发表于</span>
 
-      <time title="创建时间：2022-03-28 18:54:14" itemprop="dateCreated datePublished" datetime="2022-03-28T18:54:14+08:00">2022-03-28</time>
+      <time title="创建时间：2022-05-07 18:54:14" itemprop="dateCreated datePublished" datetime="2022-05-07T18:54:14+08:00">2022-05-07</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="从网卡接收数据说起"><a href="#从网卡接收数据说起" class="headerlink" title="从网卡接收数据说起"></a>从网卡接收数据说起</h2><ol>
+<li>网卡收到传输的数据</li>
+<li>并将收到的数据写到内存</li></ol>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/05/07/epoll/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/04/12/JVM-Bytecode-Analysis/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar_2.JPG">
+      <meta itemprop="name" content="Hexin Fang">
+      <meta itemprop="description" content="Keep going.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Crayon">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2022/04/12/JVM-Bytecode-Analysis/" class="post-title-link" itemprop="url">Java 字节码分析</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-04-12 18:54:14" itemprop="dateCreated datePublished" datetime="2022-04-12T18:54:14+08:00">2022-04-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>Java 字节码由 byte 组成，理论上可以支持 2^8 个操作码，实际中 Java 只用到了 200 个左右的操作码。</p>
+<p>在 JVM 执行过程中，每个线程都有私有的线程栈，线程执行程序时每一次方法调用都会创建一个 <strong>栈帧</strong>。栈帧由操作数栈、局部变量数组和 <a target="_blank" rel="noopener" href="https://www.artima.com/insidejvm/ed2/jvm8.html">Frame Data</a> 组成。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/04/12/JVM-Bytecode-Analysis/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/03/25/Mysql-geektime-study-record/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar_2.JPG">
+      <meta itemprop="name" content="Hexin Fang">
+      <meta itemprop="description" content="Keep going.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Crayon">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2022/03/25/Mysql-geektime-study-record/" class="post-title-link" itemprop="url">MySQL 学习记录</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-03-25 18:54:14" itemprop="dateCreated datePublished" datetime="2022-03-25T18:54:14+08:00">2022-03-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="基础架构"><a href="#基础架构" class="headerlink" title="基础架构"></a>基础架构</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/03/25/Mysql-geektime-study-record/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/03/01/ClassLoader-And-Tomact-isolation/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar_2.JPG">
+      <meta itemprop="name" content="Hexin Fang">
+      <meta itemprop="description" content="Keep going.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Crayon">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2022/03/01/ClassLoader-And-Tomact-isolation/" class="post-title-link" itemprop="url">类加载器机制 学习笔记</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-03-01 18:54:14" itemprop="dateCreated datePublished" datetime="2022-03-01T18:54:14+08:00">2022-03-01</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -265,7 +508,7 @@
 <li><p><strong>上下文类加载器</strong>的出现，顶层的类加载器可以通过 ThreadContextClassLoader 来调用下层的加载器来加载类。</p></li></ol>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/03/28/ClassLoader-And-Tomact-isolation/#more" rel="contents">
+              <a class="btn" href="/2022/03/01/ClassLoader-And-Tomact-isolation/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -296,7 +539,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/03/18/JVM-Bytecode-Analysis/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/02/24/gc-algo-in-action/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar_2.JPG">
@@ -309,7 +552,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/03/18/JVM-Bytecode-Analysis/" class="post-title-link" itemprop="url">Java 字节码分析</a>
+          <a href="/2022/02/24/gc-algo-in-action/" class="post-title-link" itemprop="url">GC 策略结合日志分析</a>
         </h2>
 
         <div class="post-meta-container">
@@ -320,7 +563,7 @@
       </span>
       <span class="post-meta-item-text">发表于</span>
 
-      <time title="创建时间：2022-03-18 18:54:14" itemprop="dateCreated datePublished" datetime="2022-03-18T18:54:14+08:00">2022-03-18</time>
+      <time title="创建时间：2022-02-24 18:54:14" itemprop="dateCreated datePublished" datetime="2022-02-24T18:54:14+08:00">2022-02-24</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -342,11 +585,10 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p>Java 字节码由 byte 组成，理论上可以支持 2^8 个操作码，实际中 Java 只用到了 200 个左右的操作码。</p>
-<p>在 JVM 执行过程中，每个线程都有私有的线程栈，线程执行程序时每一次方法调用都会创建一个 <strong>栈帧</strong>。栈帧由操作数栈、局部变量数组和 <a target="_blank" rel="noopener" href="https://www.artima.com/insidejvm/ed2/jvm8.html">Frame Data</a> 组成。</p>
+          <h2 id="Java-8-默认-GC-策略，并行-GC"><a href="#Java-8-默认-GC-策略，并行-GC" class="headerlink" title="Java 8 默认 GC 策略，并行 GC"></a>Java 8 默认 GC 策略，并行 GC</h2><p>java -Xloggc:gc.java_8_default.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xms512m -Xmx512m week02.work01.GCLogAnalysis</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/03/18/JVM-Bytecode-Analysis/#more" rel="contents">
+              <a class="btn" href="/2022/02/24/gc-algo-in-action/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -377,7 +619,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/03/07/epoll/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/02/20/GC-Algo/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar_2.JPG">
@@ -390,7 +632,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/03/07/epoll/" class="post-title-link" itemprop="url">select 到 epoll 的多路复用</a>
+          <a href="/2022/02/20/GC-Algo/" class="post-title-link" itemprop="url">GC 策略总结</a>
         </h2>
 
         <div class="post-meta-container">
@@ -401,412 +643,7 @@
       </span>
       <span class="post-meta-item-text">发表于</span>
 
-      <time title="创建时间：2022-03-07 18:54:14" itemprop="dateCreated datePublished" datetime="2022-03-07T18:54:14+08:00">2022-03-07</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="从网卡接收数据说起"><a href="#从网卡接收数据说起" class="headerlink" title="从网卡接收数据说起"></a>从网卡接收数据说起</h2><ol>
-<li>网卡收到传输的数据</li>
-<li>并将收到的数据写到内存</li></ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/03/07/epoll/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/02/26/Concurrent-Programming-2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar_2.JPG">
-      <meta itemprop="name" content="Hexin Fang">
-      <meta itemprop="description" content="Keep going.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Crayon">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/02/26/Concurrent-Programming-2/" class="post-title-link" itemprop="url">Java 并发编程（二）</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2022-02-26 21:06:50" itemprop="dateCreated datePublished" datetime="2022-02-26T21:06:50+08:00">2022-02-26</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h1><h2 id="Lock-接口"><a href="#Lock-接口" class="headerlink" title="Lock 接口"></a>Lock 接口</h2><p>Java 1.5 之后，并发包新增了 Lock 接口以及相关实现类来提供更丰富的锁功能。synchronized 同步块虽然使用上很便携，但是可操作性比较欠缺</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/02/26/Concurrent-Programming-2/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/02/24/Concurrent-Programming/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar_2.JPG">
-      <meta itemprop="name" content="Hexin Fang">
-      <meta itemprop="description" content="Keep going.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Crayon">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/02/24/Concurrent-Programming/" class="post-title-link" itemprop="url">Java 并发编程（一）</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2022-02-24 11:06:50" itemprop="dateCreated datePublished" datetime="2022-02-24T11:06:50+08:00">2022-02-24</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="可见性、有序性和原子性"><a href="#可见性、有序性和原子性" class="headerlink" title="可见性、有序性和原子性"></a>可见性、有序性和原子性</h1><h2 id="可见性"><a href="#可见性" class="headerlink" title="可见性"></a>可见性</h2><p>多核 CPU ，每个 CPU 都有属于自己的多层缓存可以提高访问数据的速度以及减少共享内存的竞争。多核 CPU，每个线程对共享变量都可能通过缓存来访问，<strong>不同线程之间对共享变量的修改是否立即可见（刷新到主存并且更新缓存），一般称为可见性。</strong></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/02/24/Concurrent-Programming/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/02/11/fastdfs-record/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar_2.JPG">
-      <meta itemprop="name" content="Hexin Fang">
-      <meta itemprop="description" content="Keep going.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Crayon">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/02/11/fastdfs-record/" class="post-title-link" itemprop="url">FastDFS Clinet Java 源码分析</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2022-02-11 18:54:14" itemprop="dateCreated datePublished" datetime="2022-02-11T18:54:14+08:00">2022-02-11</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/FastDFS/" itemprop="url" rel="index"><span itemprop="name">FastDFS</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="什么是-FastDFS"><a href="#什么是-FastDFS" class="headerlink" title="什么是 FastDFS"></a>什么是 FastDFS</h2><blockquote>
-<p><a target="_blank" rel="noopener" href="https://github.com/happyfish100/fastdfs">FastDFS</a></p>
-</blockquote>
-<p>根据项目的描述，FastDFS 是一个开源的高性能分布式文件系统。 它的主要功能包括：文件存储，文件同步和文件访问，以及高容量和负载平衡。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/02/11/fastdfs-record/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/01/25/Mysql-geektime-study-record/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar_2.JPG">
-      <meta itemprop="name" content="Hexin Fang">
-      <meta itemprop="description" content="Keep going.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Crayon">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/01/25/Mysql-geektime-study-record/" class="post-title-link" itemprop="url">MySQL 学习记录</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2022-01-25 18:54:14" itemprop="dateCreated datePublished" datetime="2022-01-25T18:54:14+08:00">2022-01-25</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="基础架构"><a href="#基础架构" class="headerlink" title="基础架构"></a>基础架构</h1>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/01/25/Mysql-geektime-study-record/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/01/09/GC-Algo/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar_2.JPG">
-      <meta itemprop="name" content="Hexin Fang">
-      <meta itemprop="description" content="Keep going.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Crayon">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/01/09/GC-Algo/" class="post-title-link" itemprop="url">GC 策略总结</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2022-01-09 18:54:14" itemprop="dateCreated datePublished" datetime="2022-01-09T18:54:14+08:00">2022-01-09</time>
+      <time title="创建时间：2022-02-20 18:54:14" itemprop="dateCreated datePublished" datetime="2022-02-20T18:54:14+08:00">2022-02-20</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -834,7 +671,180 @@
 <li>缺点：有一部分空间被浪费。如果存活对象大且多的话复制成本比较高。</li></ul></li></ul>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2022/01/09/GC-Algo/#more" rel="contents">
+              <a class="btn" href="/2022/02/20/GC-Algo/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/01/05/2021-2022/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar_2.JPG">
+      <meta itemprop="name" content="Hexin Fang">
+      <meta itemprop="description" content="Keep going.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Crayon">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2022/01/05/2021-2022/" class="post-title-link" itemprop="url">2021 -> 2022 总结和计划</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-01-05 20:43:09" itemprop="dateCreated datePublished" datetime="2022-01-05T20:43:09+08:00">2022-01-05</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2022-07-20 20:47:09" itemprop="dateModified" datetime="2022-07-20T20:47:09+08:00">2022-07-20</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%B0%E5%BD%95/" itemprop="url" rel="index"><span itemprop="name">记录</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="2021-总结"><a href="#2021-总结" class="headerlink" title="2021 总结"></a>2021 总结</h2><ol>
+<li><p>工作</p>
+<p>2021 年中的时候工作经验满 1 年。回看这一段经历，第一次正式的参加工作，公司的整体氛围和部门的工作都适应的很快。和同事们相处的也非常融洽，从工作上也获得实实在在的技术能力的提升。</p>
+<p>有时候会怀疑自己做的好不好，回头看来都是自己给自己猜疑，完全可以避免。</p></li></ol>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/01/05/2021-2022/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/02/fastdfs-record/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar_2.JPG">
+      <meta itemprop="name" content="Hexin Fang">
+      <meta itemprop="description" content="Keep going.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Crayon">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/11/02/fastdfs-record/" class="post-title-link" itemprop="url">FastDFS Clinet Java 源码分析</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-11-02 18:54:14" itemprop="dateCreated datePublished" datetime="2021-11-02T18:54:14+08:00">2021-11-02</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/FastDFS/" itemprop="url" rel="index"><span itemprop="name">FastDFS</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="什么是-FastDFS"><a href="#什么是-FastDFS" class="headerlink" title="什么是 FastDFS"></a>什么是 FastDFS</h2><blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/happyfish100/fastdfs">FastDFS</a></p>
+</blockquote>
+<p>根据项目的描述，FastDFS 是一个开源的高性能分布式文件系统。 它的主要功能包括：文件存储，文件同步和文件访问，以及高容量和负载平衡。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/11/02/fastdfs-record/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>

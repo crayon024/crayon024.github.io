@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico">
+  <link rel="mask-icon" href="/images/favicon.ico" color="#222">
+  <link rel="manifest" href="/manifest.json">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-bounce.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<meta name="description" content="基础架构">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL 学习记录">
+<meta property="og:url" content="http://example.com/2022/03/25/Mysql-geektime-study-record/index.html">
+<meta property="og:site_name" content="Crayon">
+<meta property="og:description" content="基础架构">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image-20210925163128286.png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image-20210925163145506.png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image-20210925163214981.png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image-20210925163235867.png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image-20210925163248267.png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image-20210925163309460.png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image-20210925163328495.png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image(11)-2558947.png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image(12).png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image(13).png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image(14).png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image(15).png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image(16).png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image(17).png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image(18)-2559058.png">
+<meta property="og:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image(19).png">
+<meta property="article:published_time" content="2022-03-25T10:54:14.000Z">
+<meta property="article:modified_time" content="2022-03-25T10:54:14.000Z">
+<meta property="article:author" content="Hexin Fang">
+<meta property="article:tag" content="mysql">
+<meta property="article:tag" content="专栏学习">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2022/03/25/Mysql-geektime-study-record/image-20210925163128286.png">
+
+
+<link rel="canonical" href="http://example.com/2022/03/25/Mysql-geektime-study-record/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2022/03/25/Mysql-geektime-study-record/","path":"2022/03/25/Mysql-geektime-study-record/","title":"MySQL 学习记录"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>MySQL 学习记录 | Crayon</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Crayon</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录、笔记、总结</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E6%9E%B6%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">基础架构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F"><span class="nav-number">2.</span> <span class="nav-text">日志系统</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#redo-log"><span class="nav-number">2.1.</span> <span class="nav-text">redo log</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#binlog"><span class="nav-number">2.2.</span> <span class="nav-text">binlog</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%A4%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4"><span class="nav-number">2.3.</span> <span class="nav-text">两阶段提交</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">2.4.</span> <span class="nav-text">最佳实践</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95"><span class="nav-number">3.</span> <span class="nav-text">索引</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#InnoDB-%E7%9A%84%E7%B4%A2%E5%BC%95%E6%A8%A1%E5%9E%8B"><span class="nav-number">3.1.</span> <span class="nav-text">InnoDB 的索引模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5-1"><span class="nav-number">3.2.</span> <span class="nav-text">最佳实践</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E7%9A%84%E9%9A%94%E7%A6%BB%E6%80%A7"><span class="nav-number">4.</span> <span class="nav-text">事务的隔离性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E6%80%A7%E5%92%8C%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB"><span class="nav-number">4.1.</span> <span class="nav-text">事务隔离性和隔离级别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E6%98%AF%E4%BB%80%E4%B9%88-MVCC%E3%80%81%E6%95%B0%E6%8D%AE%E7%9A%84%E8%A7%86%E5%9B%BE%E3%80%82"><span class="nav-number">4.2.</span> <span class="nav-text">事务隔离的实现方式是什么 - MVCC、数据的视图。</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5-2"><span class="nav-number">4.3.</span> <span class="nav-text">最佳实践</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E5%91%BD%E4%BB%A4%E5%92%8C%E8%AF%AD%E5%8F%A5"><span class="nav-number">4.4.</span> <span class="nav-text">相关命令和语句</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95-1"><span class="nav-number">5.</span> <span class="nav-text">索引</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%94%81"><span class="nav-number">6.</span> <span class="nav-text">锁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%A8%E5%B1%80%E9%94%81"><span class="nav-number">6.1.</span> <span class="nav-text">全局锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A8%E7%BA%A7%E9%94%81"><span class="nav-number">6.2.</span> <span class="nav-text">表级锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%8C%E9%94%81"><span class="nav-number">6.3.</span> <span class="nav-text">行锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AD%BB%E9%94%81"><span class="nav-number">6.4.</span> <span class="nav-text">死锁</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E5%88%B0%E5%BA%95%E6%98%AF%E9%9A%94%E7%A6%BB%E7%9A%84%E8%BF%98%E6%98%AF%E4%B8%8D%E9%9A%94%E7%A6%BB%E7%9A%84%EF%BC%9F"><span class="nav-number">7.</span> <span class="nav-text">事务到底是隔离的还是不隔离的？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BD%93%E5%89%8D%E8%AF%BB"><span class="nav-number">7.1.</span> <span class="nav-text">当前读</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86"><span class="nav-number">8.</span> <span class="nav-text">第二部分</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%99%AE%E9%80%9A%E7%B4%A2%E5%BC%95%E5%92%8C%E5%94%AF%E4%B8%80%E7%B4%A2%E5%BC%95%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%EF%BC%9F"><span class="nav-number">9.</span> <span class="nav-text">普通索引和唯一索引应该怎么选择？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#change-buffer"><span class="nav-number">9.1.</span> <span class="nav-text">change buffer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5-3"><span class="nav-number">9.2.</span> <span class="nav-text">最佳实践</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">10.</span> <span class="nav-text"></span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MySQL-%E6%9C%89%E6%97%B6%E5%80%99%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E9%80%89%E9%94%99%E7%B4%A2%E5%BC%95%EF%BC%9F"><span class="nav-number">11.</span> <span class="nav-text">MySQL 有时候为什么会选错索引？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%B4%E6%8E%A5%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">11.1.</span> <span class="nav-text">直接最佳实践</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E7%BB%99%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%AD%97%E6%AE%B5%E5%8A%A0%E7%B4%A2%E5%BC%95%EF%BC%9F"><span class="nav-number">11.2.</span> <span class="nav-text">怎么给字符串字段加索引？</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A1%A8%E6%95%B0%E6%8D%AE%E5%88%A0%E6%8E%89%E4%B8%80%E5%8D%8A%EF%BC%8C%E8%A1%A8%E6%96%87%E4%BB%B6%E5%A4%A7%E5%B0%8F%E4%B8%8D%E5%8F%98%EF%BC%9F"><span class="nav-number">12.</span> <span class="nav-text">为什么表数据删掉一半，表文件大小不变？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E5%BB%BA%E8%A1%A8"><span class="nav-number">12.1.</span> <span class="nav-text">重建表</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E2%80%9Corder-by%E2%80%9D-%E5%88%B0%E5%BA%95%E6%98%AF%E6%80%8E%E4%B9%88%E5%B7%A5%E4%BD%9C%E7%9A%84%EF%BC%9F"><span class="nav-number">13.</span> <span class="nav-text">“order by” 到底是怎么工作的？</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Hexin Fang"
+      src="/images/avatar_2.JPG">
+  <p class="site-author-name" itemprop="name">Hexin Fang</p>
+  <div class="site-description" itemprop="description">Keep going.</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/03/25/Mysql-geektime-study-record/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar_2.JPG">
+      <meta itemprop="name" content="Hexin Fang">
+      <meta itemprop="description" content="Keep going.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Crayon">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL 学习记录
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-03-25 18:54:14" itemprop="dateCreated datePublished" datetime="2022-03-25T18:54:14+08:00">2022-03-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="基础架构"><a href="#基础架构" class="headerlink" title="基础架构"></a>基础架构</h1><span id="more"></span>
+
+<p><img src="/2022/03/25/Mysql-geektime-study-record/image-20210925163128286.png" alt="image-20210925163128286"></p>
+<ul>
+<li>show processlist;</li>
+<li>一个连接长时间没有动静，会自动断开。由参数 wait_timeout 控制，defaule 8 hours</li>
+<li>MySQL 在一个连接中，执行命令 <strong>使用到的临时内存</strong>会被一直保留，直到这个连接断开才会释放</li>
+</ul>
+<p>每课一问：</p>
+<p>如果表 T 中没有字段 k，而你执行了这个语句 select * from T where k=1, 那肯定是会报“不存在这个列”的错误： “Unknown column ‘k’ in ‘where clause’”。你觉得这个错误是在我们上面提到的哪个阶段报出来的呢?</p>
+<p>答：执行器。</p>
+<p>正确答案：分析器。在分析词法和语法的时候，会判断表字段。</p>
+<h1 id="日志系统"><a href="#日志系统" class="headerlink" title="日志系统"></a>日志系统</h1><h2 id="redo-log"><a href="#redo-log" class="headerlink" title="redo log"></a>redo log</h2><p>WAL，Write-Ahead-Logging，先写日志后写磁盘。redo log 是 InnoDB 特有的日志模块。</p>
+<p>当有一条记录要更新的时候，执行器找 InnoDB 要这一行的记录，如果不在内存中的话，InnoDB 引擎从磁盘读取数据页到内存，返回给执行器。执行器把记录更新后，调用引擎提供的接口，InnoDB 会把数据更新到内存中，然后记录到 redo log 里。</p>
+<p>InnoDB 会在系统比较空闲的时候把 redo log 里的内容更新到磁盘中。</p>
+<p>redo log 是有大小限制的，当 redo log 满的时候，就需要把数据记录到磁盘，redo log 文件腾出空间后，再进行更新操作。</p>
+<p>redo log 记录这个数据 “做了什么改动”，redo log 有 crash-safe 能力，即使数据库异常重启了，之前的提交记录都在，可以恢复。binlog 只能用来归档，从备库一个个重放。</p>
+<h2 id="binlog"><a href="#binlog" class="headerlink" title="binlog"></a>binlog</h2><ul>
+<li>binlog 是属于 Server 层面的，任何引擎都能用。</li>
+<li>binlog 记录的内容是请求的原始语句逻辑，类似 Redis 的 AOF 记录的是执行的命令。</li>
+<li>binlog 没有大小限制，理论上可以一直追加。binlog 文件写满后切换到下一个文件，不会覆盖以前的记录。</li>
+</ul>
+<h2 id="两阶段提交"><a href="#两阶段提交" class="headerlink" title="两阶段提交"></a>两阶段提交</h2><p><img src="/2022/03/25/Mysql-geektime-study-record/image-20210925163145506.png" alt="image-20210925163145506"></p>
+<p>redolog prepare 和 commit 状态。</p>
+<p><img src="/2022/03/25/Mysql-geektime-study-record/image-20210925163214981.png" alt="image-20210925163214981"></p>
+<h2 id="最佳实践"><a href="#最佳实践" class="headerlink" title="最佳实践"></a>最佳实践</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># redolog 和 binlog，每次事务完成持久化到磁盘</span><br><span class="line"># 在配置文件中设置，记得重启服务</span><br><span class="line">innodb_flush_log_at_trx_commit<span class="operator">=</span><span class="number">1</span>;</span><br><span class="line">sync_binlog<span class="operator">=</span><span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">show</span> variables <span class="keyword">like</span> <span class="string">&#x27;log_%&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<h1 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h1><p>索引是在引擎层面实现的，意味着不同的存储引擎采用的索引实现可能是不一样的。</p>
+<p>从底层的数据结构来分析索引的各项特性</p>
+<ul>
+<li>哈希表</li>
+<li>有序数组</li>
+<li>搜索树</li>
+</ul>
+<h2 id="InnoDB-的索引模型"><a href="#InnoDB-的索引模型" class="headerlink" title="InnoDB 的索引模型"></a>InnoDB 的索引模型</h2><p>B+ 树，在 InnoDB 中，采用的是索引组织表，也就是说，每张表是通过 B+树来存储的。</p>
+<p>每个索引对应着一棵 B+ 树。</p>
+<p>因为 B+ 树需要维护索引的有序性，在数据改变的时候，就要进行调整。</p>
+<p>这就需要先知道数据页的概念，InnoDB 操作数据时，需要将磁盘中的数据读取到内存中进行操作，读取和刷入磁盘都是以数据页为单位的。</p>
+<p>当插入的新数据所在的位置的数据页刚好满了，就需要进行调整。-页分裂等等。</p>
+<h2 id="最佳实践-1"><a href="#最佳实践-1" class="headerlink" title="最佳实践"></a>最佳实践</h2><p>定义一个业务无关的自增 id，也就意味着：</p>
+<ul>
+<li>每次新增数据，在主键索引树上，总是在最后的位置添加数据，很有效的减少了可能的 IO 成本。叶子节点分裂的可能性降低。</li>
+<li>如果用整型做自增主键，这样<strong>对普通索引</strong>来说，叶子节点存储占用的空间也小很多。</li>
+<li>还是要看具体的业务情况</li>
+</ul>
+<h1 id="事务的隔离性"><a href="#事务的隔离性" class="headerlink" title="事务的隔离性"></a>事务的隔离性</h1><h2 id="事务隔离性和隔离级别"><a href="#事务隔离性和隔离级别" class="headerlink" title="事务隔离性和隔离级别"></a>事务隔离性和隔离级别</h2><p>说到事务，就会提到事务的 ACID 特性，这一部分主要分析事务的 I（Isolaction），隔离性。</p>
+<p>而隔离级别就是数据库对于事务隔离性的设计，事务源源不断的被开启，提交。不同事务之间可能操作同一部分的数据，就可能出现脏读（读未提交，可能读到脏数据）、幻读（读到的行数不一样）、不可重复读（同一个事务内前后读到的数据不一样）。</p>
+<p>数据库为此，定义了四个隔离级别，隔离级别越高，隔离性就越好，但是性能可能就比较差。</p>
+<ul>
+<li>读未提交。在事务期间内修改了数据且未 commit，修改后的数据就能被其他事务读取。</li>
+<li>读提交。一个事务做的修改，只有提交后才能被其他事务读取到。</li>
+<li>可重复读。一个事务期间读到的数据和事务启动时看到的数据一致。</li>
+<li>串行化。读加读锁，写加写锁。直接阻塞。</li>
+</ul>
+<h2 id="事务隔离的实现方式是什么-MVCC、数据的视图。"><a href="#事务隔离的实现方式是什么-MVCC、数据的视图。" class="headerlink" title="事务隔离的实现方式是什么 - MVCC、数据的视图。"></a>事务隔离的实现方式是什么 - MVCC、数据的视图。</h2><p>在 MySQL 中，每一次更新记录的时候都会同时记录一条回滚操作。也就是说，可以通过最新的记录的值，一次次的回滚取到之前不同状态的值。(以下针对“可重复读”这一隔离级别来分析。)</p>
+<p>那总不能所以的回滚记录统统记录下来吧，一些版本的数据可能已经没有用了，因为在“可重复读”的隔离级别下，系统中可能没有事务要用到这个版本的数据了，就会被删除。</p>
+<p>不同时刻启动的事务都有自己对于数据的视图。在这个事务内，采用这个一致性视图来读取值。（所以，事务内看到的数据和事务启动时的一致。）</p>
+<p>MVCC，多版本并发控制。在 MySQL 中，同一条记录可以有多个不同的版本。</p>
+<h2 id="最佳实践-2"><a href="#最佳实践-2" class="headerlink" title="最佳实践"></a>最佳实践</h2><ul>
+<li>避免长事务</li>
+<li>set autocommit=0，自动提交事务功能关闭。要注意这个语句只对当前 session 有效。当你 begin 或者 start transaction 后，如果不在命令行显示使用 commit 或者 rollback，事务会一直持续到你显示结束。</li>
+<li>set autocommit=1，并记得及时显示提交。</li>
+</ul>
+<p><img src="/2022/03/25/Mysql-geektime-study-record/image-20210925163235867.png" alt="image-20210925163235867"></p>
+<h2 id="相关命令和语句"><a href="#相关命令和语句" class="headerlink" title="相关命令和语句"></a>相关命令和语句</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#查看数据库隔离级别</span><br><span class="line"><span class="keyword">show</span> variables <span class="keyword">like</span> <span class="string">&#x27;transaction_isolation&#x27;</span>;</span><br><span class="line"></span><br><span class="line">#查询超过 <span class="number">60</span>s 的长事务</span><br><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> information_schema.innodb_trx <span class="keyword">where</span> TIME_TO_SEC(timediff(now(),trx_started))<span class="operator">&gt;</span><span class="number">60</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">show</span> session variables <span class="keyword">like</span> <span class="string">&#x27;autocommit&#x27;</span>;</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">global</span> variables <span class="keyword">like</span> <span class="string">&#x27;autocommit&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<h1 id="索引-1"><a href="#索引-1" class="headerlink" title="索引"></a>索引</h1><ul>
+<li>底层数据结构：B+ 树。叶子节点存的是 页。</li>
+<li>回表</li>
+<li>索引维护。页分裂</li>
+<li>索引下推</li>
+<li>索引覆盖</li>
+<li>最左前缀</li>
+<li>联合索引</li>
+</ul>
+<h1 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h1><h2 id="全局锁"><a href="#全局锁" class="headerlink" title="全局锁"></a>全局锁</h2><p>对整个数据库加锁。</p>
+<p>典型的使用场景是对整库进行备份。</p>
+<ul>
+<li>Flush tables with read lock，让库处于只可读状态，其他任何写操作都被拒绝。</li>
+<li>还有一种方式是用 set global readonly=true 的方式，不建议使用，原因在于<ul>
+<li>readonly 的值可能用在其他逻辑</li>
+<li>客户端设置库为 readonly 后，如果客户端端发生异常断开，数据库会一直保持 readonly 状态。Flush tables with read lock 的话，MySQL 会自动释放这个全局锁。</li>
+</ul>
+</li>
+</ul>
+<p>官方自带的逻辑备份工具是 mysqldump。使用 mysqldump 带 -single-transaction 参数时，备份是会启动一个<strong>事务</strong>，保证备份过程中数据的一致性。因为有 MVCC 的支持，期间数据库可以正常响应写请求。</p>
+<p><strong>使用该种方式需要引擎支持数据库，MyISAM 就不支持，所以需要设置全局读锁。</strong></p>
+<h2 id="表级锁"><a href="#表级锁" class="headerlink" title="表级锁"></a>表级锁</h2><p><img src="/2022/03/25/Mysql-geektime-study-record/image-20210925163248267.png" alt="image-20210925163248267"></p>
+<ul>
+<li>一般意义的锁，DML（Data Manipulation Language）操作。（DDL Data Definition Language）</li>
+<li>MDL。在 MySQL 5.5 引入，系统会自动默认添加。主要目的是<strong>针对改变表结构操作（DDL）</strong>的锁。如果对表结构进行改变的话，<strong>会加 MDL 写锁</strong>。正常的 CRUD 的话，加 MDL 读锁。</li>
+</ul>
+<p><strong>给一个表加字段、修改字段、加索引，需要扫描全表的数据。</strong></p>
+<p><strong>Session A</strong>：开启事务，查询数据，且未提交（默认添加 MDL 读锁）</p>
+<p><img src="/2022/03/25/Mysql-geektime-study-record/image-20210925163309460.png" alt="image-20210925163309460"></p>
+<p><strong>Session B</strong>：对表进行 DML 操作，需要 MDL 写锁，但 A 中的 MDL 读锁没有释放，被阻塞。</p>
+<p><img src="/2022/03/25/Mysql-geektime-study-record/image-20210925163328495.png" alt="image-20210925163328495"></p>
+<p><strong>Session C</strong>：对表进行查询，发现被阻塞</p>
+<p><img src="/2022/03/25/Mysql-geektime-study-record/image(11)-2558947.png" alt="image(11)"></p>
+<p>之后，在 <strong>Session A</strong>进行事务提交操作</p>
+<p><img src="/2022/03/25/Mysql-geektime-study-record/image(12).png" alt="image(12)"></p>
+<p><strong>Session B</strong>：</p>
+<p><img src="/2022/03/25/Mysql-geektime-study-record/image(13).png" alt="image(13)"></p>
+<p><strong>Session C</strong>：</p>
+<p><img src="/2022/03/25/Mysql-geektime-study-record/image(14).png" alt="image(14)"></p>
+<p>事务中的 MDL 锁，在语句开始是申请，在事务结束时才释放。但是这也不太好解释为什么 C 中的查询语句会被阻塞，因为 B 申请 MDL 写锁失败了。（从设计初衷来说为了防止 C 被饿死，因为后续可能一直来 MDL 读锁，导致 C 一直不能被执行）。</p>
+<h2 id="行锁"><a href="#行锁" class="headerlink" title="行锁"></a><strong>行锁</strong></h2><p>MySQL 的行锁是在引擎层实现的。但不是所有的引擎都支持行锁。</p>
+<p>行锁的两阶段锁协议：在 InnboDB 的事务中，行锁在需要时才加上，等到事务结束时才释放。</p>
+<h2 id="死锁"><a href="#死锁" class="headerlink" title="死锁"></a>死锁</h2><h1 id="事务到底是隔离的还是不隔离的？"><a href="#事务到底是隔离的还是不隔离的？" class="headerlink" title="事务到底是隔离的还是不隔离的？"></a>事务到底是隔离的还是不隔离的？</h1><p>事务的两种启动方式</p>
+<ul>
+<li>begin/start transaction，直到执行第一个操作表的语句才开启事务</li>
+<li>start transaction with consistent snapshot，语句一声明就开启事务</li>
+</ul>
+<p>InnoDB 中每个事务都有一个唯一 ID，是在事务开始的时候，按照申请顺序严格递增的。</p>
+<p>每次事务对数据的更新操作，随之会把事务 ID 和数据版本对应起来。</p>
+<p>在可重复读的隔离级别下，事务启动的时候，在整个事务期间采用一个一致性视图。即这个事务是看得到在它启动前已经提交的事务的更新结果。</p>
+<p>在实现上，InnoDB 为每个事务构造了一个数组，用来存储在该事务启动时，系统中还在“活跃”的事务 id。“活跃”指的是已经启动，但是没有提交的事务。</p>
+<p>数组中存在着最小和最大的事务 ID 。</p>
+<p>事务就会根据这个 “活跃”数组，来<strong>找自己认可的数据版本（对应着 transaction id）</strong></p>
+<p> </p>
+<p>事务判断要操作的这个数据的当前版本，<strong>版本 ID 和最小最大 ID 的大小比较</strong>（不是存不存在）：</p>
+<ul>
+<li>小于数组中的最小 ID，说明这个版本是在其启动前已经提交的，认可它。</li>
+<li>大于最大 ID，说明是未来已提交的，不认可。</li>
+<li>在中间，那么存在两种情况<ul>
+<li>在这个数组中有相同的 ID ，说明这个事务是“活跃”的，说明还没提交，不认可。</li>
+<li>没有相同的 ID，说明已经提交，要认可，即对于这个事务来说是可见的。</li>
+</ul>
+</li>
+</ul>
+<p><img src="/2022/03/25/Mysql-geektime-study-record/image(15).png" alt="image(15)"></p>
+<p><img src="/2022/03/25/Mysql-geektime-study-record/image(16).png" alt="image(16)"></p>
+<h2 id="当前读"><a href="#当前读" class="headerlink" title="当前读"></a>当前读</h2><p>库中有数据（id，k）- (1，1)，事务 A get 到的 k 是 1，这个好理解。</p>
+<p>但是事务 B get 到的 k 是 3，这就让人很疑惑了。</p>
+<p><strong>当前读</strong>说的是：在<strong>更新</strong>的时候，总是先读再写，读的值必须的<strong>当前的值。</strong></p>
+<p>事务 C 改成下面这样呢？</p>
+<p><img src="/2022/03/25/Mysql-geektime-study-record/image(17).png" alt="image(17)"></p>
+<p>事务 C’ 没有马上提交，而 B 要更新 k 值，需要进行当前读。因为 C’ 没有提交，该行的写锁还没释放，B 就会被阻塞。</p>
+<h1 id="第二部分"><a href="#第二部分" class="headerlink" title="第二部分"></a>第二部分</h1><h1 id="普通索引和唯一索引应该怎么选择？"><a href="#普通索引和唯一索引应该怎么选择？" class="headerlink" title="普通索引和唯一索引应该怎么选择？"></a>普通索引和唯一索引应该怎么选择？</h1><p>老样子，看业务场景。</p>
+<p>唯一索引的缺点是 <strong>在插入的时候</strong>一定要在内存中进行唯一判断才能插入。</p>
+<p>普通索引的缺点是 <strong>在查询的时候</strong>相比与唯一索引<strong>可能需要</strong>多一次判断。</p>
+<p>但是，存储引擎一般都是按页从磁盘读取数据，所以普通索引在查询时候的多一次判断的数据大概率已经被读取到内存中，所以只要多一次指针寻找和计算。开销可以说是微乎其微的。</p>
+<h2 id="change-buffer"><a href="#change-buffer" class="headerlink" title="change buffer"></a>change buffer</h2><p><strong>对于更新操作</strong>，普通索引和唯一索引就存在不同的开销了。这都要归因于 change buffer。</p>
+<p>当需要更新一个数据时，如果数据页在内存中就直接更新。如果不在内存中，InnoDB 会先把更新操作记录到 change buffer，暂时不从磁盘读取数据以减少 IO 开销。</p>
+<p>等到有查询该数据的请求的时候，才会进行磁盘 IO，并把 change buffer 中的操作合并，返回结果。这样就避免了数据不一致。</p>
+<p>change buffer 中存的操作应用到实际的数据页上，有三种情况</p>
+<ul>
+<li>后台线程定期 merge</li>
+<li>访问到这个数据页的时候</li>
+<li>数据库正常关闭的时候</li>
+</ul>
+<p>change buffer 还是可以持久化的，这应该是避免数据库不正常关闭的情况。</p>
+<p>对于普通索引和唯一索引，change buffer 对更新会有什么影响呢？</p>
+<ul>
+<li>更新的唯一索引需要判断唯一性，总是要读入内存来判断，利用不了 change buffer 带来的优势。</li>
+<li>对于更新已经在内存中的数据，二者没差。</li>
+</ul>
+<h2 id="最佳实践-3"><a href="#最佳实践-3" class="headerlink" title="最佳实践"></a>最佳实践</h2><p>都得看业务场景，对于读多的场景，更新请求记录在 change buffer，避免了磁盘 IO。但是马上对该数据的读请求来了，这是一定要读取的内存的请求，change buffer 就没啥用了，可能反而增加了记录和 merge 的开销。</p>
+<p><strong>“尽量选择普通索引”</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#x27;%innodb_change_buffer%&#x27;;</span><br></pre></td></tr></table></figure>
+
+<h1 id><a href="#" class="headerlink" title></a></h1><h1 id="MySQL-有时候为什么会选错索引？"><a href="#MySQL-有时候为什么会选错索引？" class="headerlink" title="MySQL 有时候为什么会选错索引？"></a>MySQL 有时候为什么会选错索引？</h1><p>选择索引是优化器的工作，其中的影响因素包括了</p>
+<ul>
+<li>扫描行数</li>
+<li>是否采用临时表</li>
+<li>是否排序</li>
+<li>等等。。</li>
+</ul>
+<p>采样分析计算索引信息，所以可能不太准确。</p>
+<p>通过 explain 来判断一个语句的执行情况</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">explain select * from t where (a between 1 and 1000)  and (b between 50000 and 100000) order by b limit 1;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2022/03/25/Mysql-geektime-study-record/image(18)-2559058.png" alt="image(18)"></p>
+<ul>
+<li>rows 代表可能扫描的行数</li>
+<li>Extra 中说明使用了索引</li>
+<li>key 代码会选择索引 b 进行查询</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">explain select * from t where (a between 1 and 1000)  and (b between 50000 and 100000) order by b,a limit 1;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2022/03/25/Mysql-geektime-study-record/image(19).png" alt="image(19)"></p>
+<h2 id="直接最佳实践"><a href="#直接最佳实践" class="headerlink" title="直接最佳实践"></a>直接最佳实践</h2><ul>
+<li>人为强制选择索引，使用 force index()</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> t force index(a) <span class="keyword">where</span> a <span class="keyword">between</span> <span class="number">1</span> <span class="keyword">and</span> <span class="number">10000</span> ...;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>analyze table <table name>，矫正一下，重新计算索引信息</table></li>
+</ul>
+<h2 id="怎么给字符串字段加索引？"><a href="#怎么给字符串字段加索引？" class="headerlink" title="怎么给字符串字段加索引？"></a>怎么给字符串字段加索引？</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">alter table SUser add index index1(email);</span><br><span class="line">或</span><br><span class="line">alter table SUser add index index2(email(6));</span><br></pre></td></tr></table></figure>
+
+<p>使用前缀索引，定义合适的长度，既可以节省索引的空间，又能减少查询的开销。</p>
+<h1 id="为什么表数据删掉一半，表文件大小不变？"><a href="#为什么表数据删掉一半，表文件大小不变？" class="headerlink" title="为什么表数据删掉一半，表文件大小不变？"></a>为什么表数据删掉一半，表文件大小不变？</h1><ul>
+<li>innodb_file_per_table，5.6.6 后，默认是 ON。这个参数 ON 的时候代表每个表都用单独的文件存储。OFF 代表表数据存储在共享空间中。</li>
+</ul>
+<p>MySQL 中记录数据的删除实际上不是我们理解的真正的删除，而是标记删除，表示该位置可复用。</p>
+<p>当整个数据页没有数据的时候，MySQL 通过把它标记为可复用（即空间没有变小），但是该数据页可以复用到任何位置。（也就是说不受）</p>
+<p>更新索引上的值也和删除一样，会造成数据页中的空洞。因为索引需要保证有序性。</p>
+<h2 id="重建表"><a href="#重建表" class="headerlink" title="重建表"></a>重建表</h2><p>重建表的大概步骤是重新读取表 A 中的值，依次放到临时表中，紧凑的排列，然后交换表名，删除旧表，启用新表。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alter table &lt;table name&gt; engine=InnoDB;</span><br></pre></td></tr></table></figure>
+
+<h1 id="“order-by”-到底是怎么工作的？"><a href="#“order-by”-到底是怎么工作的？" class="headerlink" title="“order by” 到底是怎么工作的？"></a>“order by” 到底是怎么工作的？</h1>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+              <a href="/tags/%E4%B8%93%E6%A0%8F%E5%AD%A6%E4%B9%A0/" rel="tag"># 专栏学习</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/03/01/ClassLoader-And-Tomact-isolation/" rel="prev" title="类加载器机制 学习笔记">
+                  <i class="fa fa-chevron-left"></i> 类加载器机制 学习笔记
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2022/04/12/JVM-Bytecode-Analysis/" rel="next" title="Java 字节码分析">
+                  Java 字节码分析 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hexin Fang</span>
+</div><script color="0,0,255" opacity="1.0" zIndex="-1" count="111" src="https://cdn.jsdelivr.net/npm/canvas-nest.js@1/dist/canvas-nest.js"></script>
+
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+
+
+
+
+
+</body>
+</html>
